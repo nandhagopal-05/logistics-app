@@ -6,7 +6,7 @@ import {
     Truck,
     TrendingUp,
     Clock,
-    MapPin,
+
     CheckCircle,
     AlertCircle,
     ArrowUpRight,
@@ -73,14 +73,7 @@ const Dashboard: React.FC = () => {
             color: 'from-green-600 to-green-400',
             bgColor: 'bg-green-50'
         },
-        {
-            label: 'Fleet Vehicles',
-            value: data?.stats.fleetVehicles || '0',
-            change: '+2.4%',
-            icon: MapPin,
-            color: 'from-purple-600 to-purple-400',
-            bgColor: 'bg-purple-50'
-        },
+
         {
             label: 'On-Time Rate',
             value: `${data?.stats.onTimeRate}%` || '0%',
