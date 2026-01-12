@@ -120,8 +120,8 @@ const Dashboard: React.FC = () => {
                 </div>
 
                 {/* Stats Grid */}
-                {user?.role === 'Clearance Agent' ? (
-                    /* Clearance Agent Dashboard View */
+                {user?.role === 'Clearance Manager, Admin, Administrator, Adminstrator Assistant, Clearance Assistant, Accountant, Assistant Accountant' ? (
+                    /* Clearance Manager Dashboard View */
                     <div className="space-y-8">
                         {/* Team Snapshot */}
                         <div>
