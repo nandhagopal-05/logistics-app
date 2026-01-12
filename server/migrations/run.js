@@ -10,12 +10,19 @@ async function runMigrations() {
     try {
         console.log('🔄 Running database migrations...');
 
-        const migrationFile = path.join(__dirname, '003_update_shipments_schema.sql');
-        const sql = fs.readFileSync(migrationFile, 'utf8');
+        // Get all .sql files in the directory
+        const files = fs.readdirSync(__dirname)
+            .filter(file => file.endsWith('.sql'))
+            .sort(); // Ensure order like 001, 002...
 
-        await pool.query(sql);
+        for (const file of files) {
+            console.log(`▶️ Executing migration: ${file}`);
+            const filePath = path.join(__dirname, file);
+            const sql = fs.readFileSync(filePath, 'utf8');
+            await pool.query(sql);
+        }
 
-        console.log('✅ Migrations completed successfully!');
+        console.log('✅ All migrations completed successfully!');
         process.exit(0);
     } catch (error) {
         console.error('❌ Migration failed:', error);
