@@ -10,7 +10,7 @@ interface User {
 
 interface AuthContextType {
     user: User | null;
-    login: (username: string, password: string) => Promise<boolean>;
+    login: (username: string, password: string, remember?: boolean) => Promise<boolean>;
     logout: () => void;
     isAuthenticated: boolean;
 }
@@ -22,23 +22,35 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Check for existing session
-        const savedUser = localStorage.getItem('user');
-        const token = localStorage.getItem('token');
-        if (savedUser && token) {
-            setUser(JSON.parse(savedUser));
+        // Check for existing session in both local and session storage
+        const userStr = localStorage.getItem('user') || sessionStorage.getItem('user');
+        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+
+        if (userStr && token) {
+            try {
+                setUser(JSON.parse(userStr));
+            } catch (e) {
+                console.error('Failed to parse user data', e);
+            }
         }
         setLoading(false);
     }, []);
 
-    const login = async (username: string, password: string): Promise<boolean> => {
+    const login = async (username: string, password: string, remember: boolean = false): Promise<boolean> => {
         try {
             const response = await authAPI.login(username, password);
             const { token, user: userData } = response.data;
 
             setUser(userData);
-            localStorage.setItem('user', JSON.stringify(userData));
-            localStorage.setItem('token', token);
+
+            if (remember) {
+                localStorage.setItem('user', JSON.stringify(userData));
+                localStorage.setItem('token', token);
+            } else {
+                sessionStorage.setItem('user', JSON.stringify(userData));
+                sessionStorage.setItem('token', token);
+            }
+
             return true;
         } catch (error) {
             console.error('Login error:', error);
@@ -50,6 +62,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setUser(null);
         localStorage.removeItem('user');
         localStorage.removeItem('token');
+        sessionStorage.removeItem('user');
+        sessionStorage.removeItem('token');
     };
 
     if (loading) {

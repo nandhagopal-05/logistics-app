@@ -12,6 +12,7 @@ const Login: React.FC = () => {
     const navigate = useNavigate();
 
     const [showPassword, setShowPassword] = useState(false);
+    const [rememberMe, setRememberMe] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -25,7 +26,7 @@ const Login: React.FC = () => {
         }
 
         try {
-            const success = await login(username, password);
+            const success = await login(username, password, rememberMe);
             if (success) {
                 navigate('/dashboard');
             } else {
@@ -112,6 +113,20 @@ const Login: React.FC = () => {
                                     )}
                                 </button>
                             </div>
+                        </div>
+
+                        <div className="flex items-center">
+                            <input
+                                id="remember-me"
+                                name="remember-me"
+                                type="checkbox"
+                                checked={rememberMe}
+                                onChange={(e) => setRememberMe(e.target.checked)}
+                                className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded cursor-pointer"
+                            />
+                            <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900 cursor-pointer">
+                                Remember me
+                            </label>
                         </div>
 
                         <button
