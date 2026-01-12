@@ -10,7 +10,7 @@ const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     max: 20,
     idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 2000,
+    connectionTimeoutMillis: 10000,
     // SSL configuration is often required for CockroachDB (especially cloud/serverless)
     // SSL configuration
     ssl: process.env.NODE_ENV === 'production' || process.env.DATABASE_URL?.includes('sslmode')
