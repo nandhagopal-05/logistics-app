@@ -23,10 +23,7 @@ import {
     YAxis,
     CartesianGrid,
     Tooltip,
-    ResponsiveContainer,
-    PieChart,
-    Pie,
-    Cell
+    ResponsiveContainer
 } from 'recharts';
 
 const Dashboard: React.FC = () => {
@@ -117,16 +114,6 @@ const Dashboard: React.FC = () => {
                 return <AlertCircle className="w-4 h-4" />;
             default:
                 return <Clock className="w-4 h-4" />;
-        }
-    };
-
-    const getPieColor = (name: string) => {
-        switch (name) {
-            case 'Delivered': return '#10b981';
-            case 'In Transit': return '#3b82f6';
-            case 'Processing': return '#f59e0b';
-            case 'Delayed': return '#ef4444';
-            default: return '#8884d8';
         }
     };
 
@@ -297,28 +284,7 @@ const Dashboard: React.FC = () => {
                         </div>
 
                         {/* Shipment Status Distribution */}
-                        <div className="glass-card p-6">
-                            <h3 className="text-lg font-bold text-gray-900 mb-4">Shipment Status</h3>
-                            <ResponsiveContainer width="100%" height={300}>
-                                <PieChart>
-                                    <Pie
-                                        data={data?.statusData || []}
-                                        cx="50%"
-                                        cy="50%"
-                                        labelLine={false}
-                                        label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
-                                        outerRadius={100}
-                                        fill="#8884d8"
-                                        dataKey="value"
-                                    >
-                                        {data?.statusData?.map((entry: any, index: number) => (
-                                            <Cell key={`cell-${index}`} fill={getPieColor(entry.name)} />
-                                        ))}
-                                    </Pie>
-                                    <Tooltip />
-                                </PieChart>
-                            </ResponsiveContainer>
-                        </div>
+
                     </div>
                 )}
 
