@@ -19,6 +19,13 @@ const transporter = nodemailer.createTransport({
  * @param {string} html - HTML body (optional)
  */
 export const sendEmail = async (to, subject, text, html) => {
+    // Check for default credentials
+    if (process.env.EMAIL_USER === 'your-email@gmail.com' || process.env.EMAIL_PASS === 'your-app-password') {
+        console.warn('WARNING: Email not sent. You are using default placeholder credentials in server/.env.');
+        console.warn('Please update EMAIL_USER and EMAIL_PASS with your actual Gmail address and App Password.');
+        return;
+    }
+
     try {
         const info = await transporter.sendMail({
             from: process.env.EMAIL_FROM || '"Seaflow Logistics" <no-reply@seaflow.com>',
