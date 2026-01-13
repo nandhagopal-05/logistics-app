@@ -6,7 +6,7 @@ import {
     Search, Plus, Ship,
     FileText,
     MoreVertical, Calendar,
-    Anchor, Plane, Truck, Package, X, Upload
+    Anchor, Plane, Truck, Package, X
 } from 'lucide-react';
 
 const ShipmentRegistry: React.FC = () => {
@@ -539,34 +539,7 @@ const ShipmentRegistry: React.FC = () => {
                     <div className="p-5 border-b border-gray-100">
                         <div className="flex justify-between items-center mb-5">
                             <h2 className="text-xl font-bold text-gray-900 tracking-tight">Inbox</h2>
-                            <label className="w-8 h-8 flex items-center justify-center bg-white border border-gray-200 text-gray-600 rounded-full hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm cursor-pointer mr-2 relative">
-                                {loading && <div className="absolute inset-0 rounded-full bg-white/80 flex items-center justify-center"><div className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div></div>}
-                                <Upload className="w-4 h-4" />
-                                <input type="file" className="hidden" accept=".xlsx,.xls,.csv" onChange={async (e) => {
-                                    if (e.target.files?.[0]) {
-                                        const file = e.target.files[0];
-                                        const formData = new FormData();
-                                        formData.append('file', file);
 
-                                        try {
-                                            setLoading(true);
-                                            const res = await shipmentsAPI.import(formData);
-                                            alert(`Import successful: ${res.data.success} added.`);
-                                            if (res.data.errors && res.data.errors.length > 0) {
-                                                console.warn('Import warnings:', res.data.errors);
-                                            }
-                                            loadJobs();
-                                        } catch (error) {
-                                            console.error('Import failed', error);
-                                            alert('Failed to import shipments. Check console for details.');
-                                        } finally {
-                                            setLoading(false);
-                                            // Reset input
-                                            e.target.value = '';
-                                        }
-                                    }
-                                }} />
-                            </label>
                             <button onClick={handleCreateClick} className="w-8 h-8 flex items-center justify-center bg-indigo-600 text-white rounded-full hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-200 transition-all shadow-md">
                                 <Plus className="w-5 h-5" />
                             </button>
