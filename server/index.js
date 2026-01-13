@@ -12,6 +12,7 @@ import invoiceRoutes from './routes/invoices.js';
 import consigneeRoutes from './routes/consignees.js';
 import customerRoutes from './routes/customers.js';
 import exporterRoutes from './routes/exporters.js';
+import clearanceRoutes from './routes/clearance.js';
 
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -54,6 +55,8 @@ app.use('/api/invoices', invoiceRoutes);
 app.use('/api/consignees', consigneeRoutes);
 app.use('/api/customers', customerRoutes);
 app.use('/api/exporters', exporterRoutes);
+app.use('/api/clearance', clearanceRoutes);
+
 
 // Health check
 app.get('/health', (req, res) => {

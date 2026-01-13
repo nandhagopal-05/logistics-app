@@ -1,12 +1,40 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
-import { Search, Calendar, ChevronDown } from 'lucide-react';
+import { Search, Calendar, ChevronDown, RotateCcw } from 'lucide-react';
+import { clearanceAPI } from '../services/api';
 
 const ClearanceSchedule: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [clearanceType, setClearanceType] = useState('All types');
     const [transportMode, setTransportMode] = useState('All modes');
     const [date, setDate] = useState('');
+    const [schedules, setSchedules] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchSchedules = async () => {
+            setLoading(true);
+            try {
+                const response = await clearanceAPI.getAll({
+                    search: searchTerm,
+                    type: clearanceType,
+                    transport_mode: transportMode,
+                    date: date
+                });
+                setSchedules(response.data);
+            } catch (error) {
+                console.error("Failed to fetch clearance schedules", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        const timeoutId = setTimeout(() => {
+            fetchSchedules();
+        }, 500);
+
+        return () => clearTimeout(timeoutId);
+    }, [searchTerm, clearanceType, transportMode, date]);
 
     return (
         <Layout>
@@ -96,7 +124,7 @@ const ClearanceSchedule: React.FC = () => {
                     </div>
 
                     <div className="pt-2 text-xs text-gray-400 font-medium">
-                        Showing 0 of 0 clearances
+                        Showing {schedules.length} clearances
                     </div>
                 </div>
 
@@ -119,12 +147,56 @@ const ClearanceSchedule: React.FC = () => {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
-                                {/* Empty State / Rows will go here */}
-                                <tr>
-                                    <td colSpan={10} className="py-12 text-center text-gray-500 text-sm">
-                                        No scheduled clearances found.
-                                    </td>
-                                </tr>
+                                {loading ? (
+                                    <tr>
+                                        <td colSpan={10} className="py-12 text-center text-gray-500">Loading...</td>
+                                    </tr>
+                                ) : schedules.length > 0 ? (
+                                    schedules.map((item) => (
+                                        <tr key={item.id} className="hover:bg-gray-50 transition-colors">
+                                            <td className="py-4 px-6 text-sm font-semibold text-indigo-600">
+                                                {item.job_id}
+                                                <div className="text-[10px] text-gray-400 font-normal">{new Date(item.created_at).toLocaleDateString()}</div>
+                                            </td>
+                                            <td className="py-4 px-6 text-sm text-gray-900">
+                                                <div className="font-medium">{item.consignee || 'Unknown'}</div>
+                                                <div className="text-xs text-gray-500">{item.exporter}</div>
+                                            </td>
+                                            <td className="py-4 px-6 text-sm text-gray-500 font-mono">
+                                                {/* Container logic placeholder */}
+                                                {item.remarks?.includes('Container:') ? item.remarks.split('Container:')[1] : '-'}
+                                            </td>
+                                            <td className="py-4 px-6 text-sm text-gray-900 font-medium">
+                                                20 PKG {/* Placeholder */}
+                                            </td>
+                                            <td className="py-4 px-6">
+                                                <span className={`px-2 py-1 rounded text-xs font-bold uppercase ${item.clearance_type === 'Express' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
+                                                    {item.clearance_type || 'NORMAL'}
+                                                </span>
+                                            </td>
+                                            <td className="py-4 px-6 text-sm text-gray-600 uppercase">{item.port || '-'}</td>
+                                            <td className="py-4 px-6 text-sm text-gray-500">DHONI</td> {/* Placeholder */}
+                                            <td className="py-4 px-6 text-sm text-gray-500 uppercase">{item.transport_mode || '-'}</td>
+                                            <td className="py-4 px-6 text-sm text-gray-500">
+                                                <div className="flex items-center gap-2">
+                                                    <Calendar className="w-3 h-3" />
+                                                    {new Date(item.clearance_date).toLocaleDateString()}
+                                                </div>
+                                            </td>
+                                            <td className="py-4 px-6 text-center">
+                                                <button className="p-1 hover:bg-gray-100 rounded text-gray-400 hover:text-gray-600 transition-colors">
+                                                    <RotateCcw className="w-4 h-4" />
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan={10} className="py-12 text-center text-gray-500 text-sm">
+                                            No scheduled clearances found.
+                                        </td>
+                                    </tr>
+                                )}
                             </tbody>
                         </table>
                     </div>

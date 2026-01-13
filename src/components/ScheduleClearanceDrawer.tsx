@@ -15,6 +15,7 @@ const ScheduleClearanceDrawer: React.FC<ScheduleClearanceDrawerProps> = ({ isOpe
         port: '',
         bl_awb: '',
         transport_mode: '',
+
         remarks: ''
     });
 

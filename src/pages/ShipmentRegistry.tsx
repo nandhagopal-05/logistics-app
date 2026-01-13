@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
-import { shipmentsAPI, consigneesAPI, exportersAPI } from '../services/api';
+import { shipmentsAPI, consigneesAPI, exportersAPI, clearanceAPI } from '../services/api';
 import {
     Search, Plus, Ship,
     FileText,
@@ -154,11 +154,19 @@ const ShipmentRegistry: React.FC = () => {
         setIsScheduleDrawerOpen(true);
     };
 
-    const handleScheduleSave = (data: any) => {
-        console.log('Schedule Data:', data);
-        // Here you would typically call an API to save the schedule
-        alert('Clearance Scheduled Successfully!');
-        // Ideally reload job details or updates
+    const handleScheduleSave = async (data: any) => {
+        try {
+            if (!selectedJob) return;
+            await clearanceAPI.create({
+                job_id: selectedJob.id,
+                ...data
+            });
+            alert('Clearance Scheduled Successfully!');
+            // Reload logs or job details if needed
+        } catch (error) {
+            console.error('Failed to schedule clearance', error);
+            alert('Failed to schedule clearance');
+        }
     };
 
     const getModeIcon = (mode: string) => {
