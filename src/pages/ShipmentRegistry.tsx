@@ -532,11 +532,11 @@ const ShipmentRegistry: React.FC = () => {
                             <div className="space-y-4">
                                 <div className="flex justify-between border-b border-gray-50 pb-3">
                                     <span className="text-gray-500 text-sm">Master No</span>
-                                    <span className="font-mono text-sm font-medium text-gray-900">-</span>
+                                    <span className="font-mono text-sm font-medium text-gray-900">{selectedJob.master_bl || '-'}</span>
                                 </div>
                                 <div className="flex justify-between border-b border-gray-50 pb-3">
                                     <span className="text-gray-500 text-sm">House No</span>
-                                    <span className="font-mono text-sm font-medium text-gray-900">-</span>
+                                    <span className="font-mono text-sm font-medium text-gray-900">{selectedJob.house_bl || '-'}</span>
                                 </div>
                             </div>
                         </div>
@@ -615,6 +615,7 @@ const ShipmentRegistry: React.FC = () => {
                 isOpen={isScheduleDrawerOpen}
                 onClose={() => setIsScheduleDrawerOpen(false)}
                 onSave={handleScheduleSave}
+                job={selectedJob}
             />
         </Layout>
     );

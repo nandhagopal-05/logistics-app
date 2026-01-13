@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { X, ChevronDown } from 'lucide-react';
 
-
 interface ScheduleClearanceDrawerProps {
     isOpen: boolean;
     onClose: () => void;
     onSave: (data: any) => void;
+    job?: any;
 }
 
-const ScheduleClearanceDrawer: React.FC<ScheduleClearanceDrawerProps> = ({ isOpen, onClose, onSave }) => {
+const ScheduleClearanceDrawer: React.FC<ScheduleClearanceDrawerProps> = ({ isOpen, onClose, onSave, job }) => {
     const [formData, setFormData] = useState({
         date: '',
         type: '',
@@ -17,6 +17,10 @@ const ScheduleClearanceDrawer: React.FC<ScheduleClearanceDrawerProps> = ({ isOpe
         transport_mode: '',
         remarks: ''
     });
+
+    // Derived options from job
+    // Assuming job has properties master_bl and house_bl (even if currently placeholders in UI, intention is clear)
+    const blOptions = [job?.master_bl, job?.house_bl].filter((opt) => opt && opt !== '-');
 
     if (!isOpen) return null;
 
@@ -67,8 +71,6 @@ const ScheduleClearanceDrawer: React.FC<ScheduleClearanceDrawerProps> = ({ isOpe
                                     onChange={handleInputChange}
                                     className="w-full p-3 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-gray-700"
                                 />
-                                {/* Calendar icon behavior depends on browser, usually date input has its own indicator. 
-                                    To match design perfectly we might need custom logic, but native date picker is safest for MVP. */}
                             </div>
                         </div>
 
@@ -101,10 +103,10 @@ const ScheduleClearanceDrawer: React.FC<ScheduleClearanceDrawerProps> = ({ isOpe
                                     className={`w-full p-3 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none appearance-none ${!formData.port ? 'text-gray-400' : 'text-gray-700'}`}
                                 >
                                     <option value="" disabled>Select an option</option>
-                                    <option value="Port A">MALE</option>
-                                    <option value="Port B">HULHUMALE</option>
-                                    <option value="Port C">MALE AIRPORT</option>
-                                    <option value="Port D">ADDU</option>
+                                    <option value="MALE">MALE</option>
+                                    <option value="HULHUMALE">HULHUMALE</option>
+                                    <option value="MALE AIRPORT">MALE AIRPORT</option>
+                                    <option value="ADDU">ADDU</option>
                                 </select>
                                 <ChevronDown className="absolute right-3 top-3.5 w-4 h-4 text-gray-400 pointer-events-none" />
                             </div>
@@ -121,8 +123,13 @@ const ScheduleClearanceDrawer: React.FC<ScheduleClearanceDrawerProps> = ({ isOpe
                                     className={`w-full p-3 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none appearance-none ${!formData.bl_awb ? 'text-gray-400' : 'text-gray-700'}`}
                                 >
                                     <option value="" disabled>Select an option</option>
-                                    <option value="BL-001">BL-001</option>
-                                    <option value="AWB-002">AWB-002</option>
+                                    {blOptions.length > 0 ? (
+                                        blOptions.map((opt, idx) => (
+                                            <option key={idx} value={opt}>{opt}</option>
+                                        ))
+                                    ) : (
+                                        <option value="" disabled>No BL/AWB available</option>
+                                    )}
                                 </select>
                                 <ChevronDown className="absolute right-3 top-3.5 w-4 h-4 text-gray-400 pointer-events-none" />
                             </div>
