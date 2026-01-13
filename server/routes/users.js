@@ -209,13 +209,10 @@ const storage = multer.diskStorage({
 
 const upload = multer({
     storage: storage,
-    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+    limits: { fileSize: 10 * 1024 * 1024 }, // Increase limit to 10MB
     fileFilter: (req, file, cb) => {
-        const filetypes = /jpeg|jpg|png|gif/;
-        const mimetype = filetypes.test(file.mimetype);
-        const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
-
-        if (mimetype && extname) {
+        // Allow any file that is an image
+        if (file.mimetype.startsWith('image/')) {
             return cb(null, true);
         }
         cb(new Error('Only image files are allowed!'));
@@ -223,7 +220,10 @@ const upload = multer({
 });
 
 // Upload profile photo
-router.post('/:id/photo', upload.single('photo'), async (req, res) => {
+router.post('/:id/photo', (req, res, next) => {
+    console.log(`[DEBUG] Received photo upload request for user ${req.params.id}`);
+    next();
+}, upload.single('photo'), async (req, res) => {
     const { id } = req.params;
 
     // Authorization Check: Admin or Self
