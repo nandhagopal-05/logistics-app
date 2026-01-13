@@ -8,6 +8,7 @@ import {
     MoreVertical, Calendar,
     Anchor, Plane, Truck, Package, X
 } from 'lucide-react';
+import ScheduleClearanceDrawer from '../components/ScheduleClearanceDrawer';
 
 const ShipmentRegistry: React.FC = () => {
     // State
@@ -16,6 +17,7 @@ const ShipmentRegistry: React.FC = () => {
     const [viewMode, setViewMode] = useState<'empty' | 'details' | 'create'>('empty');
     const [loading, setLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
+    const [isScheduleDrawerOpen, setIsScheduleDrawerOpen] = useState(false);
 
     // Dropdown Data State
     const [consigneesList, setConsigneesList] = useState<any[]>([]);
@@ -146,6 +148,17 @@ const ShipmentRegistry: React.FC = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleScheduleClick = () => {
+        setIsScheduleDrawerOpen(true);
+    };
+
+    const handleScheduleSave = (data: any) => {
+        console.log('Schedule Data:', data);
+        // Here you would typically call an API to save the schedule
+        alert('Clearance Scheduled Successfully!');
+        // Ideally reload job details or updates
     };
 
     const getModeIcon = (mode: string) => {
@@ -415,7 +428,10 @@ const ShipmentRegistry: React.FC = () => {
                             <span>Registered: {new Date(selectedJob.created_at || Date.now()).toLocaleDateString()}</span>
                         </p>
                     </div>
-                    <button className="px-5 py-2.5 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-200 transition-all flex items-center gap-2">
+                    <button
+                        onClick={handleScheduleClick}
+                        className="px-5 py-2.5 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-200 transition-all flex items-center gap-2"
+                    >
                         <Calendar className="w-4 h-4" />
                         Schedule Clearance
                     </button>
@@ -595,6 +611,11 @@ const ShipmentRegistry: React.FC = () => {
                 </div>
             </div>
 
+            <ScheduleClearanceDrawer
+                isOpen={isScheduleDrawerOpen}
+                onClose={() => setIsScheduleDrawerOpen(false)}
+                onSave={handleScheduleSave}
+            />
         </Layout>
     );
 };
