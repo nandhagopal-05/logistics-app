@@ -90,4 +90,16 @@ export const logsAPI = {
     getAll: () => api.get('/logs'),
 };
 
+// Delivery Notes API
+export const deliveryNotesAPI = {
+    getAll: () => api.get('/delivery-notes'),
+    update: (id: string, data: any) => api.put(`/delivery-notes/${id}`, data),
+};
+
+// Invoices API
+export const invoicesAPI = {
+    getAll: () => api.get('/invoices'),
+    getById: (id: string) => api.get(`/invoices/${id}`),
+};
+
 export default api;

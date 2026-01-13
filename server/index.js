@@ -7,6 +7,8 @@ import fleetRoutes from './routes/fleet.js';
 import analyticsRoutes from './routes/analytics.js';
 import usersRoutes from './routes/users.js';
 import logsRoutes from './routes/logs.js';
+import deliveryNoteRoutes from './routes/delivery_notes.js';
+import invoiceRoutes from './routes/invoices.js';
 
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -43,6 +45,8 @@ app.use('/api/fleet', fleetRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/logs', logsRoutes);
+app.use('/api/delivery-notes', deliveryNoteRoutes);
+app.use('/api/invoices', invoiceRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

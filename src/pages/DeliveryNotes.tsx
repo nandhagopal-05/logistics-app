@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import {
     Search, Eye, Printer, ChevronDown,
     X, Download, Trash, Upload
 } from 'lucide-react';
 import Barcode from 'react-barcode';
+import { deliveryNotesAPI } from '../services/api';
 
 interface DeliveryNote {
     id: string;
@@ -17,6 +18,8 @@ interface DeliveryNote {
     issuedDate: string;
     issuedBy: string;
     status: 'Pending' | 'Completed';
+    comments?: string;
+    unloading_date?: string;
 }
 
 const DeliveryNotes: React.FC = () => {
@@ -24,125 +27,44 @@ const DeliveryNotes: React.FC = () => {
     const [recordsPerPage, setRecordsPerPage] = useState('50 records');
     const [statusFilter, setStatusFilter] = useState('All statuses');
 
-    // Mock Data based on the image
-    const deliveryNotes: DeliveryNote[] = [
-        {
-            id: 'DN-2026014367',
-            consignee: 'APOLLO HOLDINGS PVT LTD',
-            exporter: 'ORYX TRADING LLC',
-            jobs: ['1052', '1053'],
-            detailsCount: 2,
-            detailsType: 'BL / AWB',
-            detailsLocation: 'FORM FILLING',
-            issuedDate: '12 Jan 2026',
-            issuedBy: 'Raman',
-            status: 'Pending'
-        },
-        {
-            id: 'DN-2026014366',
-            consignee: 'L.A Resorts Pvt Ltd',
-            exporter: 'SERVIZI E GESTIONI SRL',
-            jobs: ['1062'],
-            detailsCount: 1,
-            detailsType: 'BL / AWB',
-            detailsLocation: 'ALIMATHA RESORT',
-            issuedDate: '12 Jan 2026',
-            issuedBy: 'Kayum',
-            status: 'Pending'
-        },
-        {
-            id: 'DN-2026014365',
-            consignee: 'JOALI BEING BODUFUSHI / ALIBEY MALDIVES PVT LTD',
-            exporter: 'FLORA LAB D.O.O',
-            jobs: ['1045', '1056', '1069', '1061', '1065', '1066'],
-            detailsCount: 6,
-            detailsType: 'BL / AWB',
-            detailsLocation: 'JOALI BEING RESORT , BODUFUSHI',
-            issuedDate: '12 Jan 2026',
-            issuedBy: 'Kayum',
-            status: 'Pending'
-        },
-        {
-            id: 'DN-2026014364',
-            consignee: 'MRAC PVT LTD',
-            exporter: 'LINYI CHILI IMPORT & EXPORT',
-            jobs: ['3848', '3848', '3848'],
-            detailsCount: 3,
-            detailsType: 'BL / AWB',
-            detailsLocation: 'ULLAANEE FALHU RESORT',
-            issuedDate: '12 Jan 2026',
-            issuedBy: 'Aasif',
-            status: 'Pending'
-        },
-        {
-            id: 'DN-2026014363',
-            consignee: 'MRAC PVT LTD',
-            exporter: 'LINYI CHILI IMPORT & EXPORT',
-            jobs: ['3848', '3848', '3848'],
-            detailsCount: 3,
-            detailsType: 'BL / AWB',
-            detailsLocation: 'ULLAANEE FALHU RESORT',
-            issuedDate: '12 Jan 2026',
-            issuedBy: 'Aasif',
-            status: 'Pending'
-        },
-        {
-            id: 'DN-2026014362',
-            consignee: 'ASTEK IKL - MRAC',
-            exporter: 'ASTEK IKL PROJE INS SAN VE TIC LTD STI',
-            jobs: ['3847'],
-            detailsCount: 1,
-            detailsType: 'BL / AWB',
-            detailsLocation: 'ULLAANEE FALHU RESORT',
-            issuedDate: '12 Jan 2026',
-            issuedBy: 'Aasif',
-            status: 'Pending'
-        },
-        {
-            id: 'DN-2026014361',
-            consignee: 'Asters Pvt Ltd',
-            exporter: 'NINGBO AUX IMP. AND EXP. CO.,LTD',
-            jobs: ['3562', '3562'],
-            detailsCount: 2,
-            detailsType: 'BL / AWB',
-            detailsLocation: 'HULHUMALE',
-            issuedDate: '11 Jan 2026',
-            issuedBy: 'Raman',
-            status: 'Pending'
-        },
-        {
-            id: 'DN-2026014360',
-            consignee: 'Asters Pvt Ltd',
-            exporter: 'NINGBO AUX IMP. AND EXP. CO.,LTD',
-            jobs: ['3562', '3562', '3562'],
-            detailsCount: 3,
-            detailsType: 'BL / AWB',
-            detailsLocation: 'THILAFUSHI',
-            issuedDate: '11 Jan 2026',
-            issuedBy: 'Raman',
-            status: 'Pending'
-        },
-        {
-            id: 'DN-2026014359',
-            consignee: 'MALDIVES INDUSTRIAL FISHERIES COMPANY LIMITED (MIFCO)',
-            exporter: 'WYN FOODS PTE LTD',
-            jobs: ['3807', '3807', '3807', '3807'],
-            detailsCount: 4,
-            detailsType: 'BL / AWB',
-            detailsLocation: 'FELIVARU',
-            issuedDate: '11 Jan 2026',
-            issuedBy: 'Raman',
-            status: 'Pending'
-        }
-    ];
+    const [deliveryNotes, setDeliveryNotes] = useState<DeliveryNote[]>([]);
+    const [loading, setLoading] = useState(true);
 
     // State for split view and tabs
     const [selectedNote, setSelectedNote] = useState<DeliveryNote | null>(null);
-    const [activeTab, setActiveTab] = useState<'document' | 'manage'>('manage'); // Default to manage as per "Images" implication of detail view
+    const [activeTab, setActiveTab] = useState<'document' | 'manage'>('manage');
+
+    // Fetch Data
+    useEffect(() => {
+        fetchNotes();
+    }, []);
+
+    const fetchNotes = async () => {
+        try {
+            const response = await deliveryNotesAPI.getAll();
+            setDeliveryNotes(response.data);
+        } catch (error) {
+            console.error('Failed to fetch delivery notes', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Filter logic
+    const filteredNotes = deliveryNotes.filter(note => {
+        const matchesSearch =
+            note.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            note.consignee.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            note.exporter.toLowerCase().includes(searchTerm.toLowerCase());
+
+        const matchesStatus = statusFilter === 'All statuses' || note.status === statusFilter;
+
+        return matchesSearch && matchesStatus;
+    });
 
     const handleViewDetails = (note: DeliveryNote) => {
         setSelectedNote(note);
-        setActiveTab('manage'); // Open manage tab by default or 'document' if preferred. Let's start with manage.
+        setActiveTab('manage');
     };
 
     const handleCloseDetails = () => {
@@ -176,9 +98,9 @@ const DeliveryNotes: React.FC = () => {
 
             <div className="border border-gray-800 p-4 mb-6 grid grid-cols-2 gap-8">
                 <div>
-                    <p className="mb-1"><span className="font-bold">Customer:</span> {selectedNote?.consignee} / C5066</p>
-                    <p className="mb-1"><span className="font-bold">Phone:</span> 7779691</p>
-                    <p className="mb-1"><span className="font-bold">Address:</span> MARINE VILLA / 2ND FLOOR</p>
+                    <p className="mb-1"><span className="font-bold">Customer:</span> {selectedNote?.consignee}</p>
+                    {/* <p className="mb-1"><span className="font-bold">Phone:</span> 7779691</p> */}
+                    {/* <p className="mb-1"><span className="font-bold">Address:</span> MARINE VILLA / 2ND FLOOR</p> */}
                 </div>
                 <div>
                     <div className="border-b border-gray-300 pb-1 mb-1 flex justify-between">
@@ -200,23 +122,19 @@ const DeliveryNotes: React.FC = () => {
                         <tr>
                             <th className="border border-gray-300 p-2 text-left">Job No</th>
                             <th className="border border-gray-300 p-2 text-left">Shipper</th>
-                            <th className="border border-gray-300 p-2 text-left">BL/AWB #</th>
-                            <th className="border border-gray-300 p-2 text-left">Qty</th>
+                            {/* <th className="border border-gray-300 p-2 text-left">BL/AWB #</th> */}
+                            {/* <th className="border border-gray-300 p-2 text-left">Qty</th> */}
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td className="border border-gray-300 p-2">1052/26</td>
-                            <td className="border border-gray-300 p-2">{selectedNote?.exporter}</td>
-                            <td className="border border-gray-300 p-2">01/2026</td>
-                            <td className="border border-gray-300 p-2">BULK</td>
-                        </tr>
-                        <tr>
-                            <td className="border border-gray-300 p-2">1053/26</td>
-                            <td className="border border-gray-300 p-2">LIANSU GROUP COMPANY</td>
-                            <td className="border border-gray-300 p-2">MEDUKZ740748<br />CN: TCNU1795756</td>
-                            <td className="border border-gray-300 p-2">908 PKG</td>
-                        </tr>
+                        {selectedNote?.jobs.map((job, idx) => (
+                            <tr key={idx}>
+                                <td className="border border-gray-300 p-2">{job}</td>
+                                <td className="border border-gray-300 p-2">{selectedNote?.exporter}</td>
+                                {/* <td className="border border-gray-300 p-2">01/2026</td>
+                                <td className="border border-gray-300 p-2">BULK</td> */}
+                            </tr>
+                        ))}
                     </tbody>
                 </table>
             </div>
@@ -262,7 +180,7 @@ const DeliveryNotes: React.FC = () => {
                 </div>
                 <div>
                     <label className="text-xs font-bold text-gray-400 uppercase">Created</label>
-                    <p className="font-medium text-gray-900">{selectedNote?.issuedDate}</p>
+                    <p className="font-medium text-gray-900">{selectedNote?.issuedDate ? new Date(selectedNote.issuedDate).toLocaleDateString() : '-'}</p>
                 </div>
                 <div>
                     <label className="text-xs font-bold text-gray-400 uppercase">Issued By</label>
@@ -282,16 +200,16 @@ const DeliveryNotes: React.FC = () => {
                             <div>
                                 <p className="font-bold text-gray-900 text-sm">{job}</p>
                                 <p className="text-xs text-gray-500">{selectedNote?.consignee}</p>
-                                <p className="text-[10px] text-gray-400 mt-1">Packages: {idx === 0 ? '0 BULK' : '908 PKG'}</p>
+                                {/* <p className="text-[10px] text-gray-400 mt-1">Packages: {idx === 0 ? '0 BULK' : '908 PKG'}</p> */}
                             </div>
-                            <button className="text-gray-400 hover:text-red-500"><Trash className="w-4 h-4" /></button>
+                            {/* <button className="text-gray-400 hover:text-red-500"><Trash className="w-4 h-4" /></button> */}
                         </div>
                     ))}
                 </div>
-                <div className="flex justify-end gap-3 mt-4">
+                {/* <div className="flex justify-end gap-3 mt-4">
                     <button className="px-3 py-1.5 border border-gray-300 rounded text-xs font-medium hover:bg-gray-50">Reset</button>
                     <button className="px-3 py-1.5 bg-gray-900 text-white rounded text-xs font-medium hover:bg-black">Save job updates</button>
-                </div>
+                </div> */}
             </div>
 
             {/* Update Details */}
@@ -308,13 +226,21 @@ const DeliveryNotes: React.FC = () => {
 
                 <div className="mb-4">
                     <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Comments</label>
-                    <textarea className="w-full text-sm border border-gray-200 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-gray-100" rows={3} defaultValue="Form Filing"></textarea>
+                    <textarea
+                        className="w-full text-sm border border-gray-200 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-gray-100"
+                        rows={3}
+                        defaultValue={selectedNote?.comments || ''}
+                    ></textarea>
                 </div>
 
                 <div className="mb-6">
                     <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Unloading Date</label>
                     <div className="relative">
-                        <input type="date" className="w-full text-sm border border-gray-200 rounded-lg p-2 pl-3 focus:outline-none focus:ring-2 focus:ring-gray-100" defaultValue="2026-01-12" />
+                        <input
+                            type="date"
+                            className="w-full text-sm border border-gray-200 rounded-lg p-2 pl-3 focus:outline-none focus:ring-2 focus:ring-gray-100"
+                            defaultValue={selectedNote?.unloading_date ? selectedNote.unloading_date.split('T')[0] : ''}
+                        />
                     </div>
                 </div>
 
@@ -397,7 +323,7 @@ const DeliveryNotes: React.FC = () => {
                         </div>
                     </div>
 
-                    <div className="text-xs text-gray-400 mb-4">Showing 1 - 50 of 4367 delivery notes</div>
+                    <div className="text-xs text-gray-400 mb-4">Showing {filteredNotes.length} delivery notes</div>
 
                     {/* Table */}
                     <div className="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm">
@@ -418,66 +344,75 @@ const DeliveryNotes: React.FC = () => {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
-                                {deliveryNotes.map((note) => (
-                                    <tr key={note.id} className={`hover:bg-gray-50 transition-colors group cursor-pointer ${selectedNote?.id === note.id ? 'bg-blue-50' : ''}`} onClick={() => handleViewDetails(note)}>
-                                        <td className="py-4 px-6">
-                                            <span className="text-blue-600 font-medium text-sm hover:underline">{note.id}</span>
-                                        </td>
-                                        <td className="py-4 px-6">
-                                            <div className="flex flex-col">
-                                                <span className="font-bold text-gray-900 text-sm mb-0.5">{note.consignee}</span>
-                                                {!selectedNote && <span className="text-[11px] text-gray-500 uppercase tracking-wide">{note.exporter}</span>}
-                                            </div>
-                                        </td>
-                                        {!selectedNote && (
-                                            <>
-                                                <td className="py-4 px-6">
-                                                    <div className="flex flex-wrap gap-1">
-                                                        {note.jobs.map((job, idx) => (
-                                                            <span key={idx} className="px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded text-xs font-medium border border-gray-200">
-                                                                {job}
-                                                            </span>
-                                                        ))}
-                                                    </div>
-                                                </td>
-                                                <td className="py-4 px-6">
-                                                    <div className="flex items-start gap-3">
-                                                        <div className="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center text-xs font-bold flex-shrink-0">
-                                                            +{note.detailsCount}
-                                                        </div>
-                                                        <div className="flex flex-col">
-                                                            <span className="text-xs font-semibold text-gray-800">{note.detailsType}</span>
-                                                            <span className="inline-block px-2 py-0.5 bg-orange-50 text-orange-700 text-[10px] rounded border border-orange-100 mt-1 uppercase">
-                                                                {note.detailsLocation}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td className="py-4 px-6">
-                                                    <div className="flex flex-col">
-                                                        <span className="text-sm font-medium text-gray-900">{note.issuedDate}</span>
-                                                        <span className="text-xs text-gray-500">{note.issuedBy}</span>
-                                                    </div>
-                                                </td>
-                                                <td className="py-4 px-6">
-                                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-50 text-orange-700 border border-orange-200">
-                                                        {note.status}
-                                                    </span>
-                                                </td>
-                                            </>
-                                        )}
-                                        <td className="py-4 px-6 text-right">
-                                            <div className="flex items-center justify-end gap-2 text-gray-400">
-                                                <button className="p-1 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors" onClick={(e) => { e.stopPropagation(); setSelectedNote(note); setActiveTab('document'); }}>
-                                                    <Printer className="w-4 h-4" />
-                                                </button>
-                                                <button className="p-1 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors" onClick={(e) => { e.stopPropagation(); handleViewDetails(note); }}>
-                                                    <Eye className="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                        </td>
+                                {loading ? (
+                                    <tr>
+                                        <td colSpan={7} className="py-8 text-center text-gray-500">Loading records...</td>
                                     </tr>
-                                ))}
+                                ) : filteredNotes.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={7} className="py-8 text-center text-gray-500">No delivery notes found</td>
+                                    </tr>
+                                ) : (
+                                    filteredNotes.map((note) => (
+                                        <tr key={note.id} className={`hover:bg-gray-50 transition-colors group cursor-pointer ${selectedNote?.id === note.id ? 'bg-blue-50' : ''}`} onClick={() => handleViewDetails(note)}>
+                                            <td className="py-4 px-6">
+                                                <span className="text-blue-600 font-medium text-sm hover:underline">{note.id}</span>
+                                            </td>
+                                            <td className="py-4 px-6">
+                                                <div className="flex flex-col">
+                                                    <span className="font-bold text-gray-900 text-sm mb-0.5">{note.consignee}</span>
+                                                    {!selectedNote && <span className="text-[11px] text-gray-500 uppercase tracking-wide">{note.exporter}</span>}
+                                                </div>
+                                            </td>
+                                            {!selectedNote && (
+                                                <>
+                                                    <td className="py-4 px-6">
+                                                        <div className="flex flex-wrap gap-1">
+                                                            {note.jobs.map((job, idx) => (
+                                                                <span key={idx} className="px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded text-xs font-medium border border-gray-200">
+                                                                    {job}
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                    </td>
+                                                    <td className="py-4 px-6">
+                                                        <div className="flex items-start gap-3">
+                                                            <div className="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                                                                +{note.detailsCount}
+                                                            </div>
+                                                            <div className="flex flex-col">
+                                                                <span className="text-xs font-semibold text-gray-800">{note.detailsType}</span>
+                                                                <span className="inline-block px-2 py-0.5 bg-orange-50 text-orange-700 text-[10px] rounded border border-orange-100 mt-1 uppercase">
+                                                                    {note.detailsLocation}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td className="py-4 px-6">
+                                                        <div className="flex flex-col">
+                                                            <span className="text-sm font-medium text-gray-900">{note.issuedDate ? new Date(note.issuedDate).toLocaleDateString() : '-'}</span>
+                                                            <span className="text-xs text-gray-500">{note.issuedBy}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="py-4 px-6">
+                                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-50 text-orange-700 border border-orange-200">
+                                                            {note.status}
+                                                        </span>
+                                                    </td>
+                                                </>
+                                            )}
+                                            <td className="py-4 px-6 text-right">
+                                                <div className="flex items-center justify-end gap-2 text-gray-400">
+                                                    <button className="p-1 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors" onClick={(e) => { e.stopPropagation(); setSelectedNote(note); setActiveTab('document'); }}>
+                                                        <Printer className="w-4 h-4" />
+                                                    </button>
+                                                    <button className="p-1 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors" onClick={(e) => { e.stopPropagation(); handleViewDetails(note); }}>
+                                                        <Eye className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    )))}
                             </tbody>
                         </table>
                     </div>

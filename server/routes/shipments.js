@@ -4,6 +4,7 @@ import { authenticateToken, authorizeRole } from '../middleware/auth.js';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import { generateInvoicePDF } from '../utils/invoiceGenerator.js';
 
 const router = express.Router();
 
@@ -178,6 +179,34 @@ router.post('/', authenticateToken, shipmentUpload, async (req, res) => {
             }
         }
 
+        // AUTO-GENERATE INVOICE
+        const invoiceId = `INV-${new Date().getFullYear()}${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
+
+        // Generate PDF
+        let invoicePath = null;
+        try {
+            // Need to pass shipment data. We have 'shipmentValues' but it's an array.
+            // Let's verify what shipment data we have.
+            // We have variables: sender_name, receiver_name, description, price, etc.
+            const invoiceData = {
+                receiver_name: receiver_name,
+                customer: customer,
+                receiver_address: receiver_address,
+                destination: destination,
+                description: description,
+                price: price
+            };
+            invoicePath = await generateInvoicePDF(invoiceData, invoiceId);
+        } catch (pdfError) {
+            console.error('PDF Generation failed:', pdfError);
+            // Continue without PDF, just DB record
+        }
+
+        await pool.query(
+            'INSERT INTO invoices (id, shipment_id, amount, status, file_path) VALUES ($1, $2, $3, $4, $5)',
+            [invoiceId, id, price || 0, 'Pending', invoicePath]
+        );
+
         // Log action
         await pool.query(
             'INSERT INTO audit_logs (user_id, action, details, entity_type, entity_id) VALUES ($1, $2, $3, $4, $5)',
@@ -205,6 +234,8 @@ router.put('/:id', authenticateToken, async (req, res) => {
             description, weight, dimensions, price,
             date, expected_delivery_date, transport_mode
         } = req.body;
+
+        await pool.query('BEGIN');
 
         const result = await pool.query(
             `UPDATE shipments 
@@ -236,7 +267,41 @@ router.put('/:id', authenticateToken, async (req, res) => {
         );
 
         if (result.rows.length === 0) {
+            await pool.query('ROLLBACK');
             return res.status(404).json({ error: 'Shipment not found' });
+        }
+
+        const updatedShipment = result.rows[0];
+
+        // AUTO-CREATE DELIVERY NOTE
+        // "When the delivery beening proceed then the delivery notes should be made automattically"
+        // Trigger: Status becomes 'In Transit'
+        if (status === 'In Transit') {
+            const checkDN = await pool.query('SELECT id FROM delivery_notes WHERE shipment_id = $1', [id]);
+            if (checkDN.rows.length === 0) {
+                const dnId = `DN-${new Date().getFullYear()}${Math.floor(Math.random() * 100000).toString().padStart(6, '0')}`;
+
+                // Create Delivery Note
+                await pool.query(
+                    `INSERT INTO delivery_notes (
+                        id, shipment_id, consignee, exporter, details_location, issued_by, status
+                    ) VALUES ($1, $2, $3, $4, $5, $6, 'Pending')`,
+                    [
+                        dnId,
+                        id,
+                        updatedShipment.receiver_name || updatedShipment.destination,
+                        updatedShipment.sender_name || updatedShipment.customer,
+                        updatedShipment.destination, // using destination as details_location default
+                        req.user.username
+                    ]
+                );
+
+                // Create Delivery Note Job Map
+                await pool.query(
+                    'INSERT INTO delivery_note_jobs (delivery_note_id, job_no) VALUES ($1, $2)',
+                    [dnId, id]
+                );
+            }
         }
 
         // Log action
@@ -245,8 +310,10 @@ router.put('/:id', authenticateToken, async (req, res) => {
             [req.user.id, 'UPDATE_SHIPMENT', `Updated shipment ${id}`, 'SHIPMENT', id]
         );
 
-        res.json(result.rows[0]);
+        await pool.query('COMMIT');
+        res.json(updatedShipment);
     } catch (error) {
+        await pool.query('ROLLBACK');
         console.error('Update shipment error:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
