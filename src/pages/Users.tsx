@@ -34,6 +34,7 @@ const Users: React.FC = () => {
         role: ROLES[0]
     });
     const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
 
     useEffect(() => {
         fetchUsers();
@@ -53,6 +54,7 @@ const Users: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
+        setSuccess('');
 
         try {
             if (editingUser) {
@@ -67,12 +69,16 @@ const Users: React.FC = () => {
                     data.password = formData.password;
                 }
                 await usersAPI.update(editingUser.id, data);
+                setSuccess('User updated successfully');
             } else {
                 await usersAPI.create(formData);
+                setSuccess('User created and role assigned successfully');
             }
             setIsModalOpen(false);
             fetchUsers();
             resetForm();
+            // Clear success message after 3 seconds
+            setTimeout(() => setSuccess(''), 3000);
         } catch (err: any) {
             setError(err.response?.data?.error || 'An error occurred');
         }
@@ -146,6 +152,14 @@ const Users: React.FC = () => {
                 </div>
 
                 <div className="glass-card overflow-hidden">
+                    {success && (
+                        <div className="bg-green-50 text-green-700 p-4 border-b border-green-100 flex items-center justify-between animate-fade-in">
+                            <span className="font-medium">{success}</span>
+                            <button onClick={() => setSuccess('')} className="text-green-500 hover:text-green-700">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                    )}
                     <table className="w-full">
                         <thead className="bg-gray-50 border-b border-gray-200">
                             <tr>

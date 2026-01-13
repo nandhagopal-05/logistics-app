@@ -28,7 +28,9 @@ api.interceptors.request.use(
 api.interceptors.response.use(
     (response) => response,
     (error) => {
-        if (error.response?.status === 401) {
+        // Ignore 401s from login endpoint (invalid credentials)
+        // Only redirect for other 401s (expired/invalid token)
+        if (error.response?.status === 401 && !error.config.url?.includes('/auth/login')) {
             // Token expired or invalid
             localStorage.removeItem('token');
             localStorage.removeItem('user');

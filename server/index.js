@@ -23,7 +23,7 @@ const PORT = process.env.PORT || 5001;
 
 // Middleware
 app.use(cors({
-    origin: process.env.NODE_ENV === 'production' ? false : 'http://localhost:5173', // Allow same origin in prod
+    origin: true, // Allow any origin (reflects request origin)
     credentials: true
 }));
 app.use(express.json());
