@@ -12,7 +12,8 @@ import {
     AlertCircle,
     Eye,
     Loader2,
-    Trash
+    Trash,
+    Upload
 } from 'lucide-react';
 
 const Shipments: React.FC = () => {
@@ -144,6 +145,38 @@ const Shipments: React.FC = () => {
                         <Package className="w-5 h-5 inline mr-2" />
                         New Shipment
                     </button>
+                    <label className="btn-secondary cursor-pointer relative">
+                        {loading && <div className="absolute inset-0 bg-white/50 flex items-center justify-center rounded-lg"><Loader2 className="w-4 h-4 animate-spin text-primary-600" /></div>}
+                        <span className="flex items-center gap-2">
+                            <Upload className="w-5 h-5" />
+                            Import Excel
+                        </span>
+                        <input type="file" className="hidden" accept=".xlsx,.xls,.csv" onChange={async (e) => {
+                            if (e.target.files?.[0]) {
+                                const file = e.target.files[0];
+                                const formData = new FormData();
+                                formData.append('file', file);
+
+                                try {
+                                    setLoading(true);
+                                    const res = await shipmentsAPI.import(formData);
+                                    alert(`Import successful: ${res.data.success} added.`);
+                                    // Refresh list
+                                    const response = await shipmentsAPI.getAll({
+                                        search: searchTerm,
+                                        status: filterStatus
+                                    });
+                                    setShipments(response.data);
+                                } catch (error) {
+                                    console.error('Import failed', error);
+                                    alert('Failed to import shipments. Please check the file format.');
+                                } finally {
+                                    setLoading(false);
+                                    e.target.value = '';
+                                }
+                            }
+                        }} />
+                    </label>
                 </div>
 
                 {/* Filters */}
