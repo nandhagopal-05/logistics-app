@@ -452,12 +452,28 @@ const ShipmentRegistry: React.FC = () => {
                     <div className="p-5 border-b border-gray-100">
                         <div className="flex justify-between items-center mb-5">
                             <h2 className="text-xl font-bold text-gray-900 tracking-tight">Inbox</h2>
-                            <label className="w-8 h-8 flex items-center justify-center bg-white border border-gray-200 text-gray-600 rounded-full hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm cursor-pointer mr-2">
+                            <label className="w-8 h-8 flex items-center justify-center bg-white border border-gray-200 text-gray-600 rounded-full hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm cursor-pointer mr-2 relative">
+                                {loading && <div className="absolute inset-0 rounded-full bg-white/80 flex items-center justify-center"><div className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div></div>}
                                 <Upload className="w-4 h-4" />
-                                <input type="file" className="hidden" accept=".csv" onChange={(e) => {
+                                <input type="file" className="hidden" accept=".csv" onChange={async (e) => {
                                     if (e.target.files?.[0]) {
-                                        alert('CSV Upload functionality will be processed here: ' + e.target.files[0].name);
-                                        // TODO: Implement CSV parsing and upload
+                                        const file = e.target.files[0];
+                                        const formData = new FormData();
+                                        formData.append('file', file);
+
+                                        try {
+                                            setLoading(true);
+                                            await shipmentsAPI.import(formData);
+                                            alert('Shipments imported successfully');
+                                            loadJobs();
+                                        } catch (error) {
+                                            console.error('Import failed', error);
+                                            alert('Failed to import shipments');
+                                        } finally {
+                                            setLoading(false);
+                                            // Reset input
+                                            e.target.value = '';
+                                        }
                                     }
                                 }} />
                             </label>

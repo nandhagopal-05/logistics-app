@@ -53,12 +53,14 @@ export const shipmentsAPI = {
     getAll: (params?: { search?: string; status?: string }) =>
         api.get('/shipments', { params }),
     getById: (id: string) => api.get(`/shipments/${id}`),
-    create: (data: any) => {
-        const config = data instanceof FormData ? { headers: { 'Content-Type': 'multipart/form-data' } } : {};
-        return api.post('/shipments', data, config);
-    },
+    create: (data: FormData) => api.post('/shipments', data, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+    }),
     update: (id: string, data: any) => api.put(`/shipments/${id}`, data),
     delete: (id: string) => api.delete(`/shipments/${id}`),
+    import: (data: FormData) => api.post('/shipments/import', data, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+    }),
 };
 
 // Fleet API
