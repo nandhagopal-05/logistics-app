@@ -50,10 +50,14 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     // Administrator Access
     if (isAdministrator) {
         menuItems.push(
-            { icon: Users, label: 'User Management', path: '/users' },
-            { icon: ScrollText, label: 'Audit Logs', path: '/logs' }
+            { icon: Users, label: 'User Management', path: '/users' }
         );
     }
+
+    // System Access (All authenticated)
+    menuItems.push(
+        { icon: ScrollText, label: 'Audit Logs', path: '/logs' }
+    );
 
     return (
         <>
