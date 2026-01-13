@@ -64,17 +64,21 @@ const generateShipmentId = async () => {
 router.get('/', authenticateToken, async (req, res) => {
     try {
         const { search, status } = req.query;
-        let query = 'SELECT * FROM shipments';
+        let query = `
+            SELECT s.*, i.id as invoice_id, i.status as payment_status 
+            FROM shipments s
+            LEFT JOIN invoices i ON s.id = i.shipment_id
+        `;
         const params = [];
         const conditions = [];
 
         if (search) {
-            conditions.push(`(id ILIKE $${params.length + 1} OR customer ILIKE $${params.length + 1} OR sender_name ILIKE $${params.length + 1})`);
+            conditions.push(`(s.id ILIKE $${params.length + 1} OR s.customer ILIKE $${params.length + 1} OR s.sender_name ILIKE $${params.length + 1})`);
             params.push(`%${search}%`);
         }
 
         if (status && status !== 'All') {
-            conditions.push(`status = $${params.length + 1}`);
+            conditions.push(`s.status = $${params.length + 1}`);
             params.push(status);
         }
 
@@ -82,7 +86,7 @@ router.get('/', authenticateToken, async (req, res) => {
             query += ' WHERE ' + conditions.join(' AND ');
         }
 
-        query += ' ORDER BY created_at DESC';
+        query += ' ORDER BY s.created_at DESC';
 
         const result = await pool.query(query, params);
         res.json(result.rows);
@@ -103,10 +107,14 @@ router.get('/:id', authenticateToken, async (req, res) => {
         }
 
         const documentsResult = await pool.query('SELECT * FROM shipment_documents WHERE shipment_id = $1', [id]);
+        const invoiceResult = await pool.query('SELECT * FROM invoices WHERE shipment_id = $1', [id]);
 
         res.json({
             ...shipmentResult.rows[0],
-            documents: documentsResult.rows
+            documents: documentsResult.rows,
+            invoice: invoiceResult.rows[0] || null,
+            payment_status: invoiceResult.rows[0]?.status || 'Pending',
+            invoice_id: invoiceResult.rows[0]?.id || null
         });
     } catch (error) {
         console.error('Get shipment error:', error);

@@ -45,11 +45,10 @@ const ShipmentRegistry: React.FC = () => {
         if (!silent) setLoading(true);
         try {
             const response = await shipmentsAPI.getAll({ search: searchTerm });
-            // Mock some data if missing for UI testing
             const fetchedJobs = response.data || [];
             setJobs(fetchedJobs.map((j: any) => ({
                 ...j,
-                payment_status: j.payment_status || (Math.random() > 0.5 ? 'Paid' : 'Pending'),
+                payment_status: j.payment_status || 'Pending',
                 exporter: j.sender_name || 'Unknown Exporter'
             })));
         } catch (error) {
@@ -411,7 +410,7 @@ const ShipmentRegistry: React.FC = () => {
                             <div className="space-y-4">
                                 <div className="flex justify-between border-b border-gray-50 pb-3">
                                     <span className="text-gray-500 text-sm">Invoice No</span>
-                                    <span className="font-mono text-sm font-medium text-gray-900">-</span>
+                                    <span className="font-mono text-sm font-medium text-gray-900">{selectedJob.invoice_id || selectedJob.invoice?.id || '-'}</span>
                                 </div>
                                 <div className="flex justify-between border-b border-gray-50 pb-3">
                                     <span className="text-gray-500 text-sm">Items</span>
