@@ -10,7 +10,58 @@ import csv from 'csv-parser';
 
 const router = express.Router();
 
-// ... existing code ...
+
+// Multer Storage Configuration
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        const uploadDir = 'uploads/';
+        if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir);
+        }
+        cb(null, uploadDir);
+    },
+    filename: (req, file, cb) => {
+        cb(null, `${Date.now()}-${file.originalname}`);
+    }
+});
+
+const upload = multer({
+    storage,
+    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+    fileFilter: (req, file, cb) => {
+        const allowedTypes = /jpeg|jpg|png|pdf/;
+        const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+        const mimetype = allowedTypes.test(file.mimetype);
+        if (extname && mimetype) {
+            return cb(null, true);
+        }
+        cb(new Error('Only PDF and JPEG/PNG images are allowed'));
+    }
+});
+
+// Helper to generate Shipment ID
+const generateShipmentId = async () => {
+    const date = new Date();
+    const year = date.getFullYear();
+    const prefix = `SH-${year}`;
+
+    // Get last shipment ID for this year
+    const result = await pool.query(
+        "SELECT id FROM shipments WHERE id LIKE $1 ORDER BY created_at DESC LIMIT 1",
+        [`${prefix}-%`]
+    );
+
+    let nextNum = 1;
+    if (result.rows.length > 0) {
+        const lastId = result.rows[0].id;
+        const parts = lastId.split('-');
+        if (parts.length === 3) {
+            nextNum = parseInt(parts[2]) + 1;
+        }
+    }
+
+    return `${prefix}-${String(nextNum).padStart(3, '0')}`;
+};
 
 // Import Shipments from CSV
 router.post('/import', authenticateToken, upload.single('file'), async (req, res) => {
@@ -123,58 +174,6 @@ router.post('/import', authenticateToken, upload.single('file'), async (req, res
             }
         });
 });
-
-// Multer Storage Configuration
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        const uploadDir = 'uploads/';
-        if (!fs.existsSync(uploadDir)) {
-            fs.mkdirSync(uploadDir);
-        }
-        cb(null, uploadDir);
-    },
-    filename: (req, file, cb) => {
-        cb(null, `${Date.now()}-${file.originalname}`);
-    }
-});
-
-const upload = multer({
-    storage,
-    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
-    fileFilter: (req, file, cb) => {
-        const allowedTypes = /jpeg|jpg|png|pdf/;
-        const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-        const mimetype = allowedTypes.test(file.mimetype);
-        if (extname && mimetype) {
-            return cb(null, true);
-        }
-        cb(new Error('Only PDF and JPEG/PNG images are allowed'));
-    }
-});
-
-// Helper to generate Shipment ID
-const generateShipmentId = async () => {
-    const date = new Date();
-    const year = date.getFullYear();
-    const prefix = `SH-${year}`;
-
-    // Get last shipment ID for this year
-    const result = await pool.query(
-        "SELECT id FROM shipments WHERE id LIKE $1 ORDER BY created_at DESC LIMIT 1",
-        [`${prefix}-%`]
-    );
-
-    let nextNum = 1;
-    if (result.rows.length > 0) {
-        const lastId = result.rows[0].id;
-        const parts = lastId.split('-');
-        if (parts.length === 3) {
-            nextNum = parseInt(parts[2]) + 1;
-        }
-    }
-
-    return `${prefix}-${String(nextNum).padStart(3, '0')}`;
-};
 
 // Get all shipments
 router.get('/', authenticateToken, async (req, res) => {
