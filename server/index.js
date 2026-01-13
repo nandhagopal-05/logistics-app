@@ -31,6 +31,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Serve static files from the React app build directory
 app.use(express.static(path.join(__dirname, '../dist')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Request logging
 app.use((req, res, next) => {

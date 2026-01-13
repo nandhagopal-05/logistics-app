@@ -14,6 +14,10 @@ const Login: React.FC = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [rememberMe, setRememberMe] = useState(false);
 
+    // 2FA State
+    const [requires2FA, setRequires2FA] = useState(false);
+    const [token, setToken] = useState('');
+
     useEffect(() => {
         if (isAuthenticated) {
             navigate('/dashboard');
@@ -32,9 +36,17 @@ const Login: React.FC = () => {
         }
 
         try {
-            const success = await login(username, password, rememberMe);
-            if (!success) {
-                setError('Invalid username or password');
+            // First attempt or subsequent attempt with token
+            const result = await login(username, password, rememberMe, token);
+
+            if (result.requiresTwoFactor) {
+                setRequires2FA(true);
+                setIsLoading(false);
+                return;
+            }
+
+            if (!result.success) {
+                setError('Invalid credentials or 2FA token');
             }
         } catch (err) {
             setError('An error occurred during login');
@@ -60,7 +72,7 @@ const Login: React.FC = () => {
                         <p className="text-gray-600 mt-2">Sign in to your account</p>
                     </div>
 
-                    {/* Login Form */}
+                    {/* Form */}
                     <form onSubmit={handleSubmit} className="space-y-6">
                         {error && (
                             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg animate-slide-in">
@@ -68,75 +80,104 @@ const Login: React.FC = () => {
                             </div>
                         )}
 
-                        <div>
-                            <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
-                                Username or Email
-                            </label>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <User className="h-5 w-5 text-gray-400" />
+                        {!requires2FA ? (
+                            <>
+                                <div>
+                                    <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
+                                        Username or Email
+                                    </label>
+                                    <div className="relative">
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <User className="h-5 w-5 text-gray-400" />
+                                        </div>
+                                        <input
+                                            id="username"
+                                            type="text"
+                                            value={username}
+                                            onChange={(e) => setUsername(e.target.value)}
+                                            className="input-field pl-10"
+                                            placeholder="Enter username or email"
+                                            disabled={isLoading}
+                                        />
+                                    </div>
                                 </div>
-                                <input
-                                    id="username"
-                                    type="text"
-                                    value={username}
-                                    onChange={(e) => setUsername(e.target.value)}
-                                    className="input-field pl-10"
-                                    placeholder="Enter username or email"
-                                    disabled={isLoading}
-                                />
-                            </div>
-                        </div>
 
-                        <div>
-                            <div className="flex justify-between items-center mb-2">
-                                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                                    Password
+                                <div>
+                                    <div className="flex justify-between items-center mb-2">
+                                        <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                                            Password
+                                        </label>
+                                        <a href="/forgot-password" className="text-sm font-medium text-primary-600 hover:text-primary-500">
+                                            Forgot Password?
+                                        </a>
+                                    </div>
+                                    <div className="relative">
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <Lock className="h-5 w-5 text-gray-400" />
+                                        </div>
+                                        <input
+                                            id="password"
+                                            type={showPassword ? 'text' : 'password'}
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            className="input-field pl-10 pr-10"
+                                            placeholder="Enter your password"
+                                            disabled={isLoading}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none"
+                                        >
+                                            {showPassword ? (
+                                                <EyeOff className="h-5 w-5" />
+                                            ) : (
+                                                <Eye className="h-5 w-5" />
+                                            )}
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center">
+                                    <input
+                                        id="remember-me"
+                                        name="remember-me"
+                                        type="checkbox"
+                                        checked={rememberMe}
+                                        onChange={(e) => setRememberMe(e.target.checked)}
+                                        className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded cursor-pointer"
+                                    />
+                                    <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900 cursor-pointer">
+                                        Remember me
+                                    </label>
+                                </div>
+                            </>
+                        ) : (
+                            <div className="animate-fade-in">
+                                <label htmlFor="token" className="block text-sm font-medium text-gray-700 mb-2">
+                                    Two-Factor Authentication Code
                                 </label>
-                                <a href="/forgot-password" className="text-sm font-medium text-primary-600 hover:text-primary-500">
-                                    Forgot Password?
-                                </a>
-                            </div>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <Lock className="h-5 w-5 text-gray-400" />
+                                <p className="text-xs text-gray-500 mb-4">
+                                    Enter the 6-digit code from your authenticator app.
+                                </p>
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <Lock className="h-5 w-5 text-gray-400" />
+                                    </div>
+                                    <input
+                                        id="token"
+                                        type="text"
+                                        value={token}
+                                        onChange={(e) => setToken(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                                        className="input-field pl-10 text-center tracking-widest text-lg"
+                                        placeholder="000 000"
+                                        disabled={isLoading}
+                                        autoFocus
+                                        maxLength={6}
+                                    />
                                 </div>
-                                <input
-                                    id="password"
-                                    type={showPassword ? 'text' : 'password'}
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    className="input-field pl-10 pr-10"
-                                    placeholder="Enter your password"
-                                    disabled={isLoading}
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none"
-                                >
-                                    {showPassword ? (
-                                        <EyeOff className="h-5 w-5" />
-                                    ) : (
-                                        <Eye className="h-5 w-5" />
-                                    )}
-                                </button>
                             </div>
-                        </div>
-
-                        <div className="flex items-center">
-                            <input
-                                id="remember-me"
-                                name="remember-me"
-                                type="checkbox"
-                                checked={rememberMe}
-                                onChange={(e) => setRememberMe(e.target.checked)}
-                                className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded cursor-pointer"
-                            />
-                            <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900 cursor-pointer">
-                                Remember me
-                            </label>
-                        </div>
+                        )}
 
                         <button
                             type="submit"
@@ -146,20 +187,32 @@ const Login: React.FC = () => {
                             {isLoading ? (
                                 <>
                                     <Loader2 className="w-5 h-5 animate-spin" />
-                                    Signing In...
+                                    {requires2FA ? 'Verifying...' : 'Signing In...'}
                                 </>
                             ) : (
-                                'Sign In'
+                                requires2FA ? 'Verify Code' : 'Sign In'
                             )}
                         </button>
+
+                        {requires2FA && (
+                            <button
+                                type="button"
+                                onClick={() => setRequires2FA(false)}
+                                className="w-full text-center text-sm text-gray-500 hover:text-gray-700"
+                            >
+                                Cancel
+                            </button>
+                        )}
                     </form>
 
-                    {/* Demo Credentials */}
-                    <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                        <p className="text-xs text-blue-800 font-medium mb-1">Demo Credentials:</p>
-                        <p className="text-xs text-blue-700">Username: <span className="font-mono font-semibold">admin</span></p>
-                        <p className="text-xs text-blue-700">Password: <span className="font-mono font-semibold">admin123</span></p>
-                    </div>
+                    {!requires2FA && (
+                        /* Demo Credentials */
+                        <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                            <p className="text-xs text-blue-800 font-medium mb-1">Demo Credentials:</p>
+                            <p className="text-xs text-blue-700">Username: <span className="font-mono font-semibold">admin</span></p>
+                            <p className="text-xs text-blue-700">Password: <span className="font-mono font-semibold">admin123</span></p>
+                        </div>
+                    )}
                 </div>
 
                 <p className="text-center mt-6 text-white/80 text-sm">
@@ -169,5 +222,4 @@ const Login: React.FC = () => {
         </div>
     );
 };
-
 export default Login;

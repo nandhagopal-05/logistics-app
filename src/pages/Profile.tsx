@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { usersAPI, authAPI } from '../services/api';
 
 const Profile: React.FC = () => {
-    const { user } = useAuth();
+    const { user, refreshUser } = useAuth();
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
@@ -13,7 +13,6 @@ const Profile: React.FC = () => {
     const [profile, setProfile] = useState({
         name: user?.username || '',
         email: user?.email || '',
-        photo: null as string | null
     });
 
     // Password State
@@ -22,6 +21,22 @@ const Profile: React.FC = () => {
         new: '',
         confirm: ''
     });
+
+    // 2FA State
+    const [show2FAModal, setShow2FAModal] = useState(false);
+    const [qrCodeUrl, setQrCodeUrl] = useState('');
+    const [twoFactorToken, setTwoFactorToken] = useState('');
+
+    const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+    React.useEffect(() => {
+        if (user) {
+            setProfile({
+                name: user.username,
+                email: user.email || ''
+            });
+        }
+    }, [user]);
 
     const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setProfile({ ...profile, [e.target.name]: e.target.value });
@@ -40,6 +55,7 @@ const Profile: React.FC = () => {
                 username: profile.name,
                 email: profile.email
             });
+            await refreshUser();
             setMessage({ type: 'success', text: 'Profile updated successfully.' });
         } catch (error: any) {
             console.error('Profile update error:', error);
@@ -74,6 +90,88 @@ const Profile: React.FC = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    // Photo Upload
+    const handleFileSelect = () => {
+        fileInputRef.current?.click();
+    };
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!e.target.files || !e.target.files[0] || !user) return;
+
+        const file = e.target.files[0];
+        const formData = new FormData();
+        formData.append('photo', file);
+
+        setLoading(true);
+        setMessage(null);
+
+        try {
+            await usersAPI.uploadPhoto(user.id, formData);
+            await refreshUser();
+            setMessage({ type: 'success', text: 'Photo updated successfully.' });
+        } catch (error: any) {
+            console.error('Photo upload error:', error);
+            setMessage({ type: 'error', text: error.response?.data?.error || 'Failed to upload photo.' });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // 2FA Functions
+    const handleEnable2FA = async () => {
+        setLoading(true);
+        try {
+            const response = await authAPI.generate2FA();
+            setQrCodeUrl(response.data.qrCodeUrl);
+            setShow2FAModal(true);
+        } catch (error: any) {
+            console.error('2FA Generate error:', error);
+            setMessage({ type: 'error', text: 'Failed to generate 2FA secret.' });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleVerify2FA = async () => {
+        if (!twoFactorToken) return;
+        setLoading(true);
+        try {
+            await authAPI.verify2FA(twoFactorToken);
+            await refreshUser();
+            setShow2FAModal(false);
+            setTwoFactorToken('');
+            setMessage({ type: 'success', text: 'Two-factor authentication enabled successfully.' });
+        } catch (error: any) {
+            console.error('2FA Verify error:', error);
+            // Don't close modal, show error inside or via toast
+            alert('Invalid Token. Please try again.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleDisable2FA = async () => {
+        if (!window.confirm('Are you sure you want to disable two-factor authentication?')) return;
+        setLoading(true);
+        try {
+            await authAPI.disable2FA();
+            await refreshUser();
+            setMessage({ type: 'success', text: 'Two-factor authentication disabled.' });
+        } catch (error: any) {
+            console.error('2FA Disable error:', error);
+            setMessage({ type: 'error', text: 'Failed to disable 2FA.' });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const getPhotoUrl = (path?: string) => {
+        if (!path) return null;
+        if (path.startsWith('http')) return path;
+        const baseUrl = import.meta.env.MODE === 'production' ? '' : 'http://localhost:5001';
+        return `${baseUrl}${path}`;
     };
 
     return (
@@ -113,9 +211,9 @@ const Profile: React.FC = () => {
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">Photo</label>
                                 <div className="flex items-center gap-6">
-                                    <div className="w-20 h-20 rounded-full bg-gray-200 overflow-hidden flex-shrink-0 border-4 border-white shadow-sm">
-                                        {profile.photo ? (
-                                            <img src={profile.photo} alt="Profile" className="w-full h-full object-cover" />
+                                    <div className="w-20 h-20 rounded-full bg-gray-200 overflow-hidden flex-shrink-0 border-4 border-white shadow-sm relative">
+                                        {user?.photo_url ? (
+                                            <img src={getPhotoUrl(user.photo_url)!} alt="Profile" className="w-full h-full object-cover" />
                                         ) : (
                                             <div className="w-full h-full flex items-center justify-center bg-gray-800 text-white text-2xl font-bold">
                                                 {profile.name?.charAt(0).toUpperCase() || 'U'}
@@ -123,11 +221,18 @@ const Profile: React.FC = () => {
                                         )}
                                     </div>
                                     <div className="flex gap-3">
-                                        <button className="px-4 py-2 bg-purple-600 text-white text-xs font-bold rounded shadow-sm hover:bg-purple-700 transition-colors uppercase tracking-wide">
+                                        <input
+                                            type="file"
+                                            ref={fileInputRef}
+                                            className="hidden"
+                                            accept="image/*"
+                                            onChange={handleFileChange}
+                                        />
+                                        <button
+                                            onClick={handleFileSelect}
+                                            className="px-4 py-2 bg-purple-600 text-white text-xs font-bold rounded shadow-sm hover:bg-purple-700 transition-colors uppercase tracking-wide"
+                                        >
                                             Select A New Photo
-                                        </button>
-                                        <button className="px-4 py-2 bg-purple-600 text-white text-xs font-bold rounded shadow-sm hover:bg-purple-700 transition-colors uppercase tracking-wide">
-                                            Remove Photo
                                         </button>
                                     </div>
                                 </div>
@@ -240,13 +345,36 @@ const Profile: React.FC = () => {
 
                     <div className="md:col-span-2 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
                         <div className="p-6">
-                            <h4 className="text-sm font-bold text-gray-900 mb-2">You have not enabled two factor authentication.</h4>
-                            <p className="text-sm text-gray-500 mb-4 max-w-xl">
-                                When two factor authentication is enabled, you will be prompted for a secure, random token during authentication. You may retrieve this token from your phone's Google Authenticator application.
-                            </p>
-                            <button className="px-4 py-2 bg-gray-900 text-white text-xs font-bold rounded shadow-sm hover:bg-black transition-colors uppercase tracking-wide">
-                                Enable
-                            </button>
+                            {user?.two_factor_enabled ? (
+                                <div>
+                                    <h4 className="text-sm font-bold text-green-700 mb-2 flex items-center gap-2">
+                                        <CheckCircle className="w-5 h-5" />
+                                        Two factor authentication is enabled.
+                                    </h4>
+                                    <p className="text-sm text-gray-500 mb-4 max-w-xl">
+                                        Your account is secure. You will be prompted for a secure random token during authentication.
+                                    </p>
+                                    <button
+                                        onClick={handleDisable2FA}
+                                        className="px-4 py-2 bg-red-600 text-white text-xs font-bold rounded shadow-sm hover:bg-red-700 transition-colors uppercase tracking-wide"
+                                    >
+                                        Disable
+                                    </button>
+                                </div>
+                            ) : (
+                                <div>
+                                    <h4 className="text-sm font-bold text-gray-900 mb-2">You have not enabled two factor authentication.</h4>
+                                    <p className="text-sm text-gray-500 mb-4 max-w-xl">
+                                        When two factor authentication is enabled, you will be prompted for a secure, random token during authentication. You may retrieve this token from your phone's Google Authenticator application.
+                                    </p>
+                                    <button
+                                        onClick={handleEnable2FA}
+                                        className="px-4 py-2 bg-gray-900 text-white text-xs font-bold rounded shadow-sm hover:bg-black transition-colors uppercase tracking-wide"
+                                    >
+                                        Enable
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -285,6 +413,55 @@ const Profile: React.FC = () => {
                         </div>
                     </div>
                 </div>
+
+                {/* 2FA Setup Modal */}
+                {show2FAModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                        <div className="bg-white rounded-2xl shadow-xl w-full max-w-md animate-fade-in p-6">
+                            <h2 className="text-xl font-bold text-gray-900 mb-4">Setup Two-Factor Authentication</h2>
+                            <p className="text-sm text-gray-500 mb-6">
+                                Configured using Google Authenticator, Authy, or 1Password. Scan the QR code below.
+                            </p>
+
+                            <div className="flex justify-center mb-6">
+                                <img src={qrCodeUrl} alt="2FA QR Code" className="w-48 h-48 border border-gray-200 rounded" />
+                            </div>
+
+                            <div className="mb-6">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Verify Code
+                                </label>
+                                <p className="text-xs text-gray-500 mb-2">
+                                    Enter the 6-digit code from your authenticator app to verify setup.
+                                </p>
+                                <input
+                                    type="text"
+                                    value={twoFactorToken}
+                                    onChange={(e) => setTwoFactorToken(e.target.value)}
+                                    placeholder="000 000"
+                                    className="input-field text-center text-xl tracking-widest"
+                                    maxLength={6}
+                                />
+                            </div>
+
+                            <div className="flex justify-end gap-3">
+                                <button
+                                    onClick={() => setShow2FAModal(false)}
+                                    className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors font-medium"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleVerify2FA}
+                                    disabled={twoFactorToken.length < 6}
+                                    className="btn-primary"
+                                >
+                                    Verify
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
             </div>
         </Layout>

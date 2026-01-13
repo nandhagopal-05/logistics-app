@@ -44,13 +44,16 @@ api.interceptors.response.use(
 
 // Auth API
 export const authAPI = {
-    login: (username: string, password: string) =>
-        api.post('/auth/login', { username, password }),
+    login: (username: string, password: string, token?: string) =>
+        api.post('/auth/login', { username, password, token }),
     logout: () => api.post('/auth/logout'),
     getCurrentUser: () => api.get('/auth/me'),
     forgotPassword: (email: string) => api.post('/auth/forgot-password', { email }),
     resetPassword: (token: string, newPassword: string) => api.post('/auth/reset-password', { token, newPassword }),
     changePassword: (data: any) => api.post('/auth/change-password', data),
+    generate2FA: () => api.post('/auth/2fa/generate'),
+    verify2FA: (token: string) => api.post('/auth/2fa/verify', { token }),
+    disable2FA: () => api.post('/auth/2fa/disable'),
 };
 
 // Shipments API
@@ -89,6 +92,9 @@ export const usersAPI = {
     getAll: () => api.get('/users'),
     create: (data: any) => api.post('/users', data),
     update: (id: string, data: any) => api.put(`/users/${id}`, data),
+    uploadPhoto: (id: string, data: FormData) => api.post(`/users/${id}/photo`, data, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+    }),
     delete: (id: string) => api.delete(`/users/${id}`),
 };
 

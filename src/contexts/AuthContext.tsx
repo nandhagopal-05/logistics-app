@@ -8,13 +8,16 @@ interface User {
     email?: string;
     role: string;
     must_change_password?: boolean;
+    two_factor_enabled?: boolean;
+    photo_url?: string;
 }
 
 interface AuthContextType {
     user: User | null;
-    login: (username: string, password: string, remember?: boolean) => Promise<boolean>;
+    login: (username: string, password: string, remember?: boolean, token?: string) => Promise<{ success: boolean; requiresTwoFactor?: boolean }>;
     logout: () => void;
     isAuthenticated: boolean;
+    refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -22,6 +25,21 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
+
+    const refreshUser = async () => {
+        try {
+            const response = await authAPI.getCurrentUser();
+            setUser(response.data);
+            // Update storage if exists
+            if (localStorage.getItem('user')) {
+                localStorage.setItem('user', JSON.stringify(response.data));
+            } else if (sessionStorage.getItem('user')) {
+                sessionStorage.setItem('user', JSON.stringify(response.data));
+            }
+        } catch (error) {
+            console.error('Failed to refresh user', error);
+        }
+    };
 
     useEffect(() => {
         // Check for existing session in both local and session storage
@@ -38,25 +56,30 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setLoading(false);
     }, []);
 
-    const login = async (username: string, password: string, remember: boolean = false): Promise<boolean> => {
+    const login = async (username: string, password: string, remember: boolean = false, token?: string): Promise<{ success: boolean; requiresTwoFactor?: boolean }> => {
         try {
-            const response = await authAPI.login(username, password);
-            const { token, user: userData } = response.data;
+            const response = await authAPI.login(username, password, token);
+
+            if (response.data.requiresTwoFactor) {
+                return { success: false, requiresTwoFactor: true };
+            }
+
+            const { token: jwtToken, user: userData } = response.data;
 
             setUser(userData);
 
             if (remember) {
                 localStorage.setItem('user', JSON.stringify(userData));
-                localStorage.setItem('token', token);
+                localStorage.setItem('token', jwtToken);
             } else {
                 sessionStorage.setItem('user', JSON.stringify(userData));
-                sessionStorage.setItem('token', token);
+                sessionStorage.setItem('token', jwtToken);
             }
 
-            return true;
+            return { success: true };
         } catch (error) {
             console.error('Login error:', error);
-            return false;
+            return { success: false };
         }
     };
 
@@ -75,7 +98,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
 
     return (
-        <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user }}>
+        <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user, refreshUser }}>
             {children}
         </AuthContext.Provider>
     );
