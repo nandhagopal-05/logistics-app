@@ -80,6 +80,9 @@ export const fleetAPI = {
     create: (data: any) => api.post('/fleet', data),
     update: (id: string, data: any) => api.put(`/fleet/${id}`, data),
     delete: (id: string) => api.delete(`/fleet/${id}`),
+    import: (formData: FormData) => api.post('/fleet/import', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+    }),
     getStats: () => api.get('/fleet/stats/summary'),
 };
 
