@@ -35,9 +35,18 @@ app.use(cors({
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// Serve static files from the React app build directory
+// Ensure uploads directory exists
+import fs from 'fs';
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+// Serve static files
+// Serve uploads specific path first
+app.use('/uploads', express.static(uploadsDir));
+// Serve React app build
 app.use(express.static(path.join(__dirname, '../dist')));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Request logging
 app.use((req, res, next) => {
