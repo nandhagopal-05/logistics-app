@@ -172,6 +172,18 @@ export const deliveryAgentsAPI = {
     }),
 };
 
+// Vendors API
+export const vendorsAPI = {
+    getAll: () => api.get('/vendors'),
+    create: (data: any) => api.post('/vendors', data),
+    update: (id: string, data: any) => api.put(`/vendors/${id}`, data),
+    delete: (id: string) => api.delete(`/vendors/${id}`),
+    deleteAll: () => api.delete('/vendors/delete-all'),
+    import: (formData: FormData) => api.post('/vendors/import', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+    }),
+};
+
 // Clearance API
 export const clearanceAPI = {
     getAll: (params?: { search?: string; type?: string; transport_mode?: string; date?: string }) =>
