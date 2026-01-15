@@ -24,9 +24,9 @@ router.get('/', authenticateToken, async (req, res) => {
 // Create single vendor
 router.post('/', authenticateToken, async (req, res) => {
     const {
-        name, email, phone, address,
-        city, region, country, postal_code,
-        bank_name, account_number
+        name, company_name, email, phone, currency,
+        billing_address, billing_street, billing_country,
+        city, region, postal_code, bank_name, account_number
     } = req.body;
 
     if (!name) {
@@ -36,13 +36,15 @@ router.post('/', authenticateToken, async (req, res) => {
     try {
         const result = await pool.query(
             `INSERT INTO vendors (
-                name, email, phone, address, 
-                city, region, country, postal_code,
+                name, company_name, email, phone, currency,
+                billing_address, billing_street, billing_country,
+                city, region, postal_code,
                 bank_name, account_number
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING *`,
             [
-                name, email, phone, address,
-                city, region, country, postal_code,
+                name, company_name, email, phone, currency,
+                billing_address, billing_street, billing_country,
+                city, region, postal_code,
                 bank_name, account_number
             ]
         );
@@ -60,9 +62,9 @@ router.post('/', authenticateToken, async (req, res) => {
 router.put('/:id', authenticateToken, async (req, res) => {
     const { id } = req.params;
     const {
-        name, email, phone, address,
-        city, region, country, postal_code,
-        bank_name, account_number
+        name, company_name, email, phone, currency,
+        billing_address, billing_street, billing_country,
+        city, region, postal_code, bank_name, account_number
     } = req.body;
 
     if (!name) {
@@ -72,14 +74,16 @@ router.put('/:id', authenticateToken, async (req, res) => {
     try {
         const result = await pool.query(
             `UPDATE vendors SET 
-                name = $1, email = $2, phone = $3, address = $4,
-                city = $5, region = $6, country = $7, postal_code = $8,
-                bank_name = $9, account_number = $10,
+                name = $1, company_name = $2, email = $3, phone = $4, currency = $5,
+                billing_address = $6, billing_street = $7, billing_country = $8,
+                city = $9, region = $10, postal_code = $11,
+                bank_name = $12, account_number = $13,
                 updated_at = CURRENT_TIMESTAMP 
-            WHERE id = $11 RETURNING *`,
+            WHERE id = $14 RETURNING *`,
             [
-                name, email, phone, address,
-                city, region, country, postal_code,
+                name, company_name, email, phone, currency,
+                billing_address, billing_street, billing_country,
+                city, region, postal_code,
                 bank_name, account_number,
                 id
             ]
@@ -119,27 +123,31 @@ router.post('/import', authenticateToken, upload.single('file'), async (req, res
                 normalizedRow[key.toLowerCase().trim()] = row[key];
             });
 
-            const name = normalizedRow['name'] || normalizedRow['vendor name'];
+            const name = normalizedRow['name'] || normalizedRow['display name'] || normalizedRow['contact name'];
             if (!name) continue;
 
             try {
                 await pool.query(
                     `INSERT INTO vendors (
-                        name, email, phone, address, 
-                        city, region, country, postal_code,
+                        name, company_name, email, phone, currency,
+                        billing_address, billing_street, billing_country,
+                        city, region, postal_code,
                         bank_name, account_number
-                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
                     [
                         name,
+                        normalizedRow['company name'] || normalizedRow['company'] || null,
                         normalizedRow['email'] || null,
                         normalizedRow['phone'] || null,
-                        normalizedRow['address'] || null,
+                        normalizedRow['currency'] || normalizedRow['currency code'] || null,
+                        normalizedRow['billing address'] || null,
+                        normalizedRow['billing street'] || normalizedRow['street'] || null,
+                        normalizedRow['billing country'] || normalizedRow['country'] || null,
                         normalizedRow['city'] || null,
                         normalizedRow['region'] || null,
-                        normalizedRow['country'] || null,
-                        normalizedRow['postal code'] || normalizedRow['postal_code'] || null,
-                        normalizedRow['bank name'] || normalizedRow['bank_name'] || null,
-                        normalizedRow['account number'] || normalizedRow['account_number'] || null
+                        normalizedRow['postal code'] || null,
+                        normalizedRow['bank name'] || null,
+                        normalizedRow['account number'] || null
                     ]
                 );
                 successCount++;

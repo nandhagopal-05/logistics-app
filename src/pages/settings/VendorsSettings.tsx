@@ -11,15 +11,19 @@ const VendorsSettings: React.FC = () => {
     const [importing, setImporting] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
 
-    // Form State
+    // Form State matching new requirements
     const [formData, setFormData] = useState({
         name: '',
+        company_name: '',
         email: '',
         phone: '',
-        address: '',
+        currency: '',
+        billing_address: '',
+        billing_street: '',
+        billing_country: '',
+        // Keeping these just in case, hidden or optional
         city: '',
         region: '',
-        country: '',
         postal_code: '',
         bank_name: '',
         account_number: ''
@@ -52,9 +56,9 @@ const VendorsSettings: React.FC = () => {
             setShowAddModal(false);
             setEditingId(null);
             setFormData({
-                name: '', email: '', phone: '', address: '',
-                city: '', region: '', country: '', postal_code: '',
-                bank_name: '', account_number: ''
+                name: '', company_name: '', email: '', phone: '', currency: '',
+                billing_address: '', billing_street: '', billing_country: '',
+                city: '', region: '', postal_code: '', bank_name: '', account_number: ''
             });
             fetchVendors();
         } catch (error) {
@@ -67,12 +71,15 @@ const VendorsSettings: React.FC = () => {
         setEditingId(vendor.id);
         setFormData({
             name: vendor.name || '',
+            company_name: vendor.company_name || '',
             email: vendor.email || '',
             phone: vendor.phone || '',
-            address: vendor.address || '',
+            currency: vendor.currency || '',
+            billing_address: vendor.billing_address || '',
+            billing_street: vendor.billing_street || '',
+            billing_country: vendor.billing_country || '',
             city: vendor.city || '',
             region: vendor.region || '',
-            country: vendor.country || '',
             postal_code: vendor.postal_code || '',
             bank_name: vendor.bank_name || '',
             account_number: vendor.account_number || ''
@@ -84,9 +91,9 @@ const VendorsSettings: React.FC = () => {
         setShowAddModal(false);
         setEditingId(null);
         setFormData({
-            name: '', email: '', phone: '', address: '',
-            city: '', region: '', country: '', postal_code: '',
-            bank_name: '', account_number: ''
+            name: '', company_name: '', email: '', phone: '', currency: '',
+            billing_address: '', billing_street: '', billing_country: '',
+            city: '', region: '', postal_code: '', bank_name: '', account_number: ''
         });
     };
 
@@ -128,6 +135,7 @@ const VendorsSettings: React.FC = () => {
 
     const filteredVendors = vendors.filter(v =>
         (v.name && v.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (v.company_name && v.company_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (v.email && v.email.toLowerCase().includes(searchTerm.toLowerCase()))
     );
 
@@ -179,9 +187,9 @@ const VendorsSettings: React.FC = () => {
                         onClick={() => {
                             setEditingId(null);
                             setFormData({
-                                name: '', email: '', phone: '', address: '',
-                                city: '', region: '', country: '', postal_code: '',
-                                bank_name: '', account_number: ''
+                                name: '', company_name: '', email: '', phone: '', currency: '',
+                                billing_address: '', billing_street: '', billing_country: '',
+                                city: '', region: '', postal_code: '', bank_name: '', account_number: ''
                             });
                             setShowAddModal(true);
                         }}
@@ -211,12 +219,14 @@ const VendorsSettings: React.FC = () => {
                         <table className="w-full text-left border-collapse">
                             <thead>
                                 <tr className="bg-black text-white text-xs uppercase tracking-wider">
-                                    <th className="py-3 px-4 font-semibold">Vendor Name</th>
+                                    <th className="py-3 px-4 font-semibold">Name / Display Name</th>
+                                    <th className="py-3 px-4 font-semibold">Company Name</th>
                                     <th className="py-3 px-4 font-semibold">Email</th>
                                     <th className="py-3 px-4 font-semibold">Phone</th>
-                                    <th className="py-3 px-4 font-semibold">Address</th>
-                                    <th className="py-3 px-4 font-semibold">Bank Name</th>
-                                    <th className="py-3 px-4 font-semibold">Account No.</th>
+                                    <th className="py-3 px-4 font-semibold">Currency</th>
+                                    <th className="py-3 px-4 font-semibold">Billing Address</th>
+                                    <th className="py-3 px-4 font-semibold">Billing Street</th>
+                                    <th className="py-3 px-4 font-semibold">Country</th>
                                     <th className="py-3 px-4 font-semibold w-24 text-right">Actions</th>
                                 </tr>
                             </thead>
@@ -224,13 +234,13 @@ const VendorsSettings: React.FC = () => {
                                 {filteredVendors.map((item) => (
                                     <tr key={item.id} className="hover:bg-gray-50 transition-colors group text-sm">
                                         <td className="py-3 px-4 font-semibold text-gray-900">{item.name}</td>
+                                        <td className="py-3 px-4 text-gray-600">{item.company_name || '-'}</td>
                                         <td className="py-3 px-4 text-gray-600">{item.email || '-'}</td>
                                         <td className="py-3 px-4 text-gray-600 font-mono">{item.phone || '-'}</td>
-                                        <td className="py-3 px-4 text-gray-600 text-xs max-w-xs truncate">
-                                            {[item.address, item.city, item.country].filter(Boolean).join(', ')}
-                                        </td>
-                                        <td className="py-3 px-4 text-gray-600">{item.bank_name || '-'}</td>
-                                        <td className="py-3 px-4 text-gray-600 font-mono text-xs">{item.account_number || '-'}</td>
+                                        <td className="py-3 px-4 text-gray-600 font-mono text-xs">{item.currency || '-'}</td>
+                                        <td className="py-3 px-4 text-gray-600 text-xs max-w-xs truncate">{item.billing_address || '-'}</td>
+                                        <td className="py-3 px-4 text-gray-600 text-xs">{item.billing_street || '-'}</td>
+                                        <td className="py-3 px-4 text-gray-600 text-xs">{item.billing_country || '-'}</td>
                                         <td className="py-3 px-4 text-right flex justify-end gap-2">
                                             <button
                                                 onClick={() => handleEdit(item)}
@@ -266,15 +276,25 @@ const VendorsSettings: React.FC = () => {
                         </div>
                         <form onSubmit={handleAddSubmit} className="p-6 space-y-4">
                             <div className="grid grid-cols-2 gap-4">
-                                <div className="col-span-2">
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Vendor Name *</label>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Display Name *</label>
                                     <input
                                         required
                                         type="text"
                                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black/5 focus:border-black outline-none transition-all"
                                         value={formData.name}
                                         onChange={e => setFormData({ ...formData, name: e.target.value })}
-                                        placeholder="Company or Individual Name"
+                                        placeholder="e.g. John Doe"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Company Name</label>
+                                    <input
+                                        type="text"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black/5 focus:border-black outline-none transition-all"
+                                        value={formData.company_name}
+                                        onChange={e => setFormData({ ...formData, company_name: e.target.value })}
+                                        placeholder="e.g. Acme Inc."
                                     />
                                 </div>
                                 <div>
@@ -295,56 +315,47 @@ const VendorsSettings: React.FC = () => {
                                         onChange={e => setFormData({ ...formData, phone: e.target.value })}
                                     />
                                 </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Currency Code</label>
+                                    <input
+                                        type="text"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black/5 focus:border-black outline-none transition-all"
+                                        value={formData.currency}
+                                        onChange={e => setFormData({ ...formData, currency: e.target.value })}
+                                        placeholder="USD, EUR, etc."
+                                    />
+                                </div>
                             </div>
 
                             <div className="border-t border-gray-100 pt-4">
-                                <h4 className="text-sm font-semibold text-gray-900 mb-3">Address Details</h4>
+                                <h4 className="text-sm font-semibold text-gray-900 mb-3">Billing Details</h4>
                                 <div className="space-y-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Street Address</label>
-                                        <input
-                                            type="text"
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black/5 focus:border-black outline-none transition-all"
-                                            value={formData.address}
-                                            onChange={e => setFormData({ ...formData, address: e.target.value })}
-                                            placeholder="Building, Street, etc."
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Billing Address</label>
+                                        <textarea
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black/5 focus:border-black outline-none transition-all h-20 resize-none"
+                                            value={formData.billing_address}
+                                            onChange={e => setFormData({ ...formData, billing_address: e.target.value })}
+                                            placeholder="Full address..."
                                         />
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Billing Street</label>
                                             <input
                                                 type="text"
                                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black/5 focus:border-black outline-none transition-all"
-                                                value={formData.city}
-                                                onChange={e => setFormData({ ...formData, city: e.target.value })}
+                                                value={formData.billing_street}
+                                                onChange={e => setFormData({ ...formData, billing_street: e.target.value })}
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Region / State</label>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Billing Country</label>
                                             <input
                                                 type="text"
                                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black/5 focus:border-black outline-none transition-all"
-                                                value={formData.region}
-                                                onChange={e => setFormData({ ...formData, region: e.target.value })}
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Country</label>
-                                            <input
-                                                type="text"
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black/5 focus:border-black outline-none transition-all"
-                                                value={formData.country}
-                                                onChange={e => setFormData({ ...formData, country: e.target.value })}
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Postal Code</label>
-                                            <input
-                                                type="text"
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black/5 focus:border-black outline-none transition-all"
-                                                value={formData.postal_code}
-                                                onChange={e => setFormData({ ...formData, postal_code: e.target.value })}
+                                                value={formData.billing_country}
+                                                onChange={e => setFormData({ ...formData, billing_country: e.target.value })}
                                             />
                                         </div>
                                     </div>
@@ -352,7 +363,7 @@ const VendorsSettings: React.FC = () => {
                             </div>
 
                             <div className="border-t border-gray-100 pt-4">
-                                <h4 className="text-sm font-semibold text-gray-900 mb-3">Bank Details</h4>
+                                <h4 className="text-sm font-semibold text-gray-900 mb-3">Bank Details (Optional)</h4>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">Bank Name</label>
