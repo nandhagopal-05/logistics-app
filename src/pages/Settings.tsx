@@ -8,7 +8,7 @@ import {
 import ConsigneesSettings from './settings/ConsigneesSettings';
 import CustomersSettings from './settings/CustomersSettings';
 import ExportersSettings from './settings/ExportersSettings';
-
+import VehiclesSettings from './settings/VehiclesSettings';
 
 const Settings: React.FC = () => {
     const [activeTab, setActiveTab] = useState('Consignees');
@@ -17,7 +17,7 @@ const Settings: React.FC = () => {
         { id: 'Consignees', label: 'Consignees', icon: Users },
         { id: 'Customers', label: 'Customers', icon: Users },
         { id: 'Exporters', label: 'Exporters', icon: Briefcase },
-
+        { id: 'Vehicles', label: 'Vehicles', icon: Briefcase },
         { id: 'Delivery Agents', label: 'Delivery Agents', icon: Users },
         { id: 'Vendors', label: 'Vendors', icon: Briefcase },
         { id: 'Payment Items', label: 'Payment Items', icon: CreditCard },
@@ -32,7 +32,8 @@ const Settings: React.FC = () => {
                 return <CustomersSettings />;
             case 'Exporters':
                 return <ExportersSettings />;
-
+            case 'Vehicles':
+                return <VehiclesSettings />;
             // ... Add other cases as needed
             default:
                 return (
