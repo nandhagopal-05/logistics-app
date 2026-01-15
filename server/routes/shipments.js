@@ -97,31 +97,52 @@ router.post('/import', authenticateToken, upload.single('file'), async (req, res
                     normalizedRow[key.toLowerCase().trim()] = row[key];
                 });
 
-                const id = await generateShipmentId();
+                const shipmentNo = normalizedRow['shipment no'] || normalizedRow['shipment_no'] || normalizedRow['id'];
+                const id = shipmentNo || await generateShipmentId();
                 const status = 'New';
                 const progress = 0;
 
-                // Expected Headers (flexible): 'customer', 'consignee', 'exporter', 'transport mode', 'description', 'weight', 'price'
-                // Mapping
-                const customer = normalizedRow['customer'] || normalizedRow['client'] || 'Unknown';
+                // Expected Headers mapping
+                const customer = normalizedRow['customer'] || normalizedRow['client'] || normalizedRow['exporter'] || 'Unknown';
                 const consignee = normalizedRow['consignee'] || normalizedRow['receiver'] || 'Unknown';
                 const exporter = normalizedRow['exporter'] || normalizedRow['shipper'] || normalizedRow['sender'] || 'Unknown';
                 const transport_mode = normalizedRow['transport mode'] || normalizedRow['mode'] || 'SEA';
                 const description = normalizedRow['description'] || normalizedRow['goods'] || 'Import Goods';
-                const weight = normalizedRow['weight'] || '0';
+                const weight = normalizedRow['g.w'] || normalizedRow['gw'] || normalizedRow['weight'] || '0';
                 const price = parseFloat(normalizedRow['price'] || normalizedRow['value'] || normalizedRow['amount'] || '0');
                 const origin = normalizedRow['origin'] || exporter;
                 const destination = normalizedRow['destination'] || consignee;
+
+                // New Excel Columns
+                const invoiceNo = normalizedRow['invoice no'] || normalizedRow['invoice_no'] || null;
+                const invoiceItems = normalizedRow['invoice # items'] || normalizedRow['invoice items'] || normalizedRow['items'] || null;
+                const customsRForm = normalizedRow['customs r form'] || normalizedRow['customs_r_form'] || null;
+                const blAwbNo = normalizedRow['bl/awb no'] || normalizedRow['bl awb no'] || normalizedRow['bl_awb_no'] || null;
+                const containerNo = normalizedRow['container no'] || normalizedRow['container_no'] || null;
+                const containerType = normalizedRow['container type'] || normalizedRow['container_type'] || null;
+                const cbm = parseFloat(normalizedRow['cbm'] || '0');
+                const noOfPkg = normalizedRow['no. of pkg'] || normalizedRow['no of pkg'] || normalizedRow['packages'] || null;
+
+                // Expenses
+                const expenseMacl = parseFloat(normalizedRow['macl'] || '0');
+                const expenseMpl = parseFloat(normalizedRow['mpl'] || '0');
+                const expenseMcs = parseFloat(normalizedRow['mcs'] || '0');
+                const expenseTransportation = parseFloat(normalizedRow['transportation'] || '0');
+                const expenseLiner = parseFloat(normalizedRow['liner'] || '0');
 
                 // Insert Shipment
                 await pool.query(
                     `INSERT INTO shipments (
                                 id, customer, origin, destination, status, progress, 
-                                sender_name, receiver_name, description, weight, price, transport_mode
-                            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+                                sender_name, receiver_name, description, weight, price, transport_mode,
+                                invoice_no, invoice_items, customs_r_form, bl_awb_no, container_no, container_type, cbm, no_of_pkgs,
+                                expense_macl, expense_mpl, expense_mcs, expense_transportation, expense_liner
+                            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25)`,
                     [
                         id, customer, origin, destination, status, progress,
-                        exporter, consignee, description, weight, price, transport_mode
+                        exporter, consignee, description, weight, price, transport_mode,
+                        invoiceNo, invoiceItems, customsRForm, blAwbNo, containerNo, containerType, cbm, noOfPkg,
+                        expenseMacl, expenseMpl, expenseMcs, expenseTransportation, expenseLiner
                     ]
                 );
 
@@ -358,7 +379,9 @@ router.put('/:id', authenticateToken, async (req, res) => {
             sender_name, sender_address,
             receiver_name, receiver_address,
             description, weight, dimensions, price,
-            date, expected_delivery_date, transport_mode
+            date, expected_delivery_date, transport_mode,
+            invoice_no, invoice_items, customs_r_form, bl_awb_no, container_no, container_type, cbm, no_of_pkgs,
+            expense_macl, expense_mpl, expense_mcs, expense_transportation, expense_liner
         } = req.body;
 
         await pool.query('BEGIN');
@@ -380,6 +403,19 @@ router.put('/:id', authenticateToken, async (req, res) => {
                  date = COALESCE($13, date),
                  expected_delivery_date = COALESCE($14, expected_delivery_date),
                  transport_mode = COALESCE($15, transport_mode),
+                 invoice_no = COALESCE($17, invoice_no),
+                 invoice_items = COALESCE($18, invoice_items),
+                 customs_r_form = COALESCE($19, customs_r_form),
+                 bl_awb_no = COALESCE($20, bl_awb_no),
+                 container_no = COALESCE($21, container_no),
+                 container_type = COALESCE($22, container_type),
+                 cbm = COALESCE($23, cbm),
+                 no_of_pkgs = COALESCE($24, no_of_pkgs),
+                 expense_macl = COALESCE($25, expense_macl),
+                 expense_mpl = COALESCE($26, expense_mpl),
+                 expense_mcs = COALESCE($27, expense_mcs),
+                 expense_transportation = COALESCE($28, expense_transportation),
+                 expense_liner = COALESCE($29, expense_liner),
                  updated_at = CURRENT_TIMESTAMP
              WHERE id = $16
              RETURNING *`,
@@ -388,7 +424,9 @@ router.put('/:id', authenticateToken, async (req, res) => {
                 sender_name, sender_address, receiver_name, receiver_address,
                 description, weight, dimensions, price,
                 date, expected_delivery_date, transport_mode,
-                id
+                id,
+                invoice_no, invoice_items, customs_r_form, bl_awb_no, container_no, container_type, cbm, no_of_pkgs,
+                expense_macl, expense_mpl, expense_mcs, expense_transportation, expense_liner
             ]
         );
 
