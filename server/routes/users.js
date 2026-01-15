@@ -255,7 +255,6 @@ router.post('/:id/photo', (req, res, next) => {
             'UPDATE users SET photo_url = $1 WHERE id = $2',
             [photoUrl, id]
         );
-        console.log(`[DEBUG] Updated photo for user ${id}. Rows affected: ${updateResult.rowCount}`);
 
         res.json({ photoUrl });
     } catch (error) {
