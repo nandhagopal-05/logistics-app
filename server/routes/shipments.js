@@ -87,6 +87,17 @@ router.post('/import', authenticateToken, upload.single('file'), async (req, res
         let failureCount = 0;
         let errors = [];
 
+        // Pre-calculate IDs to avoid N+1 Selects
+        const date = new Date();
+        const year = date.getFullYear();
+        const prefix = `SH-${year}`;
+        const lastIdResult = await pool.query("SELECT id FROM shipments WHERE id LIKE $1 ORDER BY id DESC LIMIT 1", [`${prefix}-%`]);
+        let nextIdNum = 1;
+        if (lastIdResult.rows.length > 0) {
+            const parts = lastIdResult.rows[0].id.split('-');
+            if (parts.length === 3) nextIdNum = parseInt(parts[2]) + 1;
+        }
+
         await pool.query('BEGIN');
 
         for (const row of data) {
@@ -98,7 +109,11 @@ router.post('/import', authenticateToken, upload.single('file'), async (req, res
                 });
 
                 const shipmentNo = normalizedRow['shipment no'] || normalizedRow['shipment_no'] || normalizedRow['id'];
-                const id = shipmentNo || await generateShipmentId();
+                let id = shipmentNo;
+                if (!id) {
+                    id = `${prefix}-${String(nextIdNum).padStart(3, '0')}`;
+                    nextIdNum++;
+                }
                 const status = 'New';
                 const progress = 0;
 
@@ -147,23 +162,10 @@ router.post('/import', authenticateToken, upload.single('file'), async (req, res
                 );
 
                 // Auto-Generate Invoice record
-                const invoiceId = `INV-${new Date().getFullYear()}${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
+                const invoiceId = `INV-${new Date().getFullYear()}${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}-${successCount}`;
 
-                // Try to generate PDF
+                // Bulk: Skip PDF generation for performance
                 let invoicePath = null;
-                try {
-                    const invoiceData = {
-                        receiver_name: consignee,
-                        customer: customer,
-                        receiver_address: destination,
-                        destination: destination,
-                        description: description,
-                        price: price
-                    };
-                    invoicePath = await generateInvoicePDF(invoiceData, invoiceId);
-                } catch (pdfError) {
-                    console.error('Import PDF Gen Error (non-fatal):', pdfError.message);
-                }
 
                 await pool.query(
                     'INSERT INTO invoices (id, shipment_id, amount, status, file_path) VALUES ($1, $2, $3, $4, $5)',
