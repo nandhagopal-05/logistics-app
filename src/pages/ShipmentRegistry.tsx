@@ -6,7 +6,9 @@ import {
     Search, Plus,
     FileText,
     MoreVertical, Pencil, Check,
-    Anchor, Plane, Truck, Package, X, Download, Trash2
+    Anchor, Plane, Truck, Package, X, Download, Trash2,
+    CreditCard, UploadCloud, FileSpreadsheet, Receipt
+
 
 } from 'lucide-react';
 import ScheduleClearanceDrawer from '../components/ScheduleClearanceDrawer';
@@ -24,6 +26,9 @@ const ShipmentRegistry: React.FC = () => {
     const [editFormData, setEditFormData] = useState<any>({});
     const [previewDoc, setPreviewDoc] = useState<any | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+    const [popupJob, setPopupJob] = useState<any | null>(null);
+    const [popupType, setPopupType] = useState<'invoice' | 'bl' | 'payment' | 'upload' | null>(null);
+
 
     // Dropdown Data State
     const [consigneesList, setConsigneesList] = useState<any[]>([]);
@@ -347,6 +352,37 @@ const ShipmentRegistry: React.FC = () => {
                 <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase border ${getPaymentColor(job.payment_status)}`}>
                     {job.payment_status}
                 </span>
+            </div>
+
+            <div className="flex items-center gap-1 mt-3 pt-2 border-t border-gray-50">
+                <button
+                    onClick={(e) => { e.stopPropagation(); setPopupJob(job); setPopupType('invoice'); setEditFormData(job); setEditingSection(null); }}
+                    className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors"
+                    title="Shipment Invoice"
+                >
+                    <Receipt className="w-3.5 h-3.5" />
+                </button>
+                <button
+                    onClick={(e) => { e.stopPropagation(); setPopupJob(job); setPopupType('bl'); setEditFormData(job); setEditingSection(null); }}
+                    className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                    title="BL/AWB Details"
+                >
+                    <FileSpreadsheet className="w-3.5 h-3.5" />
+                </button>
+                <button
+                    onClick={(e) => { e.stopPropagation(); setPopupJob(job); setPopupType('payment'); setEditFormData(job); setEditingSection(null); }}
+                    className="p-1.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded transition-colors"
+                    title="Payment"
+                >
+                    <CreditCard className="w-3.5 h-3.5" />
+                </button>
+                <button
+                    onClick={(e) => { e.stopPropagation(); setPopupJob(job); setPopupType('upload'); setEditFormData(job); setEditingSection(null); }}
+                    className="p-1.5 text-gray-400 hover:text-violet-600 hover:bg-violet-50 rounded transition-colors"
+                    title="Upload Document"
+                >
+                    <UploadCloud className="w-3.5 h-3.5" />
+                </button>
             </div>
         </div>
     );
@@ -1022,6 +1058,195 @@ const ShipmentRegistry: React.FC = () => {
         );
     };
 
+    const handlePopupSave = async () => {
+        if (!popupJob) return;
+        try {
+            setLoading(true);
+            const response = await shipmentsAPI.update(popupJob.id, editFormData);
+            const updated = response.data;
+            setJobs(prev => prev.map(j => j.id === updated.id ? updated : j));
+            if (selectedJob?.id === updated.id) {
+                setSelectedJob(updated);
+            }
+            alert("Details updated successfully");
+            setPopupType(null);
+            setPopupJob(null);
+        } catch (error) {
+            console.error("Update failed", error);
+            alert("Failed to update details");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const renderPopup = () => {
+        if (!popupJob || !popupType) return null;
+
+        return (
+            <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 backdrop-blur-sm" onClick={() => { setPopupType(null); setPopupJob(null); }}>
+                <div className="bg-white rounded-2xl w-full max-w-2xl flex flex-col shadow-2xl animate-scale-in max-h-[90vh] overflow-hidden" onClick={e => e.stopPropagation()}>
+                    <div className="flex justify-between items-center p-6 border-b border-gray-100">
+                        <div>
+                            <h3 className="text-xl font-bold text-gray-900 capitalize flex items-center gap-2">
+                                {popupType === 'invoice' && <Receipt className="w-5 h-5 text-indigo-600" />}
+                                {popupType === 'bl' && <FileSpreadsheet className="w-5 h-5 text-blue-600" />}
+                                {popupType === 'payment' && <CreditCard className="w-5 h-5 text-emerald-600" />}
+                                {popupType === 'upload' && <UploadCloud className="w-5 h-5 text-violet-600" />}
+                                {popupType === 'bl' ? 'BL/AWB Details' : popupType === 'invoice' ? 'Shipment Invoice' : popupType === 'payment' ? 'Payment Details' : 'Upload Document'}
+                            </h3>
+                            <p className="text-sm text-gray-500 mt-1">Job: {popupJob.id} - {popupJob.customer}</p>
+                        </div>
+                        <button onClick={() => { setPopupType(null); setPopupJob(null); }} className="p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-gray-600 transition-colors">
+                            <X className="w-6 h-6" />
+                        </button>
+                    </div>
+
+                    <div className="p-6 overflow-y-auto custom-scrollbar">
+                        {popupType === 'invoice' && (
+                            <div className="grid grid-cols-2 gap-6">
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Invoice No.</label>
+                                    <input name="invoice_no" value={editFormData.invoice_no || ''} onChange={handleEditChange} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="-" />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Cargo Type</label>
+                                    <select name="cargo_type" value={editFormData.cargo_type || 'GENERAL'} onChange={handleEditChange} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
+                                        <option value="GENERAL">GENERAL</option>
+                                        <option value="PERISHABLE">PERISHABLE</option>
+                                        <option value="DANGEROUS GOODS">DANGEROUS GOODS</option>
+                                        <option value="CONSOLIDATED">CONSOLIDATED</option>
+                                        <option value="VALUABLE">VALUABLE</option>
+                                        <option value="OTHER">OTHER</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">No. Items</label>
+                                    <input name="no_of_pkgs" value={editFormData.no_of_pkgs || ''} onChange={handleEditChange} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="0" />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Customs Form No.</label>
+                                    <input name="customs_r_form" value={editFormData.customs_r_form || ''} onChange={handleEditChange} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="-" />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Office</label>
+                                    <select name="office" value={editFormData.office || ''} onChange={handleEditChange} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
+                                        <option value="">Select Office</option>
+                                        <option value="MPL">MPL</option>
+                                        <option value="MACL">MACL</option>
+                                        <option value="MCS">MCS</option>
+                                        <option value="Head Office">Head Office</option>
+                                    </select>
+                                </div>
+                            </div>
+                        )}
+
+                        {popupType === 'bl' && (
+                            <div className="grid grid-cols-2 gap-6">
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Master No.</label>
+                                    <input name="bl_awb_no" value={editFormData.bl_awb_no || ''} onChange={handleEditChange} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="-" />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">House No.</label>
+                                    <input name="house_bl" value={editFormData.house_bl || ''} onChange={handleEditChange} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="-" />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">ETD</label>
+                                    <input type="date" name="date" value={editFormData.date ? new Date(editFormData.date).toISOString().substr(0, 10) : ''} onChange={handleEditChange} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">ETA</label>
+                                    <input type="date" name="expected_delivery_date" value={editFormData.expected_delivery_date ? new Date(editFormData.expected_delivery_date).toISOString().substr(0, 10) : ''} onChange={handleEditChange} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Loading Port</label>
+                                    <input name="origin" value={editFormData.origin || ''} onChange={handleEditChange} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="-" />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Vessel</label>
+                                    <input name="vessel" value={editFormData.vessel || ''} onChange={handleEditChange} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="-" />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Delivery Agent</label>
+                                    <input name="delivery_agent" value={editFormData.delivery_agent || ''} onChange={handleEditChange} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="-" />
+                                </div>
+                            </div>
+                        )}
+
+                        {popupType === 'payment' && (
+                            <div className="text-center py-8 text-gray-500 italic">
+                                Payments module coming soon...
+                            </div>
+                        )}
+
+                        {popupType === 'upload' && (
+                            <div className="bg-gray-50 p-6 rounded-xl border border-gray-100">
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-semibold text-gray-700 mb-2">Document Type</label>
+                                        <select id="docTypeSelectPopup" className="w-full p-3 border border-gray-200 rounded-lg bg-white focus:ring-2 focus:ring-indigo-500 outline-none">
+                                            <option value="Invoice">Invoice</option>
+                                            <option value="Packing List">Packing List</option>
+                                            <option value="BL/AWB">BL/AWB</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-semibold text-gray-700 mb-2">File</label>
+                                        <input type="file" id="docFileInputPopup" className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" />
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="p-6 border-t border-gray-100 flex justify-end gap-3 bg-gray-50">
+                        <button onClick={() => { setPopupType(null); setPopupJob(null); }} className="px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 font-medium">Cancel</button>
+
+                        {popupType === 'upload' ? (
+                            <button onClick={async () => {
+                                const fileInput = document.getElementById('docFileInputPopup') as HTMLInputElement;
+                                const typeInput = document.getElementById('docTypeSelectPopup') as HTMLSelectElement;
+                                if (fileInput?.files?.[0]) {
+                                    const file = fileInput.files[0];
+                                    const type = typeInput.value;
+                                    const formData = new FormData();
+                                    formData.append('file', file);
+                                    formData.append('document_type', type);
+                                    try {
+                                        setLoading(true);
+                                        await shipmentsAPI.uploadDocument(popupJob.id, formData);
+                                        alert('Uploaded successfully');
+                                        // Refresh job if it's the selected one
+                                        if (selectedJob?.id === popupJob.id) {
+                                            const res = await shipmentsAPI.getById(popupJob.id);
+                                            setSelectedJob(res.data);
+                                        }
+                                        setPopupType(null);
+                                        setPopupJob(null);
+                                    } catch (e) {
+                                        console.error(e);
+                                        alert('Upload failed');
+                                    } finally {
+                                        setLoading(false);
+                                    }
+                                } else {
+                                    alert('Please select a file');
+                                }
+                            }} className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium shadow-sm">
+                                Upload Document
+                            </button>
+                        ) : popupType !== 'payment' && (
+                            <button onClick={handlePopupSave} className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium shadow-sm">
+                                Save Details
+                            </button>
+                        )}
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
     return (
         <Layout>
             <div className="h-[calc(100vh-100px)] flex border border-gray-200 rounded-2xl overflow-hidden bg-white shadow-sm font-sans">
@@ -1120,6 +1345,7 @@ const ShipmentRegistry: React.FC = () => {
                 onSave={handleScheduleSave}
                 job={selectedJob}
             />
+            {renderPopup()}
         </Layout>
     );
 };
