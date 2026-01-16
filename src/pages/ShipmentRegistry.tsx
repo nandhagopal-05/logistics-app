@@ -455,6 +455,7 @@ const ShipmentRegistry: React.FC = () => {
 
         const isEditingInvoice = editingSection === 'invoice';
         const isEditingBL = editingSection === 'bl';
+        const isEditingContainers = editingSection === 'containers';
         return (
             <div className="h-full flex flex-col animate-fade-in bg-white font-sans text-gray-900">
                 {/* Header Section */}
@@ -729,12 +730,20 @@ const ShipmentRegistry: React.FC = () => {
                     </div>
 
                     {/* Containers Card */}
-                    <div className="bg-white rounded-xl shadow-sm p-8 mb-6 border border-gray-100">
+                    <div className="bg-white rounded-xl shadow-sm p-8 mb-6 border border-gray-100 transition-all">
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="font-bold text-gray-900 flex items-center gap-3 text-lg">
                                 <Package className="w-5 h-5 text-gray-400" />
                                 Containers
                             </h3>
+                            {isEditingContainers ? (
+                                <div className="flex items-center gap-2">
+                                    <button onClick={handleSaveDetails} className="p-2 bg-green-50 text-green-600 rounded-full hover:bg-green-100"><Check className="w-4 h-4" /></button>
+                                    <button onClick={handleCancelEdit} className="p-2 bg-red-50 text-red-600 rounded-full hover:bg-red-100"><X className="w-4 h-4" /></button>
+                                </div>
+                            ) : (
+                                <button onClick={() => handleEditClick('containers')} className="text-gray-400 hover:text-indigo-600 p-2 hover:bg-indigo-50 rounded-full transition-colors"><Pencil className="w-4 h-4" /></button>
+                            )}
                         </div>
                         <table className="w-full text-sm text-left">
                             <thead className="text-xs text-gray-500 uppercase bg-gray-50/50 border-b border-gray-100">
@@ -746,11 +755,28 @@ const ShipmentRegistry: React.FC = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {selectedJob.container_no ? (
+                                {selectedJob.container_no || isEditingContainers ? (
                                     <tr className="border-b border-gray-50 hover:bg-gray-50">
-                                        <td className="py-4 px-4 font-medium text-gray-900">{selectedJob.container_no}</td>
-                                        <td className="py-4 px-4">{selectedJob.container_type || 'FCL 40'}</td>
-                                        <td className="py-4 px-4">-</td>
+                                        <td className="py-4 px-4 font-medium text-gray-900">
+                                            {isEditingContainers ? (
+                                                <input name="container_no" value={editFormData.container_no || ''} onChange={handleEditChange} className="input-field py-1 border rounded px-2 w-full text-sm" placeholder="Container No" />
+                                            ) : selectedJob.container_no}
+                                        </td>
+                                        <td className="py-4 px-4">
+                                            {isEditingContainers ? (
+                                                <select name="container_type" value={editFormData.container_type || 'FCL 20'} onChange={handleEditChange} className="input-field py-1 border rounded px-2 w-full text-sm bg-white">
+                                                    <option value="FCL 20">FCL 20</option>
+                                                    <option value="FCL 40">FCL 40</option>
+                                                    <option value="LCL">LCL</option>
+                                                    <option value="AIR">AIR</option>
+                                                </select>
+                                            ) : (selectedJob.container_type || 'FCL 20')}
+                                        </td>
+                                        <td className="py-4 px-4">
+                                            {isEditingContainers ? (
+                                                <input type="date" name="unloaded_date" value={editFormData.unloaded_date ? new Date(editFormData.unloaded_date).toISOString().substr(0, 10) : ''} onChange={handleEditChange} className="input-field py-1 border rounded px-2 w-full text-sm" />
+                                            ) : (selectedJob.unloaded_date ? new Date(selectedJob.unloaded_date).toLocaleDateString() : '-')}
+                                        </td>
                                         <td className="py-4 px-4 text-right">
                                             <button className="text-gray-400 hover:text-blue-600 transition-colors"><MoreVertical className="w-4 h-4 ml-auto" /></button>
                                         </td>
