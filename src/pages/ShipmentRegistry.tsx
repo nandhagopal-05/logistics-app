@@ -354,37 +354,6 @@ const ShipmentRegistry: React.FC = () => {
                         {job.payment_status}
                     </span>
                 </div>
-
-                <div className="flex items-center gap-1">
-                    <button
-                        onClick={(e) => { e.stopPropagation(); setPopupJob(job); setPopupType('invoice'); setEditFormData(job); setEditingSection(null); }}
-                        className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors"
-                        title="Shipment Invoice"
-                    >
-                        <Receipt className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                        onClick={(e) => { e.stopPropagation(); setPopupJob(job); setPopupType('bl'); setEditFormData(job); setEditingSection(null); }}
-                        className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                        title="BL/AWB Details"
-                    >
-                        <FileSpreadsheet className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                        onClick={(e) => { e.stopPropagation(); setPopupJob(job); setPopupType('payment'); setEditFormData(job); setEditingSection(null); }}
-                        className="p-1.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded transition-colors"
-                        title="Payment"
-                    >
-                        <CreditCard className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                        onClick={(e) => { e.stopPropagation(); setPopupJob(job); setPopupType('upload'); setEditFormData(job); setEditingSection(null); }}
-                        className="p-1.5 text-gray-400 hover:text-violet-600 hover:bg-violet-50 rounded transition-colors"
-                        title="Upload Document"
-                    >
-                        <UploadCloud className="w-3.5 h-3.5" />
-                    </button>
-                </div>
             </div>
         </div>
     );
@@ -717,6 +686,36 @@ const ShipmentRegistry: React.FC = () => {
                 <div className="px-8 pt-8 pb-0 border-b border-gray-200">
                     <div className="flex justify-between items-start mb-6">
                         <div>
+                            <div className="flex items-center gap-2 mb-2">
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); setPopupJob(selectedJob); setPopupType('invoice'); setEditFormData(selectedJob); setEditingSection(null); }}
+                                    className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors"
+                                    title="Shipment Invoice"
+                                >
+                                    <Receipt className="w-4 h-4" />
+                                </button>
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); setPopupJob(selectedJob); setPopupType('bl'); setEditFormData(selectedJob); setEditingSection(null); }}
+                                    className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                                    title="BL/AWB Details"
+                                >
+                                    <FileSpreadsheet className="w-4 h-4" />
+                                </button>
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); setPopupJob(selectedJob); setPopupType('payment'); setEditFormData(selectedJob); setEditingSection(null); }}
+                                    className="p-1.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded transition-colors"
+                                    title="Payment"
+                                >
+                                    <CreditCard className="w-4 h-4" />
+                                </button>
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); setPopupJob(selectedJob); setPopupType('upload'); setEditFormData(selectedJob); setEditingSection(null); }}
+                                    className="p-1.5 text-gray-400 hover:text-violet-600 hover:bg-violet-50 rounded transition-colors"
+                                    title="Upload Document"
+                                >
+                                    <UploadCloud className="w-4 h-4" />
+                                </button>
+                            </div>
                             <h1 className="text-2xl font-bold text-gray-900 uppercase">
                                 {selectedJob.customer || 'Customer Name'} / {selectedJob.id?.split('-')[1] || 'JOB'}
                             </h1>
