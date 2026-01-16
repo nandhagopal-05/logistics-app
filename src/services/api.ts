@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.MODE === 'production' ? '/api' : 'http://localhost:5001/api';
+export const API_BASE_URL = import.meta.env.MODE === 'production' ? '/api' : `http://${window.location.hostname}:5001/api`;
+export const FILE_BASE_URL = API_BASE_URL.replace('/api', '');
 
 // Create axios instance
 const api = axios.create({
