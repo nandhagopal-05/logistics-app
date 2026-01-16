@@ -1,0 +1,2 @@
+ALTER TABLE shipments ADD COLUMN IF NOT EXISTS shipment_type VARCHAR(50);
+ALTER TABLE shipments ADD COLUMN IF NOT EXISTS billing_contact VARCHAR(100);

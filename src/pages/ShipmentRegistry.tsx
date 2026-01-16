@@ -456,6 +456,7 @@ const ShipmentRegistry: React.FC = () => {
         const isEditingInvoice = editingSection === 'invoice';
         const isEditingBL = editingSection === 'bl';
         const isEditingContainers = editingSection === 'containers';
+        const isEditingJobDetails = editingSection === 'job_details';
         return (
             <div className="h-full flex flex-col animate-fade-in bg-white font-sans text-gray-900">
                 {/* Header Section */}
@@ -533,15 +534,37 @@ const ShipmentRegistry: React.FC = () => {
                     </div>
 
                     {/* Dark Info Card */}
-                    <div className="bg-slate-900 text-white rounded-xl p-8 mb-6 shadow-xl">
+                    <div className="bg-slate-900 text-white rounded-xl p-8 mb-6 shadow-xl relative group">
+                        <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                            {isEditingJobDetails ? (
+                                <div className="flex items-center gap-2">
+                                    <button onClick={handleSaveDetails} className="p-2 bg-green-500/20 text-green-400 rounded-full hover:bg-green-500/30"><Check className="w-4 h-4" /></button>
+                                    <button onClick={handleCancelEdit} className="p-2 bg-red-500/20 text-red-400 rounded-full hover:bg-red-500/30"><X className="w-4 h-4" /></button>
+                                </div>
+                            ) : (
+                                <button onClick={() => handleEditClick('job_details')} className="p-2 bg-white/10 text-white rounded-full hover:bg-white/20"><Pencil className="w-4 h-4" /></button>
+                            )}
+                        </div>
                         <div className="grid grid-cols-3 gap-8 mb-8">
                             <div>
                                 <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Exporter</p>
-                                <p className="font-bold text-lg">{selectedJob.exporter || selectedJob.sender_name || '-'}</p>
+                                {isEditingJobDetails ? (
+                                    <input name="sender_name" value={editFormData.sender_name || ''} onChange={handleEditChange} className="bg-slate-800 border-slate-700 text-white input-field py-1 border rounded px-2 w-full text-sm" />
+                                ) : (
+                                    <p className="font-bold text-lg">{selectedJob.exporter || selectedJob.sender_name || '-'}</p>
+                                )}
                             </div>
                             <div>
                                 <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Type</p>
-                                <p className="font-medium">{selectedJob.shipment_type || 'IMP'}</p>
+                                {isEditingJobDetails ? (
+                                    <select name="shipment_type" value={editFormData.shipment_type || 'IMP'} onChange={handleEditChange} className="bg-slate-800 border-slate-700 text-white input-field py-1 border rounded px-2 w-full text-sm">
+                                        <option value="IMP">IMP</option>
+                                        <option value="EXP">EXP</option>
+                                        <option value="CROSS_TRADE">CROSS TRADE</option>
+                                    </select>
+                                ) : (
+                                    <p className="font-medium">{selectedJob.shipment_type || 'IMP'}</p>
+                                )}
                             </div>
                             <div>
                                 <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Registered Date</p>
@@ -551,11 +574,19 @@ const ShipmentRegistry: React.FC = () => {
                         <div className="grid grid-cols-3 gap-8">
                             <div>
                                 <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Consignee</p>
-                                <p className="font-medium">{selectedJob.consignee || selectedJob.receiver_name || '-'}</p>
+                                {isEditingJobDetails ? (
+                                    <input name="receiver_name" value={editFormData.receiver_name || ''} onChange={handleEditChange} className="bg-slate-800 border-slate-700 text-white input-field py-1 border rounded px-2 w-full text-sm" />
+                                ) : (
+                                    <p className="font-medium">{selectedJob.consignee || selectedJob.receiver_name || '-'}</p>
+                                )}
                             </div>
                             <div>
                                 <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Billing Contact</p>
-                                <p className="font-medium">{selectedJob.billing_contact || '-'}</p>
+                                {isEditingJobDetails ? (
+                                    <input name="billing_contact" value={editFormData.billing_contact || ''} onChange={handleEditChange} className="bg-slate-800 border-slate-700 text-white input-field py-1 border rounded px-2 w-full text-sm" />
+                                ) : (
+                                    <p className="font-medium">{selectedJob.billing_contact || '-'}</p>
+                                )}
                             </div>
                             <div>
                                 <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Job Invoice</p>
