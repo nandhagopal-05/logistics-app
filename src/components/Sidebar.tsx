@@ -25,7 +25,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     const { user } = useAuth();
     const userRole = user?.role || '';
     const isAdministrator = userRole === 'Administrator';
-    const isClearance = ['Clearance Manager', 'Clearance Manager Assistant', 'Accountant', 'Accountant Assistant'].includes(userRole);
+    const isClearance = ['Clearance Manager', 'Clearance Manager Assistant', 'Clearance Agent', 'Accountant', 'Accountant Assistant'].includes(userRole);
 
     const menuItems = [
         { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
