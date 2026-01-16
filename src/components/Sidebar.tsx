@@ -48,22 +48,20 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         menuItems.push(
             { icon: Calendar, label: 'Clearance Schedule', path: '/schedule' },
             { icon: ClipboardList, label: 'Delivery Notes', path: '/delivery-notes' },
-            { icon: Container, label: 'Containers', path: '/containers' },
-            { icon: FileText, label: 'Reports', path: '/reports' }
+            { icon: Container, label: 'Containers', path: '/containers' }
         );
     }
 
     // Administrator Access
     if (isAdministrator) {
         menuItems.push(
-            { icon: Users, label: 'User Management', path: '/users' }
+            { icon: Users, label: 'User Management', path: '/users' },
+            { icon: FileText, label: 'Reports', path: '/reports' },
+            { icon: ScrollText, label: 'Audit Logs', path: '/logs' }
         );
     }
 
-    // System Access (All authenticated)
-    menuItems.push(
-        { icon: ScrollText, label: 'Audit Logs', path: '/logs' }
-    );
+
 
     return (
         <>
