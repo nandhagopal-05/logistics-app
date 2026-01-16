@@ -161,7 +161,7 @@ const ShipmentRegistry: React.FC = () => {
         setEditFormData(selectedJob);
     };
 
-    const handleEditChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleEditChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setEditFormData((prev: any) => ({ ...prev, [name]: value }));
     };
@@ -610,6 +610,20 @@ const ShipmentRegistry: React.FC = () => {
                                     <input name="customs_r_form" value={editFormData.customs_r_form || ''} onChange={handleEditChange} className="input-field py-1 border rounded px-2 w-full text-sm" placeholder="-" />
                                 ) : (
                                     <p className="font-semibold text-gray-900">{selectedJob.customs_r_form || '-'}</p>
+                                )}
+                            </div>
+                            <div>
+                                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Office</p>
+                                {isEditingInvoice ? (
+                                    <select name="office" value={editFormData.office || ''} onChange={handleEditChange} className="input-field py-1 border rounded px-2 w-full text-sm bg-white">
+                                        <option value="">Select Office</option>
+                                        <option value="MPL">MPL</option>
+                                        <option value="MACL">MACL</option>
+                                        <option value="MCS">MCS</option>
+                                        <option value="Head Office">Head Office</option>
+                                    </select>
+                                ) : (
+                                    <p className="font-semibold text-gray-900">{selectedJob.office || '-'}</p>
                                 )}
                             </div>
                             <div>

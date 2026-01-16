@@ -403,7 +403,8 @@ router.put('/:id', authenticateToken, async (req, res) => {
             date, expected_delivery_date, transport_mode,
             invoice_no, invoice_items, customs_r_form, bl_awb_no, container_no, container_type, cbm, no_of_pkgs,
             expense_macl, expense_mpl, expense_mcs, expense_transportation, expense_liner,
-            house_bl, vessel, delivery_agent
+            house_bl, vessel, delivery_agent,
+            office
         } = req.body;
 
         await pool.query('BEGIN');
@@ -441,6 +442,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
                  house_bl = COALESCE($30, house_bl),
                  vessel = COALESCE($31, vessel),
                  delivery_agent = COALESCE($32, delivery_agent),
+                 office = COALESCE($33, office),
                  updated_at = CURRENT_TIMESTAMP
              WHERE id = $16
              RETURNING *`,
@@ -452,7 +454,8 @@ router.put('/:id', authenticateToken, async (req, res) => {
                 id,
                 invoice_no, invoice_items, customs_r_form, bl_awb_no, container_no, container_type, cbm, no_of_pkgs,
                 expense_macl, expense_mpl, expense_mcs, expense_transportation, expense_liner,
-                house_bl, vessel, delivery_agent
+                house_bl, vessel, delivery_agent,
+                office
             ]
         );
 
