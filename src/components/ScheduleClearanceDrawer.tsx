@@ -50,7 +50,7 @@ const ScheduleClearanceDrawer: React.FC<ScheduleClearanceDrawerProps> = ({ isOpe
 
     // Derived options from job
     // Assuming job has properties master_bl and house_bl (even if currently placeholders in UI, intention is clear)
-    const blOptions = [job?.master_bl, job?.house_bl].filter((opt) => opt && opt !== '-');
+    const blOptions = [job?.bl_awb_no, job?.house_bl].filter((opt) => opt && opt !== '-');
 
     if (!isOpen) return null;
 
