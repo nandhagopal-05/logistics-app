@@ -354,30 +354,32 @@ router.post('/', authenticateToken, shipmentUpload, async (req, res) => {
             }
         }
 
-        // AUTO-GENERATE INVOICE
-        const invoiceId = job_invoice_no || `INV-${new Date().getFullYear()}${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
+        // Create Job Invoice only if provided manually
+        if (job_invoice_no) {
+            const invoiceId = job_invoice_no;
 
-        // Generate PDF
-        let invoicePath = null;
-        try {
-            const invoiceData = {
-                receiver_name: receiver_name,
-                customer: customer,
-                receiver_address: receiver_address,
-                destination: destination,
-                description: description,
-                price: safePrice
-            };
-            invoicePath = await generateInvoicePDF(invoiceData, invoiceId);
-        } catch (pdfError) {
-            console.error('PDF Generation failed:', pdfError);
-            // Continue without PDF, just DB record
+            // Generate PDF
+            let invoicePath = null;
+            try {
+                const invoiceData = {
+                    receiver_name: receiver_name,
+                    customer: customer,
+                    receiver_address: receiver_address,
+                    destination: destination,
+                    description: description,
+                    price: safePrice
+                };
+                invoicePath = await generateInvoicePDF(invoiceData, invoiceId);
+            } catch (pdfError) {
+                console.error('PDF Generation failed:', pdfError);
+                // Continue without PDF, just DB record
+            }
+
+            await pool.query(
+                'INSERT INTO invoices (id, shipment_id, amount, status, file_path) VALUES ($1, $2, $3, $4, $5)',
+                [invoiceId, id, safePrice, 'Pending', invoicePath]
+            );
         }
-
-        await pool.query(
-            'INSERT INTO invoices (id, shipment_id, amount, status, file_path) VALUES ($1, $2, $3, $4, $5)',
-            [invoiceId, id, safePrice, 'Pending', invoicePath]
-        );
 
         // Log action
         await logActivity(req.user.id, 'CREATE_SHIPMENT', `Created shipment ${id}`, 'SHIPMENT', id);
