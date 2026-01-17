@@ -199,7 +199,18 @@ const ClearanceSchedule: React.FC = () => {
                                             </td>
                                             <td className="py-4 px-6 text-sm text-gray-500 font-mono">
                                                 {/* Container logic placeholder */}
-                                                {item.remarks?.includes('Container:') ? item.remarks.split('Container:')[1] : '-'}
+                                                {(() => {
+                                                    const match = item.remarks?.match(/Container:\s*(.*?)\s*\((.*?)\)/);
+                                                    if (match) {
+                                                        return (
+                                                            <>
+                                                                <div className="font-medium text-gray-900">{match[1]}</div>
+                                                                <div className="text-xs text-gray-500">{match[2]}</div>
+                                                            </>
+                                                        );
+                                                    }
+                                                    return '-';
+                                                })()}
                                             </td>
                                             <td className="py-4 px-6 text-sm text-gray-900 font-medium">
                                                 {item.packages || '-'}
