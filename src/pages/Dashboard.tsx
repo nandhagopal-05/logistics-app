@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Layout from '../components/Layout';
-import { analyticsAPI } from '../services/api';
+import { analyticsAPI, shipmentsAPI } from '../services/api';
 import {
     Package,
     Clock,
@@ -19,6 +19,7 @@ const Dashboard: React.FC = () => {
     const { user } = useAuth();
     const [loading, setLoading] = useState(true);
     const [data, setData] = useState<any>(null);
+    const [viewingAll, setViewingAll] = useState(false);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -34,6 +35,41 @@ const Dashboard: React.FC = () => {
 
         fetchData();
     }, []);
+
+    const handleViewAll = async () => {
+        try {
+            setLoading(true);
+            const response = await shipmentsAPI.getAll();
+            const allShipments = response.data || [];
+
+            const threeDaysAgo = new Date();
+            threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+
+            const filtered = allShipments.filter((s: any) => {
+                const sDate = s.created_at || s.date; // handle various date fields
+                return sDate && new Date(sDate) >= threeDaysAgo;
+            });
+
+            // Normalize fields for dashboard display if needed (Dashboard expects: id, customer, destination, status, date)
+            const normalized = filtered.map((s: any) => ({
+                id: s.id,
+                customer: s.customer || s.receiver_name || s.sender_name, // fallback
+                destination: s.destination || s.receiver_address || 'N/A', // fallback
+                status: s.status || 'Processing',
+                date: s.created_at || s.date
+            }));
+
+            // Sort by date desc
+            normalized.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+            setData((prev: any) => ({ ...prev, recentShipments: normalized }));
+            setViewingAll(true);
+        } catch (error) {
+            console.error('Failed to load recent shipments', error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     if (loading) {
         return (
@@ -198,7 +234,13 @@ const Dashboard: React.FC = () => {
                 <div className="glass-card p-6">
                     <div className="flex items-center justify-between mb-6">
                         <h3 className="text-lg font-bold text-gray-900">Recent Shipments</h3>
-                        <button className="btn-secondary text-sm">View All</button>
+                        <button
+                            onClick={handleViewAll}
+                            disabled={viewingAll}
+                            className={`text-sm ${viewingAll ? 'text-gray-400 cursor-default' : 'btn-secondary'}`}
+                        >
+                            {viewingAll ? 'Showing Last 3 Days' : 'View All'}
+                        </button>
                     </div>
                     <div className="overflow-x-auto">
                         <table className="w-full">
@@ -208,7 +250,7 @@ const Dashboard: React.FC = () => {
                                     <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Customer</th>
                                     <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Destination</th>
                                     <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Status</th>
-                                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Date</th>
+                                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Date & Time</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -226,7 +268,13 @@ const Dashboard: React.FC = () => {
                                             </span>
                                         </td>
                                         <td className="py-4 px-4 text-sm text-gray-600">
-                                            {new Date(shipment.date).toLocaleDateString()}
+                                            {new Date(shipment.date).toLocaleString(undefined, {
+                                                year: 'numeric',
+                                                month: 'numeric',
+                                                day: 'numeric',
+                                                hour: '2-digit',
+                                                minute: '2-digit'
+                                            })}
                                         </td>
                                     </tr>
                                 ))}
