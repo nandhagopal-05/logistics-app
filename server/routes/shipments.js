@@ -406,10 +406,16 @@ router.put('/:id', authenticateToken, async (req, res) => {
             expense_macl, expense_mpl, expense_mcs, expense_transportation, expense_liner,
             house_bl, vessel, delivery_agent,
             office, cargo_type, unloaded_date,
-            shipment_type, billing_contact, service
+            shipment_type, billing_contact, service,
+            job_invoice_no
         } = req.body;
 
         await pool.query('BEGIN');
+
+        // Update Job Invoice ID if provided
+        if (job_invoice_no) {
+            await pool.query('UPDATE invoices SET id = $1 WHERE shipment_id = $2', [job_invoice_no, id]);
+        }
 
         const result = await pool.query(
             `UPDATE shipments 

@@ -179,7 +179,7 @@ const ShipmentRegistry: React.FC = () => {
             shipment_type: selectedJob.shipment_type || 'IMP',
             billing_contact: selectedJob.billing_contact || '',
             billing_contact_same: !selectedJob.billing_contact || selectedJob.billing_contact === selectedJob.receiver_name,
-            manual_invoice_no: selectedJob.invoice_no || ''
+            manual_invoice_no: selectedJob.invoice_id || selectedJob.invoice?.id || ''
         });
         setIsEditingJob(true);
         setViewMode('create');
@@ -196,7 +196,9 @@ const ShipmentRegistry: React.FC = () => {
                 shipment_type: formData.shipment_type,
 
                 billing_contact: formData.billing_contact_same ? formData.consignee : formData.billing_contact,
-                invoice_no: formData.manual_invoice_no
+                job_invoice_no: formData.manual_invoice_no,
+                // Ensure we don't accidentally overwrite shipment invoice with job invoice
+                invoice_no: selectedJob.invoice_no
             };
 
             await shipmentsAPI.update(selectedJob.id, updateData);
