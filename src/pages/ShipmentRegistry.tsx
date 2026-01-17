@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
-import { shipmentsAPI, consigneesAPI, exportersAPI, clearanceAPI } from '../services/api';
+import { shipmentsAPI, consigneesAPI, exportersAPI, clearanceAPI, deliveryAgentsAPI } from '../services/api';
 import {
     Search, Plus,
     FileText,
@@ -33,6 +33,7 @@ const ShipmentRegistry: React.FC = () => {
     // Dropdown Data State
     const [consigneesList, setConsigneesList] = useState<any[]>([]);
     const [exportersList, setExportersList] = useState<any[]>([]);
+    const [deliveryAgentsList, setDeliveryAgentsList] = useState<any[]>([]);
 
     // Form State (for Register New Job)
     const [isEditingJob, setIsEditingJob] = useState(false);
@@ -64,12 +65,14 @@ const ShipmentRegistry: React.FC = () => {
 
     const loadDropdownData = async () => {
         try {
-            const [consigneesRes, exportersRes] = await Promise.all([
+            const [consigneesRes, exportersRes, deliveryAgentsRes] = await Promise.all([
                 consigneesAPI.getAll(),
-                exportersAPI.getAll()
+                exportersAPI.getAll(),
+                deliveryAgentsAPI.getAll()
             ]);
             setConsigneesList(consigneesRes.data || []);
             setExportersList(exportersRes.data || []);
+            setDeliveryAgentsList(deliveryAgentsRes.data || []);
         } catch (error) {
             console.error("Failed to load dropdown data", error);
         }
@@ -967,7 +970,19 @@ const ShipmentRegistry: React.FC = () => {
                                 <div>
                                     <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Delivery Agent</p>
                                     {isEditingBL ? (
-                                        <input name="delivery_agent" value={editFormData.delivery_agent || ''} onChange={handleEditChange} className="input-field py-1 border rounded px-2 w-full text-sm" placeholder="-" />
+                                        <select
+                                            name="delivery_agent"
+                                            value={editFormData.delivery_agent || ''}
+                                            onChange={handleEditChange}
+                                            className="input-field py-1 border rounded px-2 w-full text-sm bg-white"
+                                        >
+                                            <option value="">Select Delivery Agent</option>
+                                            {deliveryAgentsList.map((agent: any) => (
+                                                <option key={agent.id} value={agent.name}>
+                                                    {agent.name}
+                                                </option>
+                                            ))}
+                                        </select>
                                     ) : (
                                         <p className="font-semibold text-gray-900 uppercase">{selectedJob.delivery_agent || '-'}</p>
                                     )}
@@ -1172,7 +1187,19 @@ const ShipmentRegistry: React.FC = () => {
                                 </div>
                                 <div>
                                     <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Delivery Agent</label>
-                                    <input name="delivery_agent" value={editFormData.delivery_agent || ''} onChange={handleEditChange} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="-" />
+                                    <select
+                                        name="delivery_agent"
+                                        value={editFormData.delivery_agent || ''}
+                                        onChange={handleEditChange}
+                                        className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none bg-white"
+                                    >
+                                        <option value="">Select Delivery Agent</option>
+                                        {deliveryAgentsList.map((agent: any) => (
+                                            <option key={agent.id} value={agent.name}>
+                                                {agent.name}
+                                            </option>
+                                        ))}
+                                    </select>
                                 </div>
                             </div>
                         )}
