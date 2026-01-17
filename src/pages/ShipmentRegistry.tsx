@@ -1175,458 +1175,484 @@ const ShipmentRegistry: React.FC = () => {
 
                         {/* Containers Card */}
                         <div className="bg-white rounded-xl shadow-sm p-8 mb-6 border border-gray-100 transition-all">
-                            <div className="flex justify-between items-center mb-6">
-                                <h3 className="font-bold text-gray-900 flex items-center gap-3 text-lg">
-                                    <Package className="w-5 h-5 text-gray-400" />
-                                    Containers
-                                </h3>
-                                {isEditingContainers ? (
-                                    <div className="flex items-center gap-2">
-                                        <button onClick={handleSaveDetails} className="p-2 bg-green-50 text-green-600 rounded-full hover:bg-green-100"><Check className="w-4 h-4" /></button>
-                                        <button onClick={handleCancelEdit} className="p-2 bg-red-50 text-red-600 rounded-full hover:bg-red-100"><X className="w-4 h-4" /></button>
-                                    </div>
-                                ) : (
-                                    <button onClick={() => handleEditClick('containers')} className="text-gray-400 hover:text-indigo-600 p-2 hover:bg-indigo-50 rounded-full transition-colors"><Pencil className="w-4 h-4" /></button>
-                                )}
-                            </div>
-                            <table className="w-full text-sm text-left">
-                                <thead className="text-xs text-gray-500 uppercase bg-gray-50/50 border-b border-gray-100">
-                                    <tr>
-                                        <th className="py-3 px-4 font-bold">Number</th>
-                                        <th className="py-3 px-4 font-bold">Size</th>
-                                        <th className="py-3 px-4 font-bold">Unloaded Date</th>
-                                        <th className="py-3 px-4 font-bold text-right">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {selectedJob.container_no || isEditingContainers ? (
-                                        <tr className="border-b border-gray-50 hover:bg-gray-50">
-                                            <td className="py-4 px-4 font-medium text-gray-900">
-                                                {isEditingContainers ? (
-                                                    <input name="container_no" value={editFormData.container_no || ''} onChange={handleEditChange} className="input-field py-1 border rounded px-2 w-full text-sm" placeholder="Container No" />
-                                                ) : selectedJob.container_no}
-                                            </td>
-                                            <td className="py-4 px-4">
-                                                {isEditingContainers ? (
-                                                    <select name="container_type" value={editFormData.container_type || 'FCL 20'} onChange={handleEditChange} className="input-field py-1 border rounded px-2 w-full text-sm bg-white">
-                                                        <option value="FCL 20">FCL 20</option>
-                                                        <option value="FCL 40">FCL 40</option>
-                                                        <option value="LCL">LCL</option>
-                                                        <option value="AIR">AIR</option>
-                                                    </select>
-                                                ) : (selectedJob.container_type || 'FCL 20')}
-                                            </td>
-                                            <td className="py-4 px-4">
-                                                {isEditingContainers ? (
-                                                    <input type="date" name="unloaded_date" value={editFormData.unloaded_date ? new Date(editFormData.unloaded_date).toISOString().substr(0, 10) : ''} onChange={handleEditChange} className="input-field py-1 border rounded px-2 w-full text-sm" />
-                                                ) : (selectedJob.unloaded_date ? new Date(selectedJob.unloaded_date).toLocaleDateString() : '-')}
-                                            </td>
-                                            <td className="py-4 px-4 text-right">
-                                                <button className="text-gray-400 hover:text-blue-600 transition-colors"><MoreVertical className="w-4 h-4 ml-auto" /></button>
-                                            </td>
-                                        </tr>
-                                    ) : (
-                                        <tr>
-                                            <td colSpan={4} className="py-8 text-center text-gray-400 italic">No containers listed</td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                    </>)}
-
-                    {activeTab === 'Documents' && renderDocumentsTab()}
-
-                    {activeTab === 'Payments' && <div className="p-12 text-center text-gray-400 italic">Payments module coming soon...</div>}
-                    {activeTab === 'History' && <div className="p-12 text-center text-gray-400 italic">History module coming soon...</div>}
-
-                </div>
-            </div>
-        );
-    };
-
-    const handlePopupSave = async () => {
-        if (!popupJob) return;
-        try {
-            setLoading(true);
-
-            if (popupType === 'schedule') {
-                await clearanceAPI.create({
-                    job_id: popupJob.id,
-                    ...editFormData
-                });
-                // Relaxed refresh logic
-                const res = await shipmentsAPI.getById(popupJob.id);
-                const updated = res.data;
-                setJobs(prev => prev.map(j => j.id === updated.id ? updated : j));
-                if (selectedJob?.id === updated.id) {
-                    setSelectedJob(updated);
-                }
-                alert("Clearance Scheduled Successfully");
-            } else {
-                const response = await shipmentsAPI.update(popupJob.id, editFormData);
-                const updated = response.data;
-                setJobs(prev => prev.map(j => j.id === updated.id ? updated : j));
-                if (selectedJob?.id === updated.id) {
-                    setSelectedJob(updated);
-                }
-                alert("Details updated successfully");
-            }
-
-            setPopupType(null);
-            setPopupJob(null);
-        } catch (error) {
-            console.error("Update failed", error);
-            alert("Failed to update details");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const renderPopup = () => {
-        if (!popupJob || !popupType || popupType === 'schedule') return null;
-
-        return (
-            <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 backdrop-blur-sm" onClick={() => { setPopupType(null); setPopupJob(null); }}>
-                <div className="bg-white rounded-2xl w-full max-w-2xl flex flex-col shadow-2xl animate-scale-in max-h-[90vh] overflow-hidden" onClick={e => e.stopPropagation()}>
-                    <div className="flex justify-between items-center p-6 border-b border-gray-100">
-                        <div>
-                            <h3 className="text-xl font-bold text-gray-900 capitalize flex items-center gap-2">
-                                {popupType === 'invoice' && <Receipt className="w-6 h-6 text-indigo-600" />}
-                                {popupType === 'bl' && <FileSpreadsheet className="w-6 h-6 text-blue-600" />}
-                                {popupType === 'payment' && <CreditCard className="w-6 h-6 text-emerald-600" />}
-                                {popupType === 'upload' && <UploadCloud className="w-6 h-6 text-violet-600" />}
-                                {popupType === 'bl' ? 'BL/AWB Details' : popupType === 'invoice' ? 'Shipment Invoice' : popupType === 'payment' ? 'Payment Details' : 'Upload Document'}
+                            <h3 className="font-bold text-gray-900 flex items-center gap-3 text-lg">
+                                <Package className="w-5 h-5 text-gray-400" />
+                                Containers
                             </h3>
-                            <p className="text-sm text-gray-500 mt-1">Job: {popupJob.id} - {popupJob.customer}</p>
                         </div>
-                        <button onClick={() => { setPopupType(null); setPopupJob(null); }} className="p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-gray-600 transition-colors">
-                            <X className="w-6 h-6" />
-                        </button>
-                    </div>
-
-                    <div className="p-6 overflow-y-auto custom-scrollbar">
-                        {popupType === 'invoice' && (
-                            <div className="grid grid-cols-2 gap-6">
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Invoice No.</label>
-                                    <input name="invoice_no" value={editFormData.invoice_no || ''} onChange={handleEditChange} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="-" />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Cargo Type</label>
-                                    <select name="cargo_type" value={editFormData.cargo_type || 'GENERAL'} onChange={handleEditChange} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
-                                        <option value="GENERAL">GENERAL</option>
-                                        <option value="PERISHABLE">PERISHABLE</option>
-                                        <option value="HARDWARE">HARDWARE</option>
-                                        <option value="GARMENTS">GARMENTS</option>
-                                        <option value="ELECTRONICS">ELECTRONICS</option>
-                                        <option value="DRY FOODS">DRY FOODS</option>
-                                        <option value="FURNITURE">FURNITURE</option>
-                                        <option value="OTHER">OTHER</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">No. Items</label>
-                                    <input name="no_of_pkgs" value={editFormData.no_of_pkgs || ''} onChange={handleEditChange} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="0" />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Customs Form No.</label>
-                                    <input name="customs_r_form" value={editFormData.customs_r_form || ''} onChange={handleEditChange} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="-" />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Office</label>
-                                    <select name="office" value={editFormData.office || ''} onChange={handleEditChange} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
-                                        <option value="">Select Office</option>
-                                        <option value="00MP">00MP</option>
-                                        <option value="00AP">00AP</option>
-                                        <option value="00HA">00HA</option>
-                                        <option value="00BW">00BW</option>
-                                        <option value="00HK">00HK</option>
-                                        <option value="00HM">00HM</option>
-                                        <option value="00PO">00PO</option>
-                                        <option value="00SG">00SG</option>
-                                        <option value="00SH">00SH</option>
-                                    </select>
-                                </div>
-                            </div>
-                        )}
-
-                        {popupType === 'bl' && (
-                            <div className="grid grid-cols-2 gap-6">
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Master No.</label>
-                                    <input name="bl_awb_no" value={editFormData.bl_awb_no || ''} onChange={handleEditChange} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="-" />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">House No.</label>
-                                    <input name="house_bl" value={editFormData.house_bl || ''} onChange={handleEditChange} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="-" />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">ETA</label>
-                                    <input type="date" name="expected_delivery_date" value={editFormData.expected_delivery_date ? new Date(editFormData.expected_delivery_date).toISOString().substr(0, 10) : ''} onChange={handleEditChange} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Loading Port</label>
-                                    <input name="origin" value={editFormData.origin || ''} onChange={handleEditChange} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="-" />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Vessel</label>
-                                    <input name="vessel" value={editFormData.vessel || ''} onChange={handleEditChange} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="-" />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Delivery Agent</label>
-                                    <select
-                                        name="delivery_agent"
-                                        value={editFormData.delivery_agent || ''}
-                                        onChange={handleEditChange}
-                                        className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none bg-white"
-                                    >
-                                        <option value="">Select Delivery Agent</option>
-                                        {deliveryAgentsList.map((agent: any) => (
-                                            <option key={agent.id} value={agent.name}>
-                                                {agent.name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div className="col-span-2">
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Packages</label>
-                                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-100 space-y-3">
-                                        <div className="grid grid-cols-10 gap-2 text-xs font-bold text-gray-400 mb-1">
-                                            <div className="col-span-3">Count</div>
-                                            <div className="col-span-4">Type</div>
-                                            <div className="col-span-3">Weight (KG)</div>
-                                        </div>
-                                        {editFormData.packages?.map((pkg: any, idx: number) => (
-                                            <div key={idx} className="grid grid-cols-10 gap-2 items-center">
-                                                <div className="col-span-3">
-                                                    <input
-                                                        type="number"
-                                                        value={pkg.count}
-                                                        onChange={e => handlePackageChange(idx, 'count', e.target.value)}
-                                                        className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
-                                                        placeholder="0"
-                                                    />
+                        <table className="w-full text-sm text-left">
+                            <thead className="text-xs text-gray-500 uppercase bg-gray-50/50 border-b border-gray-100">
+                                <tr>
+                                    <th className="py-3 px-4 font-bold">Number</th>
+                                    <th className="py-3 px-4 font-bold">Size</th>
+                                    <th className="py-3 px-4 font-bold">Unloaded Date</th>
+                                    <th className="py-3 px-4 font-bold text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {selectedJob.container_no || isEditingContainers ? (
+                                    <tr className="border-b border-gray-50 hover:bg-gray-50">
+                                        <td className="py-4 px-4 font-medium text-gray-900">
+                                            {isEditingContainers ? (
+                                                <input name="container_no" value={editFormData.container_no || ''} onChange={handleEditChange} className="input-field py-1 border rounded px-2 w-full text-sm" placeholder="Container No" />
+                                            ) : selectedJob.container_no}
+                                        </td>
+                                        <td className="py-4 px-4">
+                                            {isEditingContainers ? (
+                                                <select name="container_type" value={editFormData.container_type || 'FCL 20'} onChange={handleEditChange} className="input-field py-1 border rounded px-2 w-full text-sm bg-white">
+                                                    <option value="FCL 20">FCL 20</option>
+                                                    <option value="FCL 40">FCL 40</option>
+                                                    <option value="LCL">LCL</option>
+                                                    <option value="AIR">AIR</option>
+                                                </select>
+                                            ) : (selectedJob.container_type || 'FCL 20')}
+                                        </td>
+                                        <td className="py-4 px-4">
+                                            {isEditingContainers ? (
+                                                <input type="date" name="unloaded_date" value={editFormData.unloaded_date ? new Date(editFormData.unloaded_date).toISOString().substr(0, 10) : ''} onChange={handleEditChange} className="input-field py-1 border rounded px-2 w-full text-sm" />
+                                            ) : (selectedJob.unloaded_date ? new Date(selectedJob.unloaded_date).toLocaleDateString() : '-')}
+                                        </td>
+                                        <td className="py-4 px-4 text-right">
+                                            {isEditingContainers ? (
+                                                <div className="flex items-center justify-end gap-2">
+                                                    <button onClick={handleSaveDetails} className="p-1.5 bg-green-50 text-green-600 rounded hover:bg-green-100" title="Save">
+                                                        <Check className="w-4 h-4" />
+                                                    </button>
+                                                    <button onClick={handleCancelEdit} className="p-1.5 bg-red-50 text-red-600 rounded hover:bg-red-100" title="Cancel">
+                                                        <X className="w-4 h-4" />
+                                                    </button>
                                                 </div>
-                                                <div className="col-span-4">
-                                                    <select
-                                                        value={pkg.type}
-                                                        onChange={e => handlePackageChange(idx, 'type', e.target.value)}
-                                                        className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm bg-white"
+                                            ) : (
+                                                <div className="flex items-center justify-end gap-2">
+                                                    <button onClick={() => handleEditClick('containers')} className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors" title="Edit">
+                                                        <Pencil className="w-4 h-4" />
+                                                    </button>
+                                                    <button
+                                                        onClick={async () => {
+                                                            if (window.confirm('Are you sure you want to remove this container?')) {
+                                                                try {
+                                                                    const updatedData = { ...selectedJob, container_no: null, container_type: null, unloaded_date: null };
+                                                                    await shipmentsAPI.update(selectedJob.id, updatedData);
+                                                                    // Refresh locally
+                                                                    setSelectedJob(updatedData);
+                                                                    setJobs(prev => prev.map(j => j.id === updatedData.id ? updatedData : j));
+                                                                } catch (e) {
+                                                                    console.error("Failed to delete container", e);
+                                                                    alert("Failed to delete container");
+                                                                }
+                                                            }
+                                                        }}
+                                                        className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                                                        title="Delete"
                                                     >
-                                                        {PACKAGE_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-                                                    </select>
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
                                                 </div>
-                                                <div className="col-span-3 flex items-center gap-2">
-                                                    <input
-                                                        type="number"
-                                                        value={pkg.weight}
-                                                        onChange={e => handlePackageChange(idx, 'weight', e.target.value)}
-                                                        className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
-                                                        placeholder="0.0"
-                                                    />
-                                                    {editFormData.packages.length > 1 && (
-                                                        <button onClick={() => removePackage(idx)} className="text-gray-400 hover:text-red-500">
-                                                            <X className="w-4 h-4" />
-                                                        </button>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        ))}
-                                        <button onClick={addPackage} className="w-full py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-indigo-500 hover:text-indigo-600 transition-colors text-sm font-medium flex justify-center items-center gap-2">
-                                            <Plus className="w-4 h-4" /> Add Package
-                                        </button>
-                                        <div className="flex justify-between items-center pt-2 text-sm font-bold text-gray-700">
-                                            <span>Total:</span>
-                                            <span>{editFormData.no_of_pkgs} Pkgs / {editFormData.weight} KG</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {popupType === 'payment' && (
-                            <div className="text-center py-8 text-gray-500 italic">
-                                Payments module coming soon...
-                            </div>
-                        )}
-
-                        {popupType === 'upload' && (
-                            <div className="bg-gray-50 p-6 rounded-xl border border-gray-100">
-                                <div className="space-y-4">
-                                    <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-2">Document Type</label>
-                                        <select id="docTypeSelectPopup" className="w-full p-3 border border-gray-200 rounded-lg bg-white focus:ring-2 focus:ring-indigo-500 outline-none">
-                                            <option value="Invoice">Invoice</option>
-                                            <option value="Packing List">Packing List</option>
-                                            <option value="BL/AWB">BL/AWB</option>
-                                            <option value="Other">Other</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-2">File</label>
-                                        <input type="file" id="docFileInputPopup" className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" />
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-
+                                            )}
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    <tr>
+                                        <td colSpan={4} className="py-8 text-center text-gray-400 italic">No containers listed</td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
                     </div>
+                </>)}
 
-                    <div className="p-6 border-t border-gray-100 flex justify-end gap-3 bg-gray-50">
-                        <button onClick={() => { setPopupType(null); setPopupJob(null); }} className="px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 font-medium">Cancel</button>
+                {activeTab === 'Documents' && renderDocumentsTab()}
 
-                        {popupType === 'upload' ? (
-                            <button onClick={async () => {
-                                const fileInput = document.getElementById('docFileInputPopup') as HTMLInputElement;
-                                const typeInput = document.getElementById('docTypeSelectPopup') as HTMLSelectElement;
-                                if (fileInput?.files?.[0]) {
-                                    const file = fileInput.files[0];
-                                    const type = typeInput.value;
-                                    const formData = new FormData();
-                                    formData.append('file', file);
-                                    formData.append('document_type', type);
-                                    try {
-                                        setLoading(true);
-                                        await shipmentsAPI.uploadDocument(popupJob.id, formData);
-                                        alert('Uploaded successfully');
-                                        // Refresh job if it's the selected one
-                                        if (selectedJob?.id === popupJob.id) {
-                                            const res = await shipmentsAPI.getById(popupJob.id);
-                                            setSelectedJob(res.data);
-                                        }
-                                        setPopupType(null);
-                                        setPopupJob(null);
-                                    } catch (e) {
-                                        console.error(e);
-                                        alert('Upload failed');
-                                    } finally {
-                                        setLoading(false);
-                                    }
-                                } else {
-                                    alert('Please select a file');
-                                }
-                            }} className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium shadow-sm">
-                                Upload Document
-                            </button>
-                        ) : popupType !== 'payment' && (
-                            <button onClick={handlePopupSave} className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium shadow-sm">
-                                Save Details
-                            </button>
-                        )}
-                    </div>
-                </div>
+                {activeTab === 'Payments' && <div className="p-12 text-center text-gray-400 italic">Payments module coming soon...</div>}
+                {activeTab === 'History' && <div className="p-12 text-center text-gray-400 italic">History module coming soon...</div>}
+
             </div>
+            </div >
         );
     };
+
+const handlePopupSave = async () => {
+    if (!popupJob) return;
+    try {
+        setLoading(true);
+
+        if (popupType === 'schedule') {
+            await clearanceAPI.create({
+                job_id: popupJob.id,
+                ...editFormData
+            });
+            // Relaxed refresh logic
+            const res = await shipmentsAPI.getById(popupJob.id);
+            const updated = res.data;
+            setJobs(prev => prev.map(j => j.id === updated.id ? updated : j));
+            if (selectedJob?.id === updated.id) {
+                setSelectedJob(updated);
+            }
+            alert("Clearance Scheduled Successfully");
+        } else {
+            const response = await shipmentsAPI.update(popupJob.id, editFormData);
+            const updated = response.data;
+            setJobs(prev => prev.map(j => j.id === updated.id ? updated : j));
+            if (selectedJob?.id === updated.id) {
+                setSelectedJob(updated);
+            }
+            alert("Details updated successfully");
+        }
+
+        setPopupType(null);
+        setPopupJob(null);
+    } catch (error) {
+        console.error("Update failed", error);
+        alert("Failed to update details");
+    } finally {
+        setLoading(false);
+    }
+};
+
+const renderPopup = () => {
+    if (!popupJob || !popupType || popupType === 'schedule') return null;
 
     return (
-        <Layout>
-            <div className="h-[calc(100vh-100px)] flex border border-gray-200 rounded-2xl overflow-hidden bg-white shadow-sm font-sans">
-                {/* Left Panel: Inbox */}
-                <div className="w-[380px] min-w-[320px] border-r border-gray-100 flex flex-col bg-white z-20 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
-                    <div className="p-5 border-b border-gray-100">
-                        <div className="flex justify-between items-center mb-5">
-                            <h2 className="text-xl font-bold text-gray-900 tracking-tight">Inbox</h2>
-
-                            <button onClick={handleCreateClick} className="w-8 h-8 flex items-center justify-center bg-indigo-600 text-white rounded-full hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-200 transition-all shadow-md">
-                                <Plus className="w-5 h-5" />
-                            </button>
-                        </div>
-                        <div className="relative group">
-                            <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400 group-focus-within:text-indigo-500 transition-colors" />
-                            <input
-                                type="text"
-                                placeholder="Search Job No, BL/AWB, Exporter..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all placeholder:text-gray-400"
-                            />
-                        </div>
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 backdrop-blur-sm" onClick={() => { setPopupType(null); setPopupJob(null); }}>
+            <div className="bg-white rounded-2xl w-full max-w-2xl flex flex-col shadow-2xl animate-scale-in max-h-[90vh] overflow-hidden" onClick={e => e.stopPropagation()}>
+                <div className="flex justify-between items-center p-6 border-b border-gray-100">
+                    <div>
+                        <h3 className="text-xl font-bold text-gray-900 capitalize flex items-center gap-2">
+                            {popupType === 'invoice' && <Receipt className="w-6 h-6 text-indigo-600" />}
+                            {popupType === 'bl' && <FileSpreadsheet className="w-6 h-6 text-blue-600" />}
+                            {popupType === 'payment' && <CreditCard className="w-6 h-6 text-emerald-600" />}
+                            {popupType === 'upload' && <UploadCloud className="w-6 h-6 text-violet-600" />}
+                            {popupType === 'bl' ? 'BL/AWB Details' : popupType === 'invoice' ? 'Shipment Invoice' : popupType === 'payment' ? 'Payment Details' : 'Upload Document'}
+                        </h3>
+                        <p className="text-sm text-gray-500 mt-1">Job: {popupJob.id} - {popupJob.customer}</p>
                     </div>
-
-                    <div className="flex-1 overflow-y-auto custom-scrollbar">
-                        {loading ? (
-                            <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-2 border-dashed border-indigo-600"></div></div>
-                        ) : (
-                            jobs.map(renderInboxItem)
-                        )}
-                        {jobs.length === 0 && !loading && (
-                            <div className="flex flex-col items-center justify-center py-12 text-center px-6">
-                                <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-3">
-                                    <Search className="w-6 h-6 text-gray-300" />
-                                </div>
-                                <p className="text-sm font-medium text-gray-900">No shipments found</p>
-                                <p className="text-xs text-gray-500 mt-1">Try adjusting your search filters</p>
-                            </div>
-                        )}
-                    </div>
+                    <button onClick={() => { setPopupType(null); setPopupJob(null); }} className="p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-gray-600 transition-colors">
+                        <X className="w-6 h-6" />
+                    </button>
                 </div>
 
-                {/* Right Panel: Workspace */}
-                <div className="flex-1 bg-gray-50/30 relative overflow-hidden">
-                    {viewMode === 'empty' && (
-                        <div className="flex flex-col items-center justify-center h-full text-center px-4 animate-fade-in">
-                            <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mb-6 shadow-inner ring-8 ring-gray-50/50">
-                                <Truck className="w-10 h-10 text-gray-300" />
+                <div className="p-6 overflow-y-auto custom-scrollbar">
+                    {popupType === 'invoice' && (
+                        <div className="grid grid-cols-2 gap-6">
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Invoice No.</label>
+                                <input name="invoice_no" value={editFormData.invoice_no || ''} onChange={handleEditChange} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="-" />
                             </div>
-                            <h3 className="text-xl font-bold text-gray-900 mb-2">Nothing here yet</h3>
-                            <p className="text-gray-500 max-w-sm mb-8">
-                                To view a job, select a job from the inbox.<br />
-                                To add a new job, click the + button to create manually, or use the upload icon for Excel import.
-                            </p>
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Cargo Type</label>
+                                <select name="cargo_type" value={editFormData.cargo_type || 'GENERAL'} onChange={handleEditChange} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
+                                    <option value="GENERAL">GENERAL</option>
+                                    <option value="PERISHABLE">PERISHABLE</option>
+                                    <option value="HARDWARE">HARDWARE</option>
+                                    <option value="GARMENTS">GARMENTS</option>
+                                    <option value="ELECTRONICS">ELECTRONICS</option>
+                                    <option value="DRY FOODS">DRY FOODS</option>
+                                    <option value="FURNITURE">FURNITURE</option>
+                                    <option value="OTHER">OTHER</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">No. Items</label>
+                                <input name="no_of_pkgs" value={editFormData.no_of_pkgs || ''} onChange={handleEditChange} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="0" />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Customs Form No.</label>
+                                <input name="customs_r_form" value={editFormData.customs_r_form || ''} onChange={handleEditChange} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="-" />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Office</label>
+                                <select name="office" value={editFormData.office || ''} onChange={handleEditChange} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
+                                    <option value="">Select Office</option>
+                                    <option value="00MP">00MP</option>
+                                    <option value="00AP">00AP</option>
+                                    <option value="00HA">00HA</option>
+                                    <option value="00BW">00BW</option>
+                                    <option value="00HK">00HK</option>
+                                    <option value="00HM">00HM</option>
+                                    <option value="00PO">00PO</option>
+                                    <option value="00SG">00SG</option>
+                                    <option value="00SH">00SH</option>
+                                </select>
+                            </div>
                         </div>
                     )}
 
-                    {viewMode === 'create' && renderCreateForm()}
-                    {viewMode === 'details' && renderJobDetails()}
+                    {popupType === 'bl' && (
+                        <div className="grid grid-cols-2 gap-6">
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Master No.</label>
+                                <input name="bl_awb_no" value={editFormData.bl_awb_no || ''} onChange={handleEditChange} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="-" />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">House No.</label>
+                                <input name="house_bl" value={editFormData.house_bl || ''} onChange={handleEditChange} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="-" />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">ETA</label>
+                                <input type="date" name="expected_delivery_date" value={editFormData.expected_delivery_date ? new Date(editFormData.expected_delivery_date).toISOString().substr(0, 10) : ''} onChange={handleEditChange} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Loading Port</label>
+                                <input name="origin" value={editFormData.origin || ''} onChange={handleEditChange} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="-" />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Vessel</label>
+                                <input name="vessel" value={editFormData.vessel || ''} onChange={handleEditChange} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="-" />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Delivery Agent</label>
+                                <select
+                                    name="delivery_agent"
+                                    value={editFormData.delivery_agent || ''}
+                                    onChange={handleEditChange}
+                                    className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none bg-white"
+                                >
+                                    <option value="">Select Delivery Agent</option>
+                                    {deliveryAgentsList.map((agent: any) => (
+                                        <option key={agent.id} value={agent.name}>
+                                            {agent.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="col-span-2">
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Packages</label>
+                                <div className="bg-gray-50 p-4 rounded-lg border border-gray-100 space-y-3">
+                                    <div className="grid grid-cols-10 gap-2 text-xs font-bold text-gray-400 mb-1">
+                                        <div className="col-span-3">Count</div>
+                                        <div className="col-span-4">Type</div>
+                                        <div className="col-span-3">Weight (KG)</div>
+                                    </div>
+                                    {editFormData.packages?.map((pkg: any, idx: number) => (
+                                        <div key={idx} className="grid grid-cols-10 gap-2 items-center">
+                                            <div className="col-span-3">
+                                                <input
+                                                    type="number"
+                                                    value={pkg.count}
+                                                    onChange={e => handlePackageChange(idx, 'count', e.target.value)}
+                                                    className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
+                                                    placeholder="0"
+                                                />
+                                            </div>
+                                            <div className="col-span-4">
+                                                <select
+                                                    value={pkg.type}
+                                                    onChange={e => handlePackageChange(idx, 'type', e.target.value)}
+                                                    className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm bg-white"
+                                                >
+                                                    {PACKAGE_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                                                </select>
+                                            </div>
+                                            <div className="col-span-3 flex items-center gap-2">
+                                                <input
+                                                    type="number"
+                                                    value={pkg.weight}
+                                                    onChange={e => handlePackageChange(idx, 'weight', e.target.value)}
+                                                    className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
+                                                    placeholder="0.0"
+                                                />
+                                                {editFormData.packages.length > 1 && (
+                                                    <button onClick={() => removePackage(idx)} className="text-gray-400 hover:text-red-500">
+                                                        <X className="w-4 h-4" />
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                    <button onClick={addPackage} className="w-full py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-indigo-500 hover:text-indigo-600 transition-colors text-sm font-medium flex justify-center items-center gap-2">
+                                        <Plus className="w-4 h-4" /> Add Package
+                                    </button>
+                                    <div className="flex justify-between items-center pt-2 text-sm font-bold text-gray-700">
+                                        <span>Total:</span>
+                                        <span>{editFormData.no_of_pkgs} Pkgs / {editFormData.weight} KG</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
+                    {popupType === 'payment' && (
+                        <div className="text-center py-8 text-gray-500 italic">
+                            Payments module coming soon...
+                        </div>
+                    )}
+
+                    {popupType === 'upload' && (
+                        <div className="bg-gray-50 p-6 rounded-xl border border-gray-100">
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">Document Type</label>
+                                    <select id="docTypeSelectPopup" className="w-full p-3 border border-gray-200 rounded-lg bg-white focus:ring-2 focus:ring-indigo-500 outline-none">
+                                        <option value="Invoice">Invoice</option>
+                                        <option value="Packing List">Packing List</option>
+                                        <option value="BL/AWB">BL/AWB</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">File</label>
+                                    <input type="file" id="docFileInputPopup" className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" />
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+
+                </div>
+
+                <div className="p-6 border-t border-gray-100 flex justify-end gap-3 bg-gray-50">
+                    <button onClick={() => { setPopupType(null); setPopupJob(null); }} className="px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 font-medium">Cancel</button>
+
+                    {popupType === 'upload' ? (
+                        <button onClick={async () => {
+                            const fileInput = document.getElementById('docFileInputPopup') as HTMLInputElement;
+                            const typeInput = document.getElementById('docTypeSelectPopup') as HTMLSelectElement;
+                            if (fileInput?.files?.[0]) {
+                                const file = fileInput.files[0];
+                                const type = typeInput.value;
+                                const formData = new FormData();
+                                formData.append('file', file);
+                                formData.append('document_type', type);
+                                try {
+                                    setLoading(true);
+                                    await shipmentsAPI.uploadDocument(popupJob.id, formData);
+                                    alert('Uploaded successfully');
+                                    // Refresh job if it's the selected one
+                                    if (selectedJob?.id === popupJob.id) {
+                                        const res = await shipmentsAPI.getById(popupJob.id);
+                                        setSelectedJob(res.data);
+                                    }
+                                    setPopupType(null);
+                                    setPopupJob(null);
+                                } catch (e) {
+                                    console.error(e);
+                                    alert('Upload failed');
+                                } finally {
+                                    setLoading(false);
+                                }
+                            } else {
+                                alert('Please select a file');
+                            }
+                        }} className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium shadow-sm">
+                            Upload Document
+                        </button>
+                    ) : popupType !== 'payment' && (
+                        <button onClick={handlePopupSave} className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium shadow-sm">
+                            Save Details
+                        </button>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+return (
+    <Layout>
+        <div className="h-[calc(100vh-100px)] flex border border-gray-200 rounded-2xl overflow-hidden bg-white shadow-sm font-sans">
+            {/* Left Panel: Inbox */}
+            <div className="w-[380px] min-w-[320px] border-r border-gray-100 flex flex-col bg-white z-20 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
+                <div className="p-5 border-b border-gray-100">
+                    <div className="flex justify-between items-center mb-5">
+                        <h2 className="text-xl font-bold text-gray-900 tracking-tight">Inbox</h2>
+
+                        <button onClick={handleCreateClick} className="w-8 h-8 flex items-center justify-center bg-indigo-600 text-white rounded-full hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-200 transition-all shadow-md">
+                            <Plus className="w-5 h-5" />
+                        </button>
+                    </div>
+                    <div className="relative group">
+                        <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400 group-focus-within:text-indigo-500 transition-colors" />
+                        <input
+                            type="text"
+                            placeholder="Search Job No, BL/AWB, Exporter..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all placeholder:text-gray-400"
+                        />
+                    </div>
+                </div>
+
+                <div className="flex-1 overflow-y-auto custom-scrollbar">
+                    {loading ? (
+                        <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-2 border-dashed border-indigo-600"></div></div>
+                    ) : (
+                        jobs.map(renderInboxItem)
+                    )}
+                    {jobs.length === 0 && !loading && (
+                        <div className="flex flex-col items-center justify-center py-12 text-center px-6">
+                            <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-3">
+                                <Search className="w-6 h-6 text-gray-300" />
+                            </div>
+                            <p className="text-sm font-medium text-gray-900">No shipments found</p>
+                            <p className="text-xs text-gray-500 mt-1">Try adjusting your search filters</p>
+                        </div>
+                    )}
                 </div>
             </div>
 
-            {/* Preview Modal */}
-            {previewDoc && (
-                <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-lg w-full max-w-6xl h-[90vh] flex flex-col shadow-2xl animate-scale-in">
-                        <div className="flex justify-between items-center p-4 border-b">
-                            <div>
-                                <h3 className="font-bold text-gray-900">{previewDoc.file_name}</h3>
-                                <p className="text-xs text-gray-500 uppercase">{previewDoc.document_type || 'Document'}</p>
-                            </div>
-                            <button onClick={() => { setPreviewDoc(null); setPreviewUrl(null); }} className="p-2 hover:bg-gray-100 rounded-full text-gray-500 hover:text-gray-700 transition-colors">
-                                <X className="w-6 h-6" />
-                            </button>
+            {/* Right Panel: Workspace */}
+            <div className="flex-1 bg-gray-50/30 relative overflow-hidden">
+                {viewMode === 'empty' && (
+                    <div className="flex flex-col items-center justify-center h-full text-center px-4 animate-fade-in">
+                        <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mb-6 shadow-inner ring-8 ring-gray-50/50">
+                            <Truck className="w-10 h-10 text-gray-300" />
                         </div>
-                        <div className="flex-1 bg-gray-100 p-1 relative">
-                            {previewDoc.file_type?.startsWith('image/') ? (
-                                <img src={previewUrl || ''} alt="Preview" className="w-full h-full object-contain" />
-                            ) : (
-                                <iframe
-                                    src={previewUrl || ''}
-                                    className="w-full h-full border-none"
-                                    title="Document Preview"
-                                />
-                            )}
+                        <h3 className="text-xl font-bold text-gray-900 mb-2">Nothing here yet</h3>
+                        <p className="text-gray-500 max-w-sm mb-8">
+                            To view a job, select a job from the inbox.<br />
+                            To add a new job, click the + button to create manually, or use the upload icon for Excel import.
+                        </p>
+                    </div>
+                )}
+
+                {viewMode === 'create' && renderCreateForm()}
+                {viewMode === 'details' && renderJobDetails()}
+
+            </div>
+        </div>
+
+        {/* Preview Modal */}
+        {previewDoc && (
+            <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
+                <div className="bg-white rounded-lg w-full max-w-6xl h-[90vh] flex flex-col shadow-2xl animate-scale-in">
+                    <div className="flex justify-between items-center p-4 border-b">
+                        <div>
+                            <h3 className="font-bold text-gray-900">{previewDoc.file_name}</h3>
+                            <p className="text-xs text-gray-500 uppercase">{previewDoc.document_type || 'Document'}</p>
                         </div>
+                        <button onClick={() => { setPreviewDoc(null); setPreviewUrl(null); }} className="p-2 hover:bg-gray-100 rounded-full text-gray-500 hover:text-gray-700 transition-colors">
+                            <X className="w-6 h-6" />
+                        </button>
+                    </div>
+                    <div className="flex-1 bg-gray-100 p-1 relative">
+                        {previewDoc.file_type?.startsWith('image/') ? (
+                            <img src={previewUrl || ''} alt="Preview" className="w-full h-full object-contain" />
+                        ) : (
+                            <iframe
+                                src={previewUrl || ''}
+                                className="w-full h-full border-none"
+                                title="Document Preview"
+                            />
+                        )}
                     </div>
                 </div>
-            )}
+            </div>
+        )}
 
 
-            {popupType === 'schedule' && popupJob && (
-                <ScheduleClearanceDrawer
-                    isOpen={true}
-                    onClose={() => { setPopupType(null); setPopupJob(null); }}
-                    onSave={handleScheduleSave}
-                    job={popupJob}
-                    initialData={editFormData}
-                />
-            )}
+        {popupType === 'schedule' && popupJob && (
+            <ScheduleClearanceDrawer
+                isOpen={true}
+                onClose={() => { setPopupType(null); setPopupJob(null); }}
+                onSave={handleScheduleSave}
+                job={popupJob}
+                initialData={editFormData}
+            />
+        )}
 
-            {renderPopup()}
-        </Layout>
-    );
+        {renderPopup()}
+    </Layout>
+);
 };
 
 export default ShipmentRegistry;
