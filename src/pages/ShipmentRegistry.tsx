@@ -229,11 +229,7 @@ const ShipmentRegistry: React.FC = () => {
             // The backend expects generic fields: sender_name, receiver_name, transport_mode, etc.
             const apiData = new FormData();
 
-            if (!formData.manual_invoice_no) {
-                alert("Please enter the Job Invoice No.");
-                setLoading(false);
-                return;
-            }
+
 
             // Map UI 'Exporter' -> sender_name / customer
             apiData.append('sender_name', formData.exporter);
@@ -495,7 +491,7 @@ const ShipmentRegistry: React.FC = () => {
 
                 {/* Section: Manual Job Invoice */}
                 <div className="form-group mb-4">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Job Invoice No.</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Job Invoice No. <span className="text-gray-400 font-normal">(Optional)</span></label>
                     <input
                         type="text"
                         name="manual_invoice_no"
