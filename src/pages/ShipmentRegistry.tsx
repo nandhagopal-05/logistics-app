@@ -303,6 +303,10 @@ const ShipmentRegistry: React.FC = () => {
             initialData.port = 'MALE';
             initialData.bl_awb = job.bl_awb_no || '';
             initialData.transport_mode = 'Sea';
+            // Pre-fill container details in remarks
+            if (job.container_no) {
+                initialData.remarks = `Container: ${job.container_no} (${job.container_type || 'N/A'})`;
+            }
         }
         setEditFormData(initialData);
         setEditingSection(null);
