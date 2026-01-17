@@ -1089,10 +1089,10 @@ const ShipmentRegistry: React.FC = () => {
                     <div className="flex justify-between items-center p-6 border-b border-gray-100">
                         <div>
                             <h3 className="text-xl font-bold text-gray-900 capitalize flex items-center gap-2">
-                                {popupType === 'invoice' && <Receipt className="w-5 h-5 text-indigo-600" />}
-                                {popupType === 'bl' && <FileSpreadsheet className="w-5 h-5 text-blue-600" />}
-                                {popupType === 'payment' && <CreditCard className="w-5 h-5 text-emerald-600" />}
-                                {popupType === 'upload' && <UploadCloud className="w-5 h-5 text-violet-600" />}
+                                {popupType === 'invoice' && <Receipt className="w-6 h-6 text-indigo-600" />}
+                                {popupType === 'bl' && <FileSpreadsheet className="w-6 h-6 text-blue-600" />}
+                                {popupType === 'payment' && <CreditCard className="w-6 h-6 text-emerald-600" />}
+                                {popupType === 'upload' && <UploadCloud className="w-6 h-6 text-violet-600" />}
                                 {popupType === 'bl' ? 'BL/AWB Details' : popupType === 'invoice' ? 'Shipment Invoice' : popupType === 'payment' ? 'Payment Details' : 'Upload Document'}
                             </h3>
                             <p className="text-sm text-gray-500 mt-1">Job: {popupJob.id} - {popupJob.customer}</p>
