@@ -268,7 +268,7 @@ const Dashboard: React.FC = () => {
                                             </span>
                                         </td>
                                         <td className="py-4 px-4 text-sm text-gray-600">
-                                            {new Date(shipment.date).toLocaleString(undefined, {
+                                            {new Date(shipment.created_at || shipment.date).toLocaleString(undefined, {
                                                 year: 'numeric',
                                                 month: 'numeric',
                                                 day: 'numeric',
