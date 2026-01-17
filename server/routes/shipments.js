@@ -298,7 +298,8 @@ router.post('/', authenticateToken, shipmentUpload, async (req, res) => {
             receiver_name, receiver_address,
             description, weight, dimensions, price,
             date, expected_delivery_date, transport_mode,
-            driver, vehicle_id, service
+            driver, vehicle_id, service,
+            job_invoice_no
         } = req.body;
 
         const id = await generateShipmentId();
@@ -354,7 +355,7 @@ router.post('/', authenticateToken, shipmentUpload, async (req, res) => {
         }
 
         // AUTO-GENERATE INVOICE
-        const invoiceId = `INV-${new Date().getFullYear()}${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
+        const invoiceId = job_invoice_no || `INV-${new Date().getFullYear()}${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
 
         // Generate PDF
         let invoicePath = null;

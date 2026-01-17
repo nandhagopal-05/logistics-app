@@ -241,7 +241,8 @@ const ShipmentRegistry: React.FC = () => {
             apiData.append('billing_contact', finalBilling);
 
             // Manual Invoice Number (Job Invoice)
-            apiData.append('invoice_no', formData.manual_invoice_no);
+            // Use 'job_invoice_no' to distinguish from 'invoice_no' (Shipment Invoice)
+            apiData.append('job_invoice_no', formData.manual_invoice_no);
 
             // Backend requires these, so we provide defaults or mapped values
             apiData.append('service', formData.service);
@@ -921,7 +922,7 @@ const ShipmentRegistry: React.FC = () => {
                                 </div>
                                 <div>
                                     <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Job Invoice</p>
-                                    <p className="font-medium text-slate-500 italic">Not Generated</p>
+                                    <p className="font-medium text-slate-200">{selectedJob.invoice_id || selectedJob.invoice?.id || <span className="text-slate-500 italic">Not Generated</span>}</p>
                                 </div>
                             </div>
                         </div>
