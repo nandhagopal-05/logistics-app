@@ -368,7 +368,21 @@ const ShipmentRegistry: React.FC = () => {
         if (!selectedJob) return;
         try {
             setLoading(true);
-            const response = await shipmentsAPI.update(selectedJob.id, editFormData);
+
+            // Sanitize data before sending
+            const updatedData = { ...editFormData };
+            if (updatedData.unloaded_date === '') {
+                updatedData.unloaded_date = null;
+            }
+            // Sanitize other date fields just in case
+            if (updatedData.expected_delivery_date === '') {
+                updatedData.expected_delivery_date = null;
+            }
+            if (updatedData.date === '') {
+                updatedData.date = null;
+            }
+
+            const response = await shipmentsAPI.update(selectedJob.id, updatedData);
             const updated = response.data;
             setSelectedJob(updated);
             setJobs(prev => prev.map(j => j.id === updated.id ? updated : j));
