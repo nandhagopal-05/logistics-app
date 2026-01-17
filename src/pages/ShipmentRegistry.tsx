@@ -206,7 +206,12 @@ const ShipmentRegistry: React.FC = () => {
             alert('Job Updated Successfully!');
             setIsEditingJob(false);
             setViewMode('details');
-            setSelectedJob((prev: any) => ({ ...prev, ...updateData }));
+            setSelectedJob((prev: any) => ({
+                ...prev,
+                ...updateData,
+                invoice_id: formData.manual_invoice_no,
+                invoice: { ...prev.invoice, id: formData.manual_invoice_no }
+            }));
             loadJobs(true);
         } catch (error) {
             console.error('Update Job Failed', error);
