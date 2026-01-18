@@ -200,7 +200,7 @@ const DeliveryNotes: React.FC = () => {
                         <div className="bg-gray-200 p-2 font-bold border-b border-gray-800">GOODS DELIVERED BY</div>
                         <div className="p-4 grid grid-cols-[80px_1fr] gap-4 min-h-[100px]">
                             <span className="font-bold">Name:</span> <span>{selectedNote?.issued_by}</span>
-                            <span className="font-bold">Signature:</span>
+                            <span className="font-bold">Signature:</span> <span></span>
                             <div className="absolute bottom-2 right-12 w-24 h-24 opacity-80 pointer-events-none mix-blend-multiply">
                                 <img src={seaflowDigitalSeal} alt="Seal" className="w-full h-full object-contain" />
                             </div>
