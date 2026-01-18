@@ -163,7 +163,7 @@ const DeliveryNotes: React.FC = () => {
                 className="bg-white min-h-[1100px] text-sm font-mono relative flex flex-col"
             >
                 {/* Header Image */}
-                <div className="w-full relative">
+                <div className="w-full">
                     <img src={seaflowHeader} alt="Header" className="w-full h-auto object-cover max-h-48" crossOrigin="anonymous" />
                 </div>
 
@@ -274,9 +274,10 @@ const DeliveryNotes: React.FC = () => {
                                                 : ''}
                                         </span>
                                     </div>
-                                    <div className="grid grid-cols-[60px_1fr] gap-2">
-                                        <span className="font-bold">Signature:</span>
-                                        <div className="border-b border-gray-400 h-8"></div>
+                                    <div className="space-y-2">
+                                        <div className="grid grid-cols-[60px_1fr] gap-2">
+                                            <span className="font-bold">Signature:</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -287,12 +288,11 @@ const DeliveryNotes: React.FC = () => {
                             <div className="bg-gray-200 p-2 font-bold border-b border-gray-800">GOODS RECEIVED BY</div>
                             <div className="p-2 flex-grow flex flex-col h-32">
                                 <div className="grid grid-cols-[60px_1fr] gap-2 mb-2">
-                                    <span className="font-bold">Name:</span>
-                                    <div className="border-b border-gray-400 h-4"></div>
-                                </div>
-                                <div className="grid grid-cols-[60px_1fr] gap-2">
-                                    <span className="font-bold">Signature:</span>
-                                    <div className="border-b border-gray-400 h-8"></div>
+                                    <span className="font-bold">Name:</span></div>
+                                <div className="space-y-2">
+                                    <div className="grid grid-cols-[60px_1fr] gap-2">
+                                        <span className="font-bold">Signature:</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
