@@ -116,24 +116,29 @@ const DeliveryNotes: React.FC = () => {
             {/* Header Image */}
             <div className="w-full relative">
                 <img src={seaflowHeader} alt="Header" className="w-full h-auto object-cover max-h-48" />
-                {/* Logo Overlay - Positioned as requested (Blue Zone) */}
-                <div className="absolute top-1/2 -translate-y-1/2 left-8 w-24 h-24 bg-white rounded-full p-1 shadow-sm">
-                    <img src={seaflowLogo} alt="Logo" className="w-full h-full object-contain rounded-full" />
-                </div>
             </div>
 
             <div className="p-8 flex-1">
-                <div className="flex justify-between items-start mb-8 mt-4">
-                    <div className="w-1/2">
-                        {/* Spacer for where address used to be, now handled by header image or just empty */}
+                <div className="flex justify-between items-start mb-8 mt-2">
+                    <div className="w-1/2 flex items-center gap-4">
+                        {/* Logo and Address */}
+                        <div className="w-20 h-20 flex-shrink-0">
+                            <img src={seaflowLogo} alt="Logo" className="w-full h-full object-contain" />
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-bold text-red-600 italic leading-tight">Seaflow Logistics</h2>
+                            <p className="text-[10px] text-gray-600 leading-snug">H.Fusthalhaanage, 7th Floor,</p>
+                            <p className="text-[10px] text-gray-600 leading-snug">Ameer Ahmed Magu, Male', 20030,</p>
+                            <p className="text-[10px] text-gray-600 leading-snug">e: info@seaflow.mv, ph: +960 300 7633</p>
+                        </div>
                     </div>
                     <div className="text-right">
-                        <div className="bg-gray-300 text-gray-800 font-bold px-4 py-2 mb-2 inline-block">GOODS DELIVERY NOTE</div>
+                        <div className="bg-gray-300 text-gray-800 font-bold px-4 py-2 mb-2 inline-block text-xs">GOODS DELIVERY NOTE</div>
                         <div className="flex justify-end mb-2">
                             <Barcode
                                 value={selectedNote?.id || ''}
-                                width={1.5}
-                                height={50}
+                                width={1.2}
+                                height={40}
                                 displayValue={false}
                                 background="transparent"
                                 margin={0}
