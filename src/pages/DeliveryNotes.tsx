@@ -154,123 +154,141 @@ const DeliveryNotes: React.FC = () => {
     };
 
     // Render the Document Preview (Image 1 style)
+    // Render the Document Preview (Image 1 style)
     const renderDocument = () => (
-        <div
-            ref={printRef}
-            id="printable-content"
-            className="bg-white shadow-sm border border-gray-200 min-h-[1100px] text-sm font-mono relative flex flex-col"
-        >
-            {/* Header Image */}
-            <div className="w-full relative">
-                <img src={seaflowHeader} alt="Header" className="w-full h-auto object-cover max-h-48" />
-            </div>
-
-            <div className="p-8 flex-1">
-                <div className="flex justify-between items-start mb-8 mt-2">
-                    <div className="w-1/2 flex items-center gap-4">
-                        {/* Logo and Address */}
-                        <div className="w-20 h-20 flex-shrink-0">
-                            <img src={seaflowLogo} alt="Logo" className="w-full h-full object-contain" />
-                        </div>
-                        <div>
-                            <h2 className="text-xl font-bold text-sky-900 italic leading-tight">Seaflow Logistics</h2>
-                            <p className="text-[10px] text-gray-600 leading-snug">H.Fusthalhaanage, 7th Floor,</p>
-                            <p className="text-[10px] text-gray-600 leading-snug">Ameer Ahmed Magu, Male', 20030,</p>
-                            <p className="text-[10px] text-gray-600 leading-snug">e: info@seaflow.mv, ph: +960 300 7633</p>
-                        </div>
-                    </div>
-                    <div className="text-right">
-                        <div className="bg-gray-300 text-gray-800 font-bold px-4 py-2 mb-2 inline-block text-m">GOODS DELIVERY NOTE</div>
-                    </div>
+        <div className="shadow-sm border border-gray-200 w-full mb-8">
+            <div
+                ref={printRef}
+                id="printable-content"
+                className="bg-white min-h-[1100px] text-sm font-mono relative flex flex-col"
+            >
+                {/* Header Image */}
+                <div className="w-full relative">
+                    <img src={seaflowHeader} alt="Header" className="w-full h-auto object-cover max-h-48" />
                 </div>
 
-                <div className="border border-gray-800 p-4 mb-6 grid grid-cols-2 gap-8">
-                    <div>
-                        <p className="mb-1"><span className="font-bold">Customer:</span> {selectedNote?.consignee}</p>
-                        {selectedNote?.consignee_phone && (
-                            <p className="mb-1"><span className="font-bold">Phone:</span> {selectedNote.consignee_phone}</p>
-                        )}
-                        {selectedNote?.consignee_email && (
-                            <p className="mb-1"><span className="font-bold">Email:</span> {selectedNote.consignee_email}</p>
-                        )}
+                <div className="p-8 flex-1">
+                    <div className="flex justify-between items-start mb-8 mt-2">
+                        <div className="w-1/2 flex items-center gap-4">
+                            {/* Logo and Address */}
+                            <div className="w-20 h-20 flex-shrink-0">
+                                <img src={seaflowLogo} alt="Logo" className="w-full h-full object-contain" />
+                            </div>
+                            <div>
+                                <h2 className="text-xl font-bold text-sky-900 italic leading-tight">Seaflow Logistics</h2>
+                                <p className="text-[10px] text-gray-600 leading-snug">H.Fusthalhaanage, 7th Floor,</p>
+                                <p className="text-[10px] text-gray-600 leading-snug">Ameer Ahmed Magu, Male', 20030,</p>
+                                <p className="text-[10px] text-gray-600 leading-snug">e: info@seaflow.mv, ph: +960 300 7633</p>
+                            </div>
+                        </div>
+                        <div className="text-right">
+                            <div className="bg-gray-300 text-gray-800 font-bold px-4 py-2 mb-2 inline-block text-m">GOODS DELIVERY NOTE</div>
+                        </div>
                     </div>
-                    <div>
+
+                    <div className="border border-gray-800 p-4 mb-6 grid grid-cols-2 gap-8">
                         <div>
-                            <div className="border-b border-gray-300 pb-1 mb-1 flex justify-between">
-                                <span className="font-bold">Delivery:</span> <span>{selectedNote?.id}</span>
-                            </div>
-                            <div className="border-b border-gray-300 pb-1 mb-1 flex justify-between">
-                                <span className="font-bold">Loading Date:</span> <span>{selectedNote?.loading_date ? new Date(selectedNote.loading_date).toLocaleDateString() : '-'}</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span className="font-bold">Discharge Location:</span>
-                                <span>
-                                    {selectedNote?.vehicles && selectedNote.vehicles.length > 0
-                                        ? selectedNote.vehicles.map(v => v.discharge_location).join(', ')
-                                        : '-'}
-                                </span>
+                            <p className="mb-1"><span className="font-bold">Customer:</span> {selectedNote?.consignee}</p>
+                            {selectedNote?.consignee_phone && (
+                                <p className="mb-1"><span className="font-bold">Phone:</span> {selectedNote.consignee_phone}</p>
+                            )}
+                            {selectedNote?.consignee_email && (
+                                <p className="mb-1"><span className="font-bold">Email:</span> {selectedNote.consignee_email}</p>
+                            )}
+                        </div>
+                        <div>
+                            <div>
+                                <div className="border-b border-gray-300 pb-1 mb-1 flex justify-between">
+                                    <span className="font-bold">Delivery:</span> <span>{selectedNote?.id}</span>
+                                </div>
+                                <div className="border-b border-gray-300 pb-1 mb-1 flex justify-between">
+                                    <span className="font-bold">Loading Date:</span> <span>{selectedNote?.loading_date ? new Date(selectedNote.loading_date).toLocaleDateString() : '-'}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="font-bold">Discharge Location:</span>
+                                    <span>
+                                        {selectedNote?.vehicles && selectedNote.vehicles.length > 0
+                                            ? selectedNote.vehicles.map(v => v.discharge_location).join(', ')
+                                            : '-'}
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                {/* Job Table Mock */}
-                <div className="mb-8">
-                    <table className="w-full border-collapse border border-gray-300 text-xs">
-                        <thead className="bg-gray-200">
-                            <tr>
-                                <th className="border border-gray-300 p-2 text-left">Job No</th>
-                                <th className="border border-gray-300 p-2 text-left">Shipper</th>
-                                <th className="border border-gray-300 p-2 text-left">BL/AWB #</th>
-                                <th className="border border-gray-300 p-2 text-left">Qty</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {selectedNote?.items?.map((item, idx) => (
-                                <tr key={idx}>
-                                    <td className="border border-gray-300 p-2">{item.job_id}</td>
-                                    <td className="border border-gray-300 p-2">{item.sender_name || selectedNote.exporter}</td>
-                                    <td className="border border-gray-300 p-2">{item.bl_awb_no || '-'}</td>
-                                    <td className="border border-gray-300 p-2">{item.packages || '-'}</td>
+                    {/* Job Table Mock */}
+                    <div className="mb-8">
+                        <table className="w-full border-collapse border border-gray-300 text-xs">
+                            <thead className="bg-gray-200">
+                                <tr>
+                                    <th className="border border-gray-300 p-2 text-left">Job No</th>
+                                    <th className="border border-gray-300 p-2 text-left">Shipper</th>
+                                    <th className="border border-gray-300 p-2 text-left">BL/AWB #</th>
+                                    <th className="border border-gray-300 p-2 text-left">Qty</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                            </thead>
+                            <tbody>
+                                {selectedNote?.items?.map((item, idx) => (
+                                    <tr key={idx}>
+                                        <td className="border border-gray-300 p-2">{item.job_id}</td>
+                                        <td className="border border-gray-300 p-2">{item.sender_name || selectedNote.exporter}</td>
+                                        <td className="border border-gray-300 p-2">{item.bl_awb_no || '-'}</td>
+                                        <td className="border border-gray-300 p-2">{item.packages || '-'}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
 
-                {/* Signatures */}
-                {/* Signatures */}
-                <div className="border border-gray-800 flex mb-8 text-xs">
-                    {/* GOODS DELIVERED BY (Takes up 2/3 of width) */}
-                    <div className="w-2/3 border-r border-gray-800 flex flex-col">
-                        <div className="bg-gray-200 p-2 font-bold border-b border-gray-800">GOODS DELIVERED BY</div>
-                        <div className="grid grid-cols-2 flex-grow h-32">
-                            {/* Column 1: Issued By + Seal */}
-                            <div className="p-2 border-r border-gray-800 relative flex flex-col justify-between">
-                                <div>
+                    {/* Signatures */}
+                    {/* Signatures */}
+                    <div className="border border-gray-800 flex mb-8 text-xs">
+                        {/* GOODS DELIVERED BY (Takes up 2/3 of width) */}
+                        <div className="w-2/3 border-r border-gray-800 flex flex-col">
+                            <div className="bg-gray-200 p-2 font-bold border-b border-gray-800">GOODS DELIVERED BY</div>
+                            <div className="grid grid-cols-2 flex-grow h-32">
+                                {/* Column 1: Issued By + Seal */}
+                                <div className="p-2 border-r border-gray-800 relative flex flex-col justify-between">
+                                    <div>
+                                        <div className="grid grid-cols-[60px_1fr] gap-2 mb-2">
+                                            <span className="font-bold">Name:</span>
+                                            <span className="uppercase">{selectedNote?.issued_by}</span>
+                                        </div>
+                                        <div className="grid grid-cols-[60px_1fr] gap-2">
+                                            <span className="font-bold">Signature:</span>
+                                            <div className="border-b border-gray-400 h-8"></div>
+                                        </div>
+                                    </div>
+                                    <div className="absolute bottom-1 right-2 w-20 h-20 opacity-80 pointer-events-none mix-blend-multiply">
+                                        <img src={seaflowDigitalSeal} alt="Seal" className="w-full h-full object-contain" />
+                                    </div>
+                                </div>
+
+                                {/* Column 2: Driver */}
+                                <div className="p-2 relative flex flex-col">
                                     <div className="grid grid-cols-[60px_1fr] gap-2 mb-2">
                                         <span className="font-bold">Name:</span>
-                                        <span className="uppercase">{selectedNote?.issued_by}</span>
+                                        <span className="uppercase">
+                                            {selectedNote?.vehicles && selectedNote.vehicles.length > 0
+                                                ? `${selectedNote.vehicles[0].driver_name} / ${selectedNote.vehicles[0].driver_contact}`
+                                                : ''}
+                                        </span>
                                     </div>
                                     <div className="grid grid-cols-[60px_1fr] gap-2">
                                         <span className="font-bold">Signature:</span>
                                         <div className="border-b border-gray-400 h-8"></div>
                                     </div>
                                 </div>
-                                <div className="absolute bottom-1 right-2 w-20 h-20 opacity-80 pointer-events-none mix-blend-multiply">
-                                    <img src={seaflowDigitalSeal} alt="Seal" className="w-full h-full object-contain" />
-                                </div>
                             </div>
+                        </div>
 
-                            {/* Column 2: Driver */}
-                            <div className="p-2 relative flex flex-col">
+                        {/* GOODS RECEIVED BY (Takes up 1/3 of width) */}
+                        <div className="w-1/3 flex flex-col">
+                            <div className="bg-gray-200 p-2 font-bold border-b border-gray-800">GOODS RECEIVED BY</div>
+                            <div className="p-2 flex-grow flex flex-col h-32">
                                 <div className="grid grid-cols-[60px_1fr] gap-2 mb-2">
                                     <span className="font-bold">Name:</span>
-                                    <span className="uppercase">
-                                        {selectedNote?.vehicles && selectedNote.vehicles.length > 0
-                                            ? `${selectedNote.vehicles[0].driver_name} / ${selectedNote.vehicles[0].driver_contact}`
-                                            : ''}
-                                    </span>
+                                    <div className="border-b border-gray-400 h-4"></div>
                                 </div>
                                 <div className="grid grid-cols-[60px_1fr] gap-2">
                                     <span className="font-bold">Signature:</span>
@@ -280,32 +298,17 @@ const DeliveryNotes: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* GOODS RECEIVED BY (Takes up 1/3 of width) */}
-                    <div className="w-1/3 flex flex-col">
-                        <div className="bg-gray-200 p-2 font-bold border-b border-gray-800">GOODS RECEIVED BY</div>
-                        <div className="p-2 flex-grow flex flex-col h-32">
-                            <div className="grid grid-cols-[60px_1fr] gap-2 mb-2">
-                                <span className="font-bold">Name:</span>
-                                <div className="border-b border-gray-400 h-4"></div>
-                            </div>
-                            <div className="grid grid-cols-[60px_1fr] gap-2">
-                                <span className="font-bold">Signature:</span>
-                                <div className="border-b border-gray-400 h-8"></div>
-                            </div>
-                        </div>
-                    </div>
+                    <p className="text-[10px] text-center text-gray-500 mt-12">
+                        Any Shortage or damage must be notified within 72 hours of receipt of goods. <br />
+                        Should you have any enquiries concerning this delivery note, please contact us. <br />
+                        Thank you for your business!
+                    </p>
                 </div>
 
-                <p className="text-[10px] text-center text-gray-500 mt-12">
-                    Any Shortage or damage must be notified within 72 hours of receipt of goods. <br />
-                    Should you have any enquiries concerning this delivery note, please contact us. <br />
-                    Thank you for your business!
-                </p>
-            </div>
-
-            {/* Footer Image */}
-            <div className="w-full mt-auto">
-                <img src={seaflowFooter} alt="Footer" className="w-full h-auto object-cover" />
+                {/* Footer Image */}
+                <div className="w-full mt-auto">
+                    <img src={seaflowFooter} alt="Footer" className="w-full h-auto object-cover" />
+                </div>
             </div>
         </div>
     );
