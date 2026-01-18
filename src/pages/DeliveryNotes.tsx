@@ -317,7 +317,7 @@ const DeliveryNotes: React.FC = () => {
                 </div>
 
                 {/* Footer Image */}
-                <div className="w-full mt-auto">
+                <div className="w-full">
                     <img src={seaflowFooter} alt="Footer" className="w-full h-auto" crossOrigin="anonymous" />
                 </div>
             </div>
