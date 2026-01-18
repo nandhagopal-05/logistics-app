@@ -3,11 +3,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
-import Shipments from './pages/Shipments';
 import Users from './pages/Users';
 import Logs from './pages/Logs';
-import CreateShipment from './pages/CreateShipment';
-import ShipmentDetails from './pages/ShipmentDetails';
 import ShipmentRegistry from './pages/ShipmentRegistry';
 import ClearanceSchedule from './pages/ClearanceSchedule';
 import Profile from './pages/Profile';
@@ -68,30 +65,7 @@ function App() {
             }
           />
           {/* ... other routes ... */}
-          <Route
-            path="/shipments"
-            element={
-              <ProtectedRoute>
-                <Shipments />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/shipments/new"
-            element={
-              <ProtectedRoute>
-                <CreateShipment />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/shipments/:id"
-            element={
-              <ProtectedRoute>
-                <ShipmentDetails />
-              </ProtectedRoute>
-            }
-          />
+
           <Route
             path="/registry"
             element={
