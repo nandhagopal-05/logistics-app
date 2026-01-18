@@ -631,67 +631,6 @@ const DeliveryNotes: React.FC = () => {
                     </div>
                 )}
             </div>
-
-            <style>{`
-            /* Print Styles */
-            @media print {
-                @page {
-                    size: auto;
-                    margin: 0mm;
-                }
-                body {
-                    margin: 0;
-                    padding: 0;
-                }
-                /* Hide everything by default */
-                body * {
-                    visibility: hidden;
-                }
-                /* Make printable content visible */
-                #printable-content, #printable-content * {
-                    visibility: visible;
-                }
-                /* Position the content to fill the page */
-                #printable-content {
-                    position: absolute;
-                    left: 0;
-                    top: 0;
-                    width: 100%;
-                    margin: 0;
-                    padding: 20px; /* Add some internal padding safely */
-                    background: white;
-                    border: none !important;
-                    box-shadow: none !important;
-                    min-height: auto !important;
-                    z-index: 9999;
-                }
-                /* Hide buttons/UI during print */
-                button, .no-print {
-                    display: none !important;
-                }
-            }
-
-            .custom-scrollbar::-webkit-scrollbar {
-                width: 6px;
-            }
-            .custom-scrollbar::-webkit-scrollbar-track {
-                background: transparent;
-            }
-            .custom-scrollbar::-webkit-scrollbar-thumb {
-                background-color: rgba(229, 231, 235, 0.5);
-                border-radius: 20px;
-            }
-            .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-                background-color: rgba(209, 213, 219, 0.8);
-            }
-            @keyframes slideInRight {
-                from { transform: translateX(100%); opacity: 0; }
-                to { transform: translateX(0); opacity: 1; }
-            }
-            .animate-slide-in-right {
-                animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-            }
-        `}</style>
         </Layout >
     );
 };
