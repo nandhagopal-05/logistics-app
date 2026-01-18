@@ -7,19 +7,48 @@ import {
 import Barcode from 'react-barcode';
 import { deliveryNotesAPI } from '../services/api';
 
+interface DeliveryNoteItem {
+    id: number;
+    schedule_id: number;
+    job_id: string;
+    shortage: string;
+    damaged: string;
+    remarks: string;
+    bl_awb_no?: string;
+    sender_name?: string;
+    packages?: string;
+    package_type?: string;
+    container_no?: string;
+}
+
+interface DeliveryNoteVehicle {
+    id: number;
+    vehicle_id: string;
+    driver_name: string;
+    driver_contact: string;
+    discharge_location: string;
+    registration_number?: string;
+    vehicle_type?: string;
+}
+
 interface DeliveryNote {
     id: string;
     consignee: string;
     exporter: string;
-    jobs: string[];
-    detailsCount: number;
-    detailsType: string;
-    detailsLocation: string;
-    issuedDate: string;
-    issuedBy: string;
-    status: 'Pending' | 'Completed';
+    issued_date: string;
+    issued_by: string;
+    status: string;
     comments?: string;
     unloading_date?: string;
+    loading_date?: string;
+
+    // For List Logic
+    job_ids: string[];
+    item_count: number;
+
+    // Detailed Data
+    items?: DeliveryNoteItem[];
+    vehicles?: DeliveryNoteVehicle[];
 }
 
 const DeliveryNotes: React.FC = () => {
@@ -62,9 +91,14 @@ const DeliveryNotes: React.FC = () => {
         return matchesSearch && matchesStatus;
     });
 
-    const handleViewDetails = (note: DeliveryNote) => {
-        setSelectedNote(note);
-        setActiveTab('manage');
+    const handleViewDetails = async (note: DeliveryNote) => {
+        try {
+            const response = await deliveryNotesAPI.getById(note.id);
+            setSelectedNote(response.data);
+            setActiveTab('manage');
+        } catch (err) {
+            console.error(err);
+        }
     };
 
     const handleCloseDetails = () => {
@@ -99,18 +133,23 @@ const DeliveryNotes: React.FC = () => {
             <div className="border border-gray-800 p-4 mb-6 grid grid-cols-2 gap-8">
                 <div>
                     <p className="mb-1"><span className="font-bold">Customer:</span> {selectedNote?.consignee}</p>
-                    {/* <p className="mb-1"><span className="font-bold">Phone:</span> 7779691</p> */}
-                    {/* <p className="mb-1"><span className="font-bold">Address:</span> MARINE VILLA / 2ND FLOOR</p> */}
                 </div>
                 <div>
-                    <div className="border-b border-gray-300 pb-1 mb-1 flex justify-between">
-                        <span className="font-bold">Delivery:</span> <span>{selectedNote?.id}</span>
-                    </div>
-                    <div className="border-b border-gray-300 pb-1 mb-1 flex justify-between">
-                        <span className="font-bold">Loading Date:</span> <span>{selectedNote?.issuedDate}</span>
-                    </div>
-                    <div className="flex justify-between">
-                        <span className="font-bold">Discharge Location:</span> <span>{selectedNote?.detailsLocation}</span>
+                    <div>
+                        <div className="border-b border-gray-300 pb-1 mb-1 flex justify-between">
+                            <span className="font-bold">Delivery:</span> <span>{selectedNote?.id}</span>
+                        </div>
+                        <div className="border-b border-gray-300 pb-1 mb-1 flex justify-between">
+                            <span className="font-bold">Loading Date:</span> <span>{selectedNote?.loading_date ? new Date(selectedNote.loading_date).toLocaleDateString() : '-'}</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="font-bold">Discharge Location:</span>
+                            <span>
+                                {selectedNote?.vehicles && selectedNote.vehicles.length > 0
+                                    ? selectedNote.vehicles.map(v => v.discharge_location).join(', ')
+                                    : '-'}
+                            </span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -122,17 +161,17 @@ const DeliveryNotes: React.FC = () => {
                         <tr>
                             <th className="border border-gray-300 p-2 text-left">Job No</th>
                             <th className="border border-gray-300 p-2 text-left">Shipper</th>
-                            {/* <th className="border border-gray-300 p-2 text-left">BL/AWB #</th> */}
-                            {/* <th className="border border-gray-300 p-2 text-left">Qty</th> */}
+                            <th className="border border-gray-300 p-2 text-left">BL/AWB #</th>
+                            <th className="border border-gray-300 p-2 text-left">Qty</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {selectedNote?.jobs.map((job, idx) => (
+                        {selectedNote?.items?.map((item, idx) => (
                             <tr key={idx}>
-                                <td className="border border-gray-300 p-2">{job}</td>
-                                <td className="border border-gray-300 p-2">{selectedNote?.exporter}</td>
-                                {/* <td className="border border-gray-300 p-2">01/2026</td>
-                                <td className="border border-gray-300 p-2">BULK</td> */}
+                                <td className="border border-gray-300 p-2">{item.job_id}</td>
+                                <td className="border border-gray-300 p-2">{item.sender_name || selectedNote.exporter}</td>
+                                <td className="border border-gray-300 p-2">{item.bl_awb_no || '-'}</td>
+                                <td className="border border-gray-300 p-2">{item.packages || '-'}</td>
                             </tr>
                         ))}
                     </tbody>
@@ -144,7 +183,7 @@ const DeliveryNotes: React.FC = () => {
                 <div className="p-0">
                     <div className="bg-gray-200 p-2 font-bold border-b border-gray-800">GOODS DELIVERED BY</div>
                     <div className="p-4 grid grid-cols-[80px_1fr] gap-4">
-                        <span className="font-bold">Name:</span> <span>{selectedNote?.issuedBy}</span>
+                        <span className="font-bold">Name:</span> <span>{selectedNote?.issued_by}</span>
                         <span className="font-bold">Signature:</span> <div className="h-12 border-b border-gray-400 border-dashed"></div>
                     </div>
                 </div>
@@ -176,15 +215,19 @@ const DeliveryNotes: React.FC = () => {
                 </div>
                 <div>
                     <label className="text-xs font-bold text-gray-400 uppercase">Discharge Location</label>
-                    <p className="font-medium text-gray-900">{selectedNote?.detailsLocation}</p>
+                    <p className="font-medium text-gray-900">
+                        {selectedNote?.vehicles && selectedNote.vehicles.length > 0
+                            ? selectedNote.vehicles.map(v => v.discharge_location).join(', ')
+                            : '-'}
+                    </p>
                 </div>
                 <div>
                     <label className="text-xs font-bold text-gray-400 uppercase">Created</label>
-                    <p className="font-medium text-gray-900">{selectedNote?.issuedDate ? new Date(selectedNote.issuedDate).toLocaleDateString() : '-'}</p>
+                    <p className="font-medium text-gray-900">{selectedNote?.issued_date ? new Date(selectedNote.issued_date).toLocaleDateString() : '-'}</p>
                 </div>
                 <div>
                     <label className="text-xs font-bold text-gray-400 uppercase">Issued By</label>
-                    <p className="font-medium text-gray-900">{selectedNote?.issuedBy}</p>
+                    <p className="font-medium text-gray-900">{selectedNote?.issued_by}</p>
                 </div>
             </div>
 
@@ -192,24 +235,19 @@ const DeliveryNotes: React.FC = () => {
             <div className="border border-gray-200 rounded-lg p-4">
                 <div className="flex justify-between items-center mb-4">
                     <h3 className="text-xs font-bold text-gray-400 uppercase">Linked Jobs</h3>
-                    <span className="text-xs text-gray-400">{selectedNote?.jobs.length} Jobs Selected</span>
+                    <span className="text-xs text-gray-400">{selectedNote?.job_ids?.length || 0} Jobs Selected</span>
                 </div>
                 <div className="space-y-2">
-                    {selectedNote?.jobs.map((job, idx) => (
+                    {selectedNote?.items?.map((item, idx) => (
                         <div key={idx} className="flex justify-between items-start bg-gray-50 p-3 rounded border border-gray-100">
                             <div>
-                                <p className="font-bold text-gray-900 text-sm">{job}</p>
+                                <p className="font-bold text-gray-900 text-sm">{item.job_id}</p>
                                 <p className="text-xs text-gray-500">{selectedNote?.consignee}</p>
-                                {/* <p className="text-[10px] text-gray-400 mt-1">Packages: {idx === 0 ? '0 BULK' : '908 PKG'}</p> */}
+                                <p className="text-[10px] text-gray-400 mt-1">Packages: {item.packages || 'N/A'}</p>
                             </div>
-                            {/* <button className="text-gray-400 hover:text-red-500"><Trash className="w-4 h-4" /></button> */}
                         </div>
                     ))}
                 </div>
-                {/* <div className="flex justify-end gap-3 mt-4">
-                    <button className="px-3 py-1.5 border border-gray-300 rounded text-xs font-medium hover:bg-gray-50">Reset</button>
-                    <button className="px-3 py-1.5 bg-gray-900 text-white rounded text-xs font-medium hover:bg-black">Save job updates</button>
-                </div> */}
             </div>
 
             {/* Update Details */}
@@ -368,34 +406,40 @@ const DeliveryNotes: React.FC = () => {
                                                 <>
                                                     <td className="py-4 px-6">
                                                         <div className="flex flex-wrap gap-1">
-                                                            {note.jobs.map((job, idx) => (
+                                                            {note.job_ids?.slice(0, 3).map((job, idx) => (
                                                                 <span key={idx} className="px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded text-xs font-medium border border-gray-200">
                                                                     {job}
                                                                 </span>
                                                             ))}
+                                                            {(note.job_ids?.length || 0) > 3 && (
+                                                                <span className="px-1.5 py-0.5 bg-gray-50 text-gray-500 rounded text-xs font-medium border border-gray-200">
+                                                                    +{note.job_ids!.length - 3}
+                                                                </span>
+                                                            )}
                                                         </div>
                                                     </td>
                                                     <td className="py-4 px-6">
                                                         <div className="flex items-start gap-3">
                                                             <div className="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center text-xs font-bold flex-shrink-0">
-                                                                +{note.detailsCount}
+                                                                {note.item_count}
                                                             </div>
                                                             <div className="flex flex-col">
-                                                                <span className="text-xs font-semibold text-gray-800">{note.detailsType}</span>
-                                                                <span className="inline-block px-2 py-0.5 bg-orange-50 text-orange-700 text-[10px] rounded border border-orange-100 mt-1 uppercase">
-                                                                    {note.detailsLocation}
-                                                                </span>
+                                                                {/* <span className="text-xs font-semibold text-gray-800">BL / AWB</span> */}
+                                                                {/* <span className="inline-block px-2 py-0.5 bg-orange-50 text-orange-700 text-[10px] rounded border border-orange-100 mt-1 uppercase">
+                                                                Male'
+                                                            </span> */}
                                                             </div>
                                                         </div>
                                                     </td>
                                                     <td className="py-4 px-6">
                                                         <div className="flex flex-col">
-                                                            <span className="text-sm font-medium text-gray-900">{note.issuedDate ? new Date(note.issuedDate).toLocaleDateString() : '-'}</span>
-                                                            <span className="text-xs text-gray-500">{note.issuedBy}</span>
+                                                            <span className="text-sm font-medium text-gray-900">{note.issued_date ? new Date(note.issued_date).toLocaleDateString() : '-'}</span>
+                                                            <span className="text-xs text-gray-500">{note.issued_by}</span>
                                                         </div>
                                                     </td>
                                                     <td className="py-4 px-6">
-                                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-50 text-orange-700 border border-orange-200">
+                                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                                                        ${note.status === 'Delivered' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
                                                             {note.status}
                                                         </span>
                                                     </td>
@@ -475,27 +519,27 @@ const DeliveryNotes: React.FC = () => {
             </div>
 
             <style>{`
-                .custom-scrollbar::-webkit-scrollbar {
-                    width: 6px;
-                }
-                .custom-scrollbar::-webkit-scrollbar-track {
-                    background: transparent;
-                }
-                .custom-scrollbar::-webkit-scrollbar-thumb {
-                    background-color: rgba(229, 231, 235, 0.5);
-                    border-radius: 20px;
-                }
-                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-                    background-color: rgba(209, 213, 219, 0.8);
-                }
-                @keyframes slideInRight {
-                    from { transform: translateX(100%); opacity: 0; }
-                    to { transform: translateX(0); opacity: 1; }
-                }
-                .animate-slide-in-right {
-                    animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-                }
-            `}</style>
+            .custom-scrollbar::-webkit-scrollbar {
+                width: 6px;
+            }
+            .custom-scrollbar::-webkit-scrollbar-track {
+                background: transparent;
+            }
+            .custom-scrollbar::-webkit-scrollbar-thumb {
+                background-color: rgba(229, 231, 235, 0.5);
+                border-radius: 20px;
+            }
+            .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                background-color: rgba(209, 213, 219, 0.8);
+            }
+            @keyframes slideInRight {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            .animate-slide-in-right {
+                animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            }
+        `}</style>
         </Layout>
     );
 };

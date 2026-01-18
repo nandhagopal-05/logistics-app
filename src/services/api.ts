@@ -122,8 +122,12 @@ export const logsAPI = {
 
 // Delivery Notes API
 export const deliveryNotesAPI = {
-    getAll: () => api.get('/delivery-notes'),
+    getAll: (params?: { search?: string; status?: string }) =>
+        api.get('/delivery-notes', { params }),
+    getById: (id: string) => api.get(`/delivery-notes/${id}`),
+    create: (data: any) => api.post('/delivery-notes', data),
     update: (id: string, data: any) => api.put(`/delivery-notes/${id}`, data),
+    updateStatus: (id: string, status: string) => api.put(`/delivery-notes/${id}/status`, { status }),
 };
 
 // Invoices API

@@ -119,6 +119,12 @@ const ClearanceDetailsDrawer: React.FC<ClearanceDetailsDrawerProps> = ({
                                     <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Transport Mode</p>
                                     <p className="text-sm font-medium text-gray-900 uppercase">{schedule.transport_mode || '-'}</p>
                                 </div>
+                                {schedule.reschedule_reason && (
+                                    <div className="col-span-2 mt-2 bg-yellow-50 p-2 rounded border border-yellow-100">
+                                        <p className="text-xs text-yellow-600 uppercase font-bold mb-1">Reschedule Reason</p>
+                                        <p className="text-sm font-medium text-yellow-800">{schedule.reschedule_reason}</p>
+                                    </div>
+                                )}
                             </div>
                         </div>
 

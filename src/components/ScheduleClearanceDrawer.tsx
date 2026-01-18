@@ -18,7 +18,8 @@ const ScheduleClearanceDrawer: React.FC<ScheduleClearanceDrawerProps> = ({ isOpe
         transport_mode: '',
         packages: '',
         clearance_method: '',
-        remarks: ''
+        remarks: '',
+        reschedule_reason: ''
     });
 
     useEffect(() => {
@@ -31,7 +32,8 @@ const ScheduleClearanceDrawer: React.FC<ScheduleClearanceDrawerProps> = ({ isOpe
                 transport_mode: initialData.transport_mode || '',
                 packages: initialData.packages || '',
                 clearance_method: initialData.clearance_method || '',
-                remarks: initialData.remarks || ''
+                remarks: initialData.remarks || '',
+                reschedule_reason: initialData.reschedule_reason || ''
             });
         } else {
             setFormData({
@@ -42,7 +44,8 @@ const ScheduleClearanceDrawer: React.FC<ScheduleClearanceDrawerProps> = ({ isOpe
                 transport_mode: job?.transport_mode ? (job.transport_mode.charAt(0).toUpperCase() + job.transport_mode.slice(1).toLowerCase()) : '',
                 packages: '',
                 clearance_method: '',
-                remarks: ''
+                remarks: '',
+                reschedule_reason: ''
             });
         }
     }, [initialData, isOpen, job]);
@@ -141,6 +144,28 @@ const ScheduleClearanceDrawer: React.FC<ScheduleClearanceDrawerProps> = ({ isOpe
                                 <ChevronDown className="absolute right-3 top-3.5 w-4 h-4 text-gray-400 pointer-events-none" />
                             </div>
                         </div>
+
+                        {/* Reschedule Reason (Only for Edit/Reschedule) */}
+                        {initialData && (
+                            <div className="form-group">
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">Reschedule Reason</label>
+                                <div className="relative">
+                                    <select
+                                        name="reschedule_reason"
+                                        value={(formData as any).reschedule_reason || ''}
+                                        onChange={handleInputChange}
+                                        className={`w-full p-3 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none appearance-none ${!(formData as any).reschedule_reason ? 'text-gray-400' : 'text-gray-700'}`}
+                                    >
+                                        <option value="" disabled>Select reason</option>
+                                        <option value="Customer Request">Customer Request</option>
+                                        <option value="MPL Issues">MPL Issues</option>
+                                        <option value="Weather Conditions">Weather Conditions</option>
+                                        <option value="Others">Others</option>
+                                    </select>
+                                    <ChevronDown className="absolute right-3 top-3.5 w-4 h-4 text-gray-400 pointer-events-none" />
+                                </div>
+                            </div>
+                        )}
 
 
                         {/* Clearance Method */}

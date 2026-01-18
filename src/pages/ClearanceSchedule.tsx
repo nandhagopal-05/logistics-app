@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import { Search, Calendar, ChevronDown, Pencil, Trash2 } from 'lucide-react';
-import { clearanceAPI } from '../services/api';
+import { clearanceAPI, deliveryNotesAPI } from '../services/api';
 import ScheduleClearanceDrawer from '../components/ScheduleClearanceDrawer';
 import ClearanceDetailsDrawer from '../components/ClearanceDetailsDrawer';
 import DeliveryNoteDrawer from '../components/DeliveryNoteDrawer';
@@ -90,12 +90,17 @@ const ClearanceSchedule: React.FC = () => {
         );
     };
 
-    const handleDeliveryNoteSave = (data: any) => {
-        console.log('Delivery Note Data:', data);
-        alert('Delivery Note Saved! (Check console for data)');
-        setIsDeliveryDrawerOpen(false);
-        setSelectedIds([]);
-        setIsDeliveryNoteMode(false);
+    const handleDeliveryNoteSave = async (data: any) => {
+        try {
+            await deliveryNotesAPI.create(data);
+            alert('Delivery Note Created Successfully!');
+            setIsDeliveryDrawerOpen(false);
+            setSelectedIds([]);
+            setIsDeliveryNoteMode(false);
+        } catch (error) {
+            console.error('Failed to create delivery note', error);
+            alert('Failed to create delivery note');
+        }
     };
 
     const getSelectedSchedules = () => {

@@ -46,14 +46,14 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const { date, type, port, bl_awb, transport_mode, remarks, packages, clearance_method } = req.body;
+        const { date, type, port, bl_awb, transport_mode, remarks, packages, clearance_method, reschedule_reason } = req.body;
 
         const result = await pool.query(
             `UPDATE clearance_schedules 
-             SET clearance_date = $1, clearance_type = $2, port = $3, bl_awb = $4, transport_mode = $5, remarks = $6, packages = $7, clearance_method = $8
-             WHERE id = $9
+             SET clearance_date = $1, clearance_type = $2, port = $3, bl_awb = $4, transport_mode = $5, remarks = $6, packages = $7, clearance_method = $8, reschedule_reason = $9
+             WHERE id = $10
              RETURNING *`,
-            [date, type, port, bl_awb, transport_mode, remarks, packages, clearance_method, id]
+            [date, type, port, bl_awb, transport_mode, remarks, packages, clearance_method, reschedule_reason, id]
         );
 
         if (result.rows.length === 0) {
