@@ -411,7 +411,8 @@ const DeliveryNotes: React.FC = () => {
         <Layout>
             <div className="flex h-[calc(100vh-100px)] overflow-hidden bg-white">
                 {/* Left Side: The List */}
-                <div className={`p-8 overflow-y-auto custom-scrollbar transition-all duration-300 ${selectedNote ? 'w-1/2 border-r border-gray-200' : 'w-full'}`}>
+                {/* Left Side: The List */}
+                <div className="p-8 overflow-y-auto custom-scrollbar transition-all duration-300 w-full">
                     {/* Header */}
                     <div className="mb-8">
                         <h1 className="text-3xl font-bold text-gray-900 mb-2">Issued delivery notes</h1>
@@ -420,7 +421,7 @@ const DeliveryNotes: React.FC = () => {
 
                     {/* Filters */}
                     <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm mb-6">
-                        <div className={`flex flex-col ${selectedNote ? 'gap-3' : 'md:flex-row gap-6'}`}>
+                        <div className="flex flex-col md:flex-row gap-6">
                             <div className="flex-1">
                                 <label className="block text-xs font-bold text-gray-400 uppercase mb-1 tracking-wider">Search Notes</label>
                                 <div className="relative">
@@ -434,39 +435,36 @@ const DeliveryNotes: React.FC = () => {
                                     />
                                 </div>
                             </div>
-                            {!selectedNote && (
-                                <>
-                                    <div className="w-48">
-                                        <label className="block text-xs font-bold text-gray-400 uppercase mb-1 tracking-wider">Records</label>
-                                        <div className="relative">
-                                            <select
-                                                className="w-full pl-3 pr-8 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-200 appearance-none"
-                                                value={recordsPerPage}
-                                                onChange={(e) => setRecordsPerPage(e.target.value)}
-                                            >
-                                                <option>50 records</option>
-                                                <option>100 records</option>
-                                            </select>
-                                            <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
-                                        </div>
-                                    </div>
-                                    <div className="w-48">
-                                        <label className="block text-xs font-bold text-gray-400 uppercase mb-1 tracking-wider">Status</label>
-                                        <div className="relative">
-                                            <select
-                                                className="w-full pl-3 pr-8 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-200 appearance-none"
-                                                value={statusFilter}
-                                                onChange={(e) => setStatusFilter(e.target.value)}
-                                            >
-                                                <option>All statuses</option>
-                                                <option>Pending</option>
-                                                <option>Completed</option>
-                                            </select>
-                                            <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
-                                        </div>
-                                    </div>
-                                </>
-                            )}
+
+                            <div className="w-48">
+                                <label className="block text-xs font-bold text-gray-400 uppercase mb-1 tracking-wider">Records</label>
+                                <div className="relative">
+                                    <select
+                                        className="w-full pl-3 pr-8 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-200 appearance-none"
+                                        value={recordsPerPage}
+                                        onChange={(e) => setRecordsPerPage(e.target.value)}
+                                    >
+                                        <option>50 records</option>
+                                        <option>100 records</option>
+                                    </select>
+                                    <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
+                                </div>
+                            </div>
+                            <div className="w-48">
+                                <label className="block text-xs font-bold text-gray-400 uppercase mb-1 tracking-wider">Status</label>
+                                <div className="relative">
+                                    <select
+                                        className="w-full pl-3 pr-8 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-200 appearance-none"
+                                        value={statusFilter}
+                                        onChange={(e) => setStatusFilter(e.target.value)}
+                                    >
+                                        <option>All statuses</option>
+                                        <option>Pending</option>
+                                        <option>Completed</option>
+                                    </select>
+                                    <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -475,18 +473,14 @@ const DeliveryNotes: React.FC = () => {
                     {/* Table */}
                     <div className="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm">
                         <table className="w-full text-left border-collapse">
-                            <thead className={`${selectedNote ? 'hidden' : ''}`}>
+                            <thead>
                                 <tr className="bg-black text-white text-xs uppercase tracking-wider">
                                     <th className="py-4 px-6 font-semibold">Delivery</th>
                                     <th className="py-4 px-6 font-semibold w-1/4">Consignee</th>
-                                    {!selectedNote && (
-                                        <>
-                                            <th className="py-4 px-6 font-semibold">Jobs</th>
-                                            <th className="py-4 px-6 font-semibold">Details</th>
-                                            <th className="py-4 px-6 font-semibold">Issued</th>
-                                            <th className="py-4 px-6 font-semibold">Status</th>
-                                        </>
-                                    )}
+                                    <th className="py-4 px-6 font-semibold">Jobs</th>
+                                    <th className="py-4 px-6 font-semibold">Details</th>
+                                    <th className="py-4 px-6 font-semibold">Issued</th>
+                                    <th className="py-4 px-6 font-semibold">Status</th>
                                     <th className="py-4 px-6 font-semibold text-right"></th>
                                 </tr>
                             </thead>
@@ -508,52 +502,48 @@ const DeliveryNotes: React.FC = () => {
                                             <td className="py-4 px-6">
                                                 <div className="flex flex-col">
                                                     <span className="font-bold text-gray-900 text-sm mb-0.5">{note.consignee}</span>
-                                                    {!selectedNote && <span className="text-[11px] text-gray-500 uppercase tracking-wide">{note.exporter}</span>}
+                                                    <span className="text-[11px] text-gray-500 uppercase tracking-wide">{note.exporter}</span>
                                                 </div>
                                             </td>
-                                            {!selectedNote && (
-                                                <>
-                                                    <td className="py-4 px-6">
-                                                        <div className="flex flex-wrap gap-1">
-                                                            {note.job_ids?.slice(0, 3).map((job, idx) => (
-                                                                <span key={idx} className="px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded text-xs font-medium border border-gray-200">
-                                                                    {job}
-                                                                </span>
-                                                            ))}
-                                                            {(note.job_ids?.length || 0) > 3 && (
-                                                                <span className="px-1.5 py-0.5 bg-gray-50 text-gray-500 rounded text-xs font-medium border border-gray-200">
-                                                                    +{note.job_ids!.length - 3}
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                    </td>
-                                                    <td className="py-4 px-6">
-                                                        <div className="flex items-start gap-3">
-                                                            <div className="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center text-xs font-bold flex-shrink-0">
-                                                                {note.item_count}
-                                                            </div>
-                                                            <div className="flex flex-col">
-                                                                {/* <span className="text-xs font-semibold text-gray-800">BL / AWB</span> */}
-                                                                {/* <span className="inline-block px-2 py-0.5 bg-orange-50 text-orange-700 text-[10px] rounded border border-orange-100 mt-1 uppercase">
-                                                                Male'
-                                                            </span> */}
-                                                            </div>
-                                                        </div>
-                                                    </td>
-                                                    <td className="py-4 px-6">
-                                                        <div className="flex flex-col">
-                                                            <span className="text-sm font-medium text-gray-900">{note.issued_date ? new Date(note.issued_date).toLocaleDateString() : '-'}</span>
-                                                            <span className="text-xs text-gray-500">{note.issued_by}</span>
-                                                        </div>
-                                                    </td>
-                                                    <td className="py-4 px-6">
-                                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
-                                                        ${note.status === 'Delivered' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
-                                                            {note.status}
+                                            <td className="py-4 px-6">
+                                                <div className="flex flex-wrap gap-1">
+                                                    {note.job_ids?.slice(0, 3).map((job, idx) => (
+                                                        <span key={idx} className="px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded text-xs font-medium border border-gray-200">
+                                                            {job}
                                                         </span>
-                                                    </td>
-                                                </>
-                                            )}
+                                                    ))}
+                                                    {(note.job_ids?.length || 0) > 3 && (
+                                                        <span className="px-1.5 py-0.5 bg-gray-50 text-gray-500 rounded text-xs font-medium border border-gray-200">
+                                                            +{note.job_ids!.length - 3}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </td>
+                                            <td className="py-4 px-6">
+                                                <div className="flex items-start gap-3">
+                                                    <div className="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                                                        {note.item_count}
+                                                    </div>
+                                                    <div className="flex flex-col">
+                                                        {/* <span className="text-xs font-semibold text-gray-800">BL / AWB</span> */}
+                                                        {/* <span className="inline-block px-2 py-0.5 bg-orange-50 text-orange-700 text-[10px] rounded border border-orange-100 mt-1 uppercase">
+                                                        Male'
+                                                    </span> */}
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="py-4 px-6">
+                                                <div className="flex flex-col">
+                                                    <span className="text-sm font-medium text-gray-900">{note.issued_date ? new Date(note.issued_date).toLocaleDateString() : '-'}</span>
+                                                    <span className="text-xs text-gray-500">{note.issued_by}</span>
+                                                </div>
+                                            </td>
+                                            <td className="py-4 px-6">
+                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                                                ${note.status === 'Delivered' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                                                    {note.status}
+                                                </span>
+                                            </td>
                                             <td className="py-4 px-6 text-right">
                                                 <div className="flex items-center justify-end gap-2 text-gray-400">
                                                     <button className="p-1 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors" onClick={(e) => { e.stopPropagation(); setSelectedNote(note); setActiveTab('document'); }}>
@@ -571,65 +561,67 @@ const DeliveryNotes: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Right Side: Detail Panel */}
+                {/* Modal Overlay */}
                 {selectedNote && (
-                    <div className="w-1/2 h-full flex flex-col bg-white border-l border-gray-200 animate-slide-in-right overflow-hidden shadow-2xl z-20">
-                        {/* Header */}
-                        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between bg-white">
-                            <div>
-                                <h2 className="text-lg font-bold text-gray-800">Delivery note {selectedNote.id}</h2>
-                            </div>
-                            <button onClick={handleCloseDetails} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-                                <X className="w-5 h-5 text-gray-500" />
-                            </button>
-                        </div>
-
-                        {/* Tabs/Actions */}
-                        <div className="border-b border-gray-200 px-6 py-2 bg-gray-50 flex items-center sticky top-0 z-10">
-                            <div className="flex p-1 bg-white border border-gray-200 rounded-lg">
-                                <button
-                                    onClick={() => setActiveTab('manage')}
-                                    className={`px-4 py-1.5 text-xs font-medium rounded-md transition-all ${activeTab === 'manage'
-                                        ? 'bg-black text-white shadow-sm'
-                                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                                        }`}
-                                >
-                                    Details
-                                </button>
-                                <button
-                                    onClick={() => setActiveTab('document')}
-                                    className={`px-4 py-1.5 text-xs font-medium rounded-md transition-all ${activeTab === 'document'
-                                        ? 'bg-black text-white shadow-sm'
-                                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                                        }`}
-                                >
-                                    Document Preview
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                        <div className="bg-white rounded-xl shadow-2xl w-full max-w-5xl h-[90vh] flex flex-col overflow-hidden animate-scale-in">
+                            {/* Header */}
+                            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between bg-white">
+                                <div>
+                                    <h2 className="text-lg font-bold text-gray-800">Delivery note {selectedNote.id}</h2>
+                                </div>
+                                <button onClick={handleCloseDetails} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                                    <X className="w-5 h-5 text-gray-500" />
                                 </button>
                             </div>
 
-                            {activeTab === 'document' && (
-                                <div className="ml-auto flex gap-2">
+                            {/* Tabs/Actions */}
+                            <div className="border-b border-gray-200 px-6 py-2 bg-gray-50 flex items-center sticky top-0 z-10">
+                                <div className="flex p-1 bg-white border border-gray-200 rounded-lg">
                                     <button
-                                        className="p-2 text-gray-500 hover:text-gray-900 hover:bg-white rounded border border-transparent hover:border-gray-200 transition-all"
-                                        title="Print"
-                                        onClick={handlePrint}
+                                        onClick={() => setActiveTab('manage')}
+                                        className={`px-4 py-1.5 text-xs font-medium rounded-md transition-all ${activeTab === 'manage'
+                                            ? 'bg-black text-white shadow-sm'
+                                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                                            }`}
                                     >
-                                        <Printer className="w-4 h-4" />
+                                        Details
                                     </button>
                                     <button
-                                        className="p-2 text-gray-500 hover:text-gray-900 hover:bg-white rounded border border-transparent hover:border-gray-200 transition-all"
-                                        title="Download PDF"
-                                        onClick={handleDownloadPDF}
+                                        onClick={() => setActiveTab('document')}
+                                        className={`px-4 py-1.5 text-xs font-medium rounded-md transition-all ${activeTab === 'document'
+                                            ? 'bg-black text-white shadow-sm'
+                                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                                            }`}
                                     >
-                                        <Download className="w-4 h-4" />
+                                        Document Preview
                                     </button>
                                 </div>
-                            )}
-                        </div>
 
-                        {/* Content */}
-                        <div className="flex-1 overflow-y-auto p-8 custom-scrollbar bg-gray-50/50">
-                            {activeTab === 'document' ? renderDocument() : renderManage()}
+                                {activeTab === 'document' && (
+                                    <div className="ml-auto flex gap-2">
+                                        <button
+                                            className="p-2 text-gray-500 hover:text-gray-900 hover:bg-white rounded border border-transparent hover:border-gray-200 transition-all"
+                                            title="Print"
+                                            onClick={handlePrint}
+                                        >
+                                            <Printer className="w-4 h-4" />
+                                        </button>
+                                        <button
+                                            className="p-2 text-gray-500 hover:text-gray-900 hover:bg-white rounded border border-transparent hover:border-gray-200 transition-all"
+                                            title="Download PDF"
+                                            onClick={handleDownloadPDF}
+                                        >
+                                            <Download className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Content */}
+                            <div className="flex-1 overflow-y-auto p-8 custom-scrollbar bg-gray-50/50">
+                                {activeTab === 'document' ? renderDocument() : renderManage()}
+                            </div>
                         </div>
                     </div>
                 )}
@@ -690,11 +682,18 @@ const DeliveryNotes: React.FC = () => {
                 from { transform: translateX(100%); opacity: 0; }
                 to { transform: translateX(0); opacity: 1; }
             }
+            @keyframes scaleIn {
+                from { transform: scale(0.95); opacity: 0; }
+                to { transform: scale(1); opacity: 1; }
+            }
             .animate-slide-in-right {
                 animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
             }
+            .animate-scale-in {
+                animation: scaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            }
         `}</style>
-        </Layout>
+        </Layout >
     );
 };
 
