@@ -434,13 +434,31 @@ const ShipmentRegistry: React.FC = () => {
             : 'bg-amber-100 text-amber-700 border-amber-200';
     };
 
+    const handleDeleteJob = async (jobId: string, e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (window.confirm('Are you sure you want to delete this job? This action cannot be undone.')) {
+            try {
+                await shipmentsAPI.delete(jobId);
+                setJobs(prev => prev.filter(j => j.id !== jobId));
+                if (selectedJob?.id === jobId) {
+                    setSelectedJob(null);
+                    setViewMode('empty');
+                }
+                alert('Job deleted successfully');
+            } catch (error) {
+                console.error("Failed to delete job", error);
+                alert("Failed to delete job");
+            }
+        }
+    };
+
     // --- Render Helpers ---
 
     const renderInboxItem = (job: any) => (
         <div
             key={job.id}
             onClick={() => handleJobClick(job)}
-            className={`p-4 border-b border-gray-100 cursor-pointer transition-all duration-200 group
+            className={`p-4 border-b border-gray-100 cursor-pointer transition-all duration-200 group relative
                 ${selectedJob?.id === job.id
                     ? 'bg-indigo-50 border-l-4 border-indigo-500 shadow-sm'
                     : 'hover:bg-gray-50 border-l-4 border-transparent hover:border-gray-300'
@@ -451,12 +469,22 @@ const ShipmentRegistry: React.FC = () => {
                 <span className="font-mono text-xs font-bold text-gray-500 group-hover:text-indigo-600 transition-colors">
                     {job.id}
                 </span>
-                <span className="text-xs font-medium text-gray-400">
-                    {new Date(job.created_at || Date.now()).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                </span>
+
+                <div className="flex items-center gap-2">
+                    <span className="text-xs font-medium text-gray-400">
+                        {new Date(job.created_at || Date.now()).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                    </span>
+                    <button
+                        onClick={(e) => handleDeleteJob(job.id, e)}
+                        className="p-1 rounded-full text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
+                        title="Delete Job"
+                    >
+                        <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                </div>
             </div>
 
-            <h4 className="text-sm font-bold text-gray-900 mb-1 leading-tight">{job.customer || 'Unknown Customer'}</h4>
+            <h4 className="text-sm font-bold text-gray-900 mb-1 leading-tight pr-6">{job.customer || 'Unknown Customer'}</h4>
             <p className="text-xs text-gray-500 mb-3 truncate">{job.exporter}</p>
 
             <div className="flex items-center justify-between mt-2">
