@@ -10,6 +10,7 @@ router.use(authenticateToken);
 // Create a new clearance schedule
 router.post('/', async (req, res) => {
     try {
+        console.log('Creating clearance schedule:', req.body);
         const { job_id, date, type, port, bl_awb, transport_mode, remarks, packages, clearance_method } = req.body;
 
         if (!job_id || !date) {

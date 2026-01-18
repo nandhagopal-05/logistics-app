@@ -399,13 +399,25 @@ const ShipmentRegistry: React.FC = () => {
 
     const handleScheduleSave = async (data: any) => {
         try {
-            if (!selectedJob) return;
+            const currentJobId = popupJob?.id || selectedJob?.id;
+            if (!currentJobId) return;
+
             await clearanceAPI.create({
-                job_id: selectedJob.id,
+                job_id: currentJobId,
                 ...data
             });
             alert('Clearance Scheduled Successfully!');
-            // Reload logs or job details if needed
+
+            // Refresh Data
+            loadJobs(true);
+            const updatedJob = await shipmentsAPI.getById(currentJobId);
+            setSelectedJob(updatedJob.data);
+
+            // Close popup if it was open via popup state
+            if (popupType === 'schedule') {
+                setPopupType(null);
+                setPopupJob(null);
+            }
         } catch (error) {
             console.error('Failed to schedule clearance', error);
             alert('Failed to schedule clearance');
