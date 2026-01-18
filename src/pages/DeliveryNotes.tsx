@@ -126,7 +126,7 @@ const DeliveryNotes: React.FC = () => {
                             <img src={seaflowLogo} alt="Logo" className="w-full h-full object-contain" />
                         </div>
                         <div>
-                            <h2 className="text-xl font-bold text-red-600 italic leading-tight">Seaflow Logistics</h2>
+                            <h2 className="text-xl font-bold text-blue-600 italic leading-tight">Seaflow Logistics</h2>
                             <p className="text-[10px] text-gray-600 leading-snug">H.Fusthalhaanage, 7th Floor,</p>
                             <p className="text-[10px] text-gray-600 leading-snug">Ameer Ahmed Magu, Male', 20030,</p>
                             <p className="text-[10px] text-gray-600 leading-snug">e: info@seaflow.mv, ph: +960 300 7633</p>
@@ -201,18 +201,19 @@ const DeliveryNotes: React.FC = () => {
                         <div className="bg-gray-200 p-2 font-bold border-b border-gray-800">GOODS DELIVERED BY</div>
                         <div className="p-4 grid grid-cols-[80px_1fr] gap-4 min-h-[100px]">
                             <span className="font-bold">Name:</span> <span>{selectedNote?.issued_by}</span>
-                            <span className="font-bold">Signature:</span> <div className="h-12 border-b border-gray-400 border-dashed"></div>
+                            <span className="font-bold">Signature:</span> <div className="h-12 border-b border-gray-400"></div>
                         </div>
                         {/* Digital Seal (Yellow Zone) */}
                         <div className="absolute bottom-2 right-12 w-24 h-24 opacity-80 pointer-events-none mix-blend-multiply">
                             <img src={seaflowDigitalSeal} alt="Seal" className="w-full h-full object-contain" />
                         </div>
                     </div>
+
                     <div className="p-0 border-l border-gray-800">
                         <div className="bg-gray-200 p-2 font-bold border-b border-gray-800">GOODS RECEIVED BY</div>
                         <div className="p-4 grid grid-cols-[80px_1fr] gap-4 min-h-[100px]">
-                            <span className="font-bold">Name:</span> <div className="border-b border-gray-400 border-dashed"></div>
-                            <span className="font-bold">Signature:</span> <div className="h-12 border-b border-gray-400 border-dashed"></div>
+                            <span className="font-bold">Name:</span> <div className="border-b border-gray-400"></div>
+                            <span className="font-bold">Signature:</span> <div className="h-12 border-b border-gray-400"></div>
                         </div>
                     </div>
                 </div>
