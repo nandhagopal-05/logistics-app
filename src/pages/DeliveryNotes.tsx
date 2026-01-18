@@ -39,6 +39,9 @@ interface DeliveryNoteVehicle {
 interface DeliveryNote {
     id: string;
     consignee: string;
+    consignee_email?: string; // Added from join
+    consignee_phone?: string; // Added from join
+    consignee_address?: string; // Added from join
     exporter: string;
     issued_date: string;
     issued_by: string;
@@ -150,6 +153,12 @@ const DeliveryNotes: React.FC = () => {
                 <div className="border border-gray-800 p-4 mb-6 grid grid-cols-2 gap-8">
                     <div>
                         <p className="mb-1"><span className="font-bold">Customer:</span> {selectedNote?.consignee}</p>
+                        {selectedNote?.consignee_phone && (
+                            <p className="mb-1"><span className="font-bold">Phone:</span> {selectedNote.consignee_phone}</p>
+                        )}
+                        {selectedNote?.consignee_email && (
+                            <p className="mb-1"><span className="font-bold">Email:</span> {selectedNote.consignee_email}</p>
+                        )}
                     </div>
                     <div>
                         <div>
@@ -201,7 +210,7 @@ const DeliveryNotes: React.FC = () => {
                         <div className="bg-gray-200 p-2 font-bold border-b border-gray-800">GOODS DELIVERED BY</div>
                         <div className="p-4 grid grid-cols-[80px_1fr] gap-4 min-h-[100px]">
                             <span className="font-bold">Name:</span> <span>{selectedNote?.issued_by}</span>
-                            <span className="font-bold">Signature:</span> <div className="h-12 border-b border-gray-400"></div>
+                            <span className="font-bold">Signature:</span>
                         </div>
                         {/* Digital Seal (Yellow Zone) */}
                         <div className="absolute bottom-2 right-12 w-24 h-24 opacity-80 pointer-events-none mix-blend-multiply">
@@ -212,8 +221,8 @@ const DeliveryNotes: React.FC = () => {
                     <div className="p-0 border-l border-gray-800">
                         <div className="bg-gray-200 p-2 font-bold border-b border-gray-800">GOODS RECEIVED BY</div>
                         <div className="p-4 grid grid-cols-[80px_1fr] gap-4 min-h-[100px]">
-                            <span className="font-bold">Name:</span> <div className="border-b border-gray-400"></div>
-                            <span className="font-bold">Signature:</span> <div className="h-12 border-b border-gray-400"></div>
+                            <span className="font-bold">Name:</span>
+                            <span className="font-bold">Signature:</span>
                         </div>
                     </div>
                 </div>

@@ -143,8 +143,13 @@ router.get('/:id', authenticateToken, async (req, res) => {
     try {
         const { id } = req.params;
 
-        // Fetch DN
-        const dnResult = await pool.query('SELECT * FROM delivery_notes WHERE id = $1', [id]);
+        const dnResult = await pool.query(`
+            SELECT dn.*, c.email as consignee_email, c.phone as consignee_phone, c.address as consignee_address 
+            FROM delivery_notes dn
+            LEFT JOIN customers c ON LOWER(dn.consignee) = LOWER(c.name)
+            WHERE dn.id = $1
+        `, [id]);
+
         if (dnResult.rows.length === 0) {
             return res.status(404).json({ error: 'Delivery Note not found' });
         }
