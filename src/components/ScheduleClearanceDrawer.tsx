@@ -39,13 +39,13 @@ const ScheduleClearanceDrawer: React.FC<ScheduleClearanceDrawerProps> = ({ isOpe
                 type: '',
                 port: '',
                 bl_awb: '',
-                transport_mode: '',
+                transport_mode: job?.transport_mode ? (job.transport_mode.charAt(0).toUpperCase() + job.transport_mode.slice(1).toLowerCase()) : '',
                 packages: '',
                 clearance_method: '',
                 remarks: ''
             });
         }
-    }, [initialData, isOpen]);
+    }, [initialData, isOpen, job]);
 
 
     // Derived options from job

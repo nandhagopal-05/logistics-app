@@ -109,7 +109,7 @@ router.get('/', async (req, res) => {
                    s.package_type,
                    s.transport_mode as shipment_transport_mode
             FROM clearance_schedules cs
-            JOIN shipments s ON cs.job_id = s.id
+            LEFT JOIN shipments s ON cs.job_id = s.id
         `;
 
         const params = [];
@@ -150,7 +150,11 @@ router.get('/', async (req, res) => {
 
         console.log('Query:', query, 'Params:', params);
 
+        const totalCount = await pool.query('SELECT count(*) FROM clearance_schedules');
+        console.log('Total clearance schedules in DB:', totalCount.rows[0].count);
+
         const result = await pool.query(query, params);
+        console.log('Query returned rows:', result.rows.length);
         res.json(result.rows);
 
     } catch (error) {
