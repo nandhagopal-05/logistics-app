@@ -308,8 +308,8 @@ router.post('/', authenticateToken, shipmentUpload, async (req, res) => {
         const status = 'New';
         const progress = 0;
 
-        // Map sender_name to customer and origin/destination for backward compatibility
-        const customer = sender_name;
+        // Map receiver_name to customer (Consignee is usually the customer)
+        const customer = receiver_name;
         const origin = sender_address ? sender_address.split('\n')[0] : '';
         const destination = receiver_address ? receiver_address.split('\n')[0] : '';
 
