@@ -491,18 +491,7 @@ const ShipmentRegistry: React.FC = () => {
             // Sanitize data before sending
             const updatedData = { ...editFormData };
 
-            // Sync Loading Port fields - cover all bases
-            const portValue = updatedData.loading_port || updatedData.origin || updatedData.port_of_loading;
-            if (portValue) {
-                updatedData.loading_port = portValue;
-                updatedData.origin = portValue;
-                updatedData.port_of_loading = portValue;
-            }
 
-            // Sync Package Type
-            if (updatedData.package_type) {
-                updatedData.pkg_type = updatedData.package_type;
-            }
 
             // Sync null dates
             if (updatedData.unloaded_date === '') updatedData.unloaded_date = null;
