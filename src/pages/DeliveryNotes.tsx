@@ -204,12 +204,8 @@ const DeliveryNotes: React.FC = () => {
                     <div className="border border-gray-800 p-4 mb-6 grid grid-cols-2 gap-8">
                         <div>
                             <p className="mb-1"><span className="font-bold">Customer:</span> {selectedNote?.consignee}</p>
-                            {selectedNote?.consignee_phone && (
-                                <p className="mb-1"><span className="font-bold">Phone:</span> {selectedNote.consignee_phone}</p>
-                            )}
-                            {selectedNote?.consignee_email && (
-                                <p className="mb-1"><span className="font-bold">Email:</span> {selectedNote.consignee_email}</p>
-                            )}
+                            <p className="mb-1"><span className="font-bold">Phone:</span> {selectedNote?.consignee_phone}</p>
+                            <p className="mb-1"><span className="font-bold">Email:</span> {selectedNote?.consignee_email}</p>
                         </div>
                         <div>
                             <div>
