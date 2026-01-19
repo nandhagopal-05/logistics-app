@@ -588,8 +588,8 @@ const ShipmentRegistry: React.FC = () => {
                 </div>
 
                 {/* Section B: Consignee */}
-                <div className="form-group">
-                    <div className="mt-4 animate-fade-in-down">
+                <div className="form-group relative z-30">
+                    <div className="mt-4">
                         <label className="block text-sm font-semibold text-gray-700 mb-2">Consignee</label>
                         <SearchableSelect
                             options={consigneesList.map((c: any) => ({
@@ -605,8 +605,8 @@ const ShipmentRegistry: React.FC = () => {
                     </div>
                 </div>
                 {/* Section C: Exporter */}
-                <div className="form-group">
-                    <div className="mt-4 animate-fade-in-down">
+                <div className="form-group relative z-20">
+                    <div className="mt-4">
                         <label className="block text-sm font-semibold text-gray-700 mb-2">Exporter</label>
                         <SearchableSelect
                             options={exportersList.map((e: any) => ({
