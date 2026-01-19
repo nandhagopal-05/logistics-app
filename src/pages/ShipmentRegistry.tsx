@@ -13,6 +13,7 @@ import {
 
 } from 'lucide-react';
 import ScheduleClearanceDrawer from '../components/ScheduleClearanceDrawer';
+import SearchableSelect from '../components/SearchableSelect';
 
 const PACKAGE_TYPES = ['PALLET', 'BUNDLES', 'CARTON', 'PKG', 'BOX', 'CASE', 'BULK', 'UNIT'];
 
@@ -590,48 +591,34 @@ const ShipmentRegistry: React.FC = () => {
                 <div className="form-group">
                     <div className="mt-4 animate-fade-in-down">
                         <label className="block text-sm font-semibold text-gray-700 mb-2">Consignee</label>
-                        <div className="relative">
-                            <select
-                                name="consignee"
-                                value={formData.consignee}
-                                onChange={handleInputChange}
-                                className="w-full p-3 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all outline-none appearance-none text-gray-700"
-                            >
-                                <option value="">Select Consignee</option>
-                                {consigneesList.map((consignee: any) => (
-                                    <option key={consignee.id} value={consignee.name || consignee.id}>
-                                        {consignee.name}
-                                    </option>
-                                ))}
-                            </select>
-                            <div className="absolute right-3 top-3.5 pointer-events-none text-gray-400">
-                                <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" /></svg>
-                            </div>
-                        </div>
+                        <SearchableSelect
+                            options={consigneesList.map((c: any) => ({
+                                id: c.id,
+                                label: c.name,
+                                value: c.name
+                            }))}
+                            value={formData.consignee}
+                            onChange={(val) => setFormData(prev => ({ ...prev, consignee: val }))}
+                            placeholder="Select Consignee"
+                            required
+                        />
                     </div>
                 </div>
                 {/* Section C: Exporter */}
                 <div className="form-group">
                     <div className="mt-4 animate-fade-in-down">
                         <label className="block text-sm font-semibold text-gray-700 mb-2">Exporter</label>
-                        <div className="relative">
-                            <select
-                                name="exporter"
-                                value={formData.exporter}
-                                onChange={handleInputChange}
-                                className="w-full p-3 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all outline-none appearance-none text-gray-700"
-                            >
-                                <option value="">Select Exporter</option>
-                                {exportersList.map((exporter: any) => (
-                                    <option key={exporter.id} value={exporter.name || exporter.id}>
-                                        {exporter.name}
-                                    </option>
-                                ))}
-                            </select>
-                            <div className="absolute right-3 top-3.5 pointer-events-none text-gray-400">
-                                <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" /></svg>
-                            </div>
-                        </div>
+                        <SearchableSelect
+                            options={exportersList.map((e: any) => ({
+                                id: e.id,
+                                label: e.name,
+                                value: e.name
+                            }))}
+                            value={formData.exporter}
+                            onChange={(val) => setFormData(prev => ({ ...prev, exporter: val }))}
+                            placeholder="Select Exporter"
+                            required
+                        />
                     </div>
                 </div>
 
