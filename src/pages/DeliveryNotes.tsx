@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import Layout from '../components/Layout';
 import {
     Search, Printer, ChevronDown,
-    X, Download, Upload
+    X, Download, Upload,
+    Mail, Phone, Globe, MapPin
 } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
@@ -320,6 +321,28 @@ const DeliveryNotes: React.FC = () => {
                         Should you have any enquiries concerning this delivery note, please contact us. <br />
                         Thank you for your business!
                     </p>
+                </div>
+
+                {/* Contact Info */}
+                <div className="px-12 mb-2 text-[10px] text-gray-600 font-medium">
+                    <div className="flex flex-wrap gap-x-8 gap-y-2 items-center mb-1">
+                        <div className="flex items-center gap-2">
+                            <Mail className="w-3 h-3 text-black" />
+                            <span>info@seaflowlogistic.com</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Phone className="w-3 h-3 text-black" />
+                            <span>+960 9990371/+960 9995768</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Globe className="w-3 h-3 text-black" />
+                            <span>www.seaflowlogistic.com</span>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <MapPin className="w-3 h-3 text-black" />
+                        <span>Hulhumale' Lot 11393, Saima Hingun, Rep of Maldives, 23000</span>
+                    </div>
                 </div>
 
                 {/* Footer Image */}
