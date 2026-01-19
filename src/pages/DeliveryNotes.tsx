@@ -172,7 +172,7 @@ const DeliveryNotes: React.FC = () => {
                 }}
             >
                 {/* Header Image */}
-                <div className="w-full flex-shrink-0 font-none leading-none print-header">
+                <div className="w-full flex-shrink-0 font-none leading-none">
                     <img
                         src={seaflowHeader}
                         alt="Header"
@@ -182,7 +182,7 @@ const DeliveryNotes: React.FC = () => {
                     />
                 </div>
 
-                <div className="px-12 py-8 flex-1 print-body">
+                <div className="px-12 py-8 flex-1">
                     <div className="flex justify-between items-start mb-8 mt-2">
                         <div className="w-1/2 flex items-center gap-4">
                             {/* Logo and Address */}
@@ -325,7 +325,7 @@ const DeliveryNotes: React.FC = () => {
 
                 {/* Contact Info */}
                 {/* Contact Info */}
-                <div className="px-12 mb-4 text-[10px] text-gray-600 font-medium flex flex-col items-center print-contact">
+                <div className="px-12 mb-4 text-[10px] text-gray-600 font-medium flex flex-col items-center">
                     <div className="flex flex-wrap justify-center gap-x-8 gap-y-2 items-center mb-1">
                         <div className="flex items-center gap-2">
                             <Mail className="w-4 h-4 text-black" />
@@ -347,7 +347,7 @@ const DeliveryNotes: React.FC = () => {
                 </div>
 
                 {/* Footer Image */}
-                <div className="w-full mt-auto flex-shrink-0 font-none leading-none print-footer">
+                <div className="w-full mt-auto flex-shrink-0 font-none leading-none">
                     <img
                         src={seaflowFooter}
                         alt="Footer"
@@ -697,7 +697,6 @@ const DeliveryNotes: React.FC = () => {
                     top: 0;
                     width: 210mm !important;
                     height: 297mm !important;
-                    max-height: 297mm !important;
                     margin: 0;
                     padding: 0 !important;
                     background: white;
@@ -705,23 +704,6 @@ const DeliveryNotes: React.FC = () => {
                     box-shadow: none !important;
                     overflow: hidden !important;
                     z-index: 9999;
-                    page-break-inside: avoid;
-                    break-inside: avoid;
-                }
-                #printable-content .print-body {
-                    padding: 8mm 10mm !important;
-                    min-height: 0 !important;
-                }
-                #printable-content .print-contact {
-                    margin-bottom: 2mm !important;
-                }
-                #printable-content .print-header img {
-                    height: auto !important;
-                    max-height: 28mm;
-                }
-                #printable-content .print-footer img {
-                    height: auto !important;
-                    max-height: 24mm;
                 }
                 /* Hide buttons/UI during print */
                 button, .no-print {
