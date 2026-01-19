@@ -1146,9 +1146,9 @@ const ShipmentRegistry: React.FC = () => {
                                 <div>
                                     <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Loading Port</p>
                                     {isEditingBL ? (
-                                        <input name="origin" value={editFormData.origin || ''} onChange={handleEditChange} className="input-field py-1 border rounded px-2 w-full text-sm" placeholder="-" />
+                                        <input name="loading_port" value={editFormData.loading_port || editFormData.origin || ''} onChange={handleEditChange} className="input-field py-1 border rounded px-2 w-full text-sm" placeholder="-" />
                                     ) : (
-                                        <p className="font-semibold text-gray-900 uppercase">{selectedJob.origin || '-'}</p>
+                                        <p className="font-semibold text-gray-900 uppercase">{selectedJob.loading_port || selectedJob.origin || '-'}</p>
                                     )}
                                 </div>
                                 <div>
@@ -1214,7 +1214,7 @@ const ShipmentRegistry: React.FC = () => {
                                                 <Plus className="w-3 h-3" /> Add Package
                                             </button>
                                             <div className="text-xs text-gray-500 font-medium pt-2 border-t mt-2">
-                                                Total: {editFormData.no_of_pkgs} Pkgs, {editFormData.weight} KG
+                                                Total: {editFormData.no_of_pkgs} Pkgs, {editFormData.weight} KG, Type: {editFormData.package_type}
                                             </div>
                                         </div>
                                     </div>
@@ -1230,7 +1230,7 @@ const ShipmentRegistry: React.FC = () => {
                                         </div>
                                         <div>
                                             <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Package Type</p>
-                                            <p className="font-semibold text-gray-900 uppercase">{selectedJob.package_type || 'BUNDLES'}</p>
+                                            <p className="font-semibold text-gray-900 uppercase">{selectedJob.package_type || '-'}</p>
                                         </div>
                                     </>
                                 )}
