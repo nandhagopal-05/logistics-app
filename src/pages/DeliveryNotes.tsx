@@ -371,9 +371,7 @@ const DeliveryNotes: React.FC = () => {
                     </p>
                 </div>
 
-                {/* Contact Info */}
-                {/* Contact Info */}
-                <div className="px-12 mb-4 text-[10px] text-gray-600 font-medium flex flex-col items-center">
+                <div className="px-10 mb-4 text-[10px] text-gray-600 font-medium flex flex-col items-center">
                     <div className="flex flex-wrap justify-center gap-x-8 gap-y-2 items-center mb-1">
                         <div className="flex items-center gap-2">
                             <Mail className="w-4 h-4 text-black" />
