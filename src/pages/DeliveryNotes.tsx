@@ -27,6 +27,7 @@ interface DeliveryNoteItem {
     packages?: string;
     package_type?: string;
     container_no?: string;
+    schedule_port?: string; // Fetched from backend join
 }
 
 interface DeliveryNoteVehicle {
@@ -248,9 +249,18 @@ const DeliveryNotes: React.FC = () => {
                                 <div className="flex justify-between">
                                     <span className="font-bold">Discharge Location:</span>
                                     <span>
-                                        {selectedNote?.vehicles && selectedNote.vehicles.length > 0
-                                            ? selectedNote.vehicles.map(v => v.dischargeLocation).filter(Boolean).join(', ')
-                                            : '-'}
+                                        {(() => {
+                                            const vehicleLocs = selectedNote?.vehicles
+                                                ? selectedNote.vehicles.map(v => v.dischargeLocation).filter(Boolean)
+                                                : [];
+
+                                            if (vehicleLocs.length > 0) {
+                                                return vehicleLocs.join(', ');
+                                            }
+
+                                            // Fallback to the port from the schedule of the first item
+                                            return selectedNote?.items?.[0]?.schedule_port || '-';
+                                        })()}
                                     </span>
                                 </div>
                             </div>

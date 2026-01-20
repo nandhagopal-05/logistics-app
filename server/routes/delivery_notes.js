@@ -159,6 +159,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
         // Fetch Items with Shipment Details
         // Joining to get BL/AWB, Shipper (Sender), Packages
         // PRIORITIZE details from Clearance Schedule (cs) if they exist
+        // Also fetch 'port' from clearance schedule to use as fallback/default Discharge Location
         // Fallback to Shipment (s) details
         const itemsResult = await pool.query(`
             SELECT dni.*, 
@@ -166,7 +167,8 @@ router.get('/:id', authenticateToken, async (req, res) => {
                    s.sender_name, 
                    COALESCE(cs.packages, CAST(s.no_of_pkgs AS VARCHAR)) as packages, 
                    s.container_type as package_type, 
-                   s.container_no
+                   s.container_no,
+                   cs.port as schedule_port
             FROM delivery_note_items dni
             LEFT JOIN clearance_schedules cs ON dni.schedule_id = cs.id
             LEFT JOIN shipments s ON dni.job_id = s.id
