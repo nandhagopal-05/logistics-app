@@ -117,24 +117,16 @@ router.post('/import', authenticateToken, upload.single('file'), async (req, res
                 normalizedRow[key.toLowerCase().trim()] = row[key];
             });
 
-            const name = normalizedRow['name'] || normalizedRow['payment item'] || normalizedRow['item'];
+            const name = normalizedRow['name'] || normalizedRow['payment item'] || normalizedRow['item'] || normalizedRow['payment_item'];
             if (!name) continue;
 
-            const vendorName = normalizedRow['vendor'] || normalizedRow['vendor name'];
-            let vendorId = null;
-
-            if (vendorName) {
-                // Try to find vendor by name
-                const vendorRes = await pool.query('SELECT id FROM vendors WHERE LOWER(name) = LOWER($1)', [vendorName]);
-                if (vendorRes.rows.length > 0) {
-                    vendorId = vendorRes.rows[0].id;
-                }
-            }
+            // Vendor logic removed as per requirement: Import file only contains payment item names.
+            // Vendors are assigned manually in the UI.
 
             try {
                 await pool.query(
-                    'INSERT INTO payment_items (name, vendor_id) VALUES ($1, $2)',
-                    [name, vendorId]
+                    'INSERT INTO payment_items (name, vendor_id) VALUES ($1, NULL)',
+                    [name]
                 );
                 successCount++;
             } catch (err) {
