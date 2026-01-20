@@ -162,8 +162,8 @@ router.get('/:id', authenticateToken, async (req, res) => {
             SELECT dni.*, 
                    s.bl_awb_no, 
                    s.sender_name, 
-                   s.packages, 
-                   s.package_type, 
+                   s.no_of_pkgs as packages, 
+                   s.container_type as package_type, 
                    s.container_no
             FROM delivery_note_items dni
             LEFT JOIN shipments s ON dni.job_id = s.id
@@ -173,11 +173,16 @@ router.get('/:id', authenticateToken, async (req, res) => {
         // Fetch Vehicles
         // Joining to get Vehicle Name/Registration if vehicle_id exists
         // Note: vehicle_id in delivery_note_vehicles might be the registration number (string) based on fleet import logic
+        // We alias columns to match the frontend camelCase interface (DeliveryNoteVehicle)
         const vehiclesResult = await pool.query(`
-            SELECT dnv.*, 
-                   v.name as vehicle_name, 
-                   v.id as registration_number, -- In current fleet schema, id IS the registration number
-                   v.type as vehicle_type
+            SELECT dnv.id,
+                   dnv.vehicle_id as "vehicleId", 
+                   dnv.driver_name as "driver",
+                   dnv.driver_contact as "driverContact",
+                   dnv.discharge_location as "dischargeLocation",
+                   v.name as "vehicleName", 
+                   v.id as "registrationNumber",
+                   v.type as "vehicle_type"
             FROM delivery_note_vehicles dnv
             LEFT JOIN vehicles v ON dnv.vehicle_id = v.id
             WHERE dnv.delivery_note_id = $1
