@@ -31,12 +31,12 @@ interface DeliveryNoteItem {
 
 interface DeliveryNoteVehicle {
     id: number;
-    vehicle_id: string; // This is the ID stored in DB (Registration No)
-    vehicle_name?: string; // Fetched from join
-    registration_number?: string; // Fetched from join (redundant but explicit)
-    driver_name: string;
-    driver_contact: string;
-    discharge_location: string;
+    vehicleId: string; // This is the ID stored in DB (Registration No)
+    vehicleName?: string; // Fetched from join
+    registrationNumber?: string; // Fetched from join (redundant but explicit)
+    driver: string;
+    driverContact: string;
+    dischargeLocation: string;
     vehicle_type?: string;
 }
 
@@ -249,7 +249,7 @@ const DeliveryNotes: React.FC = () => {
                                     <span className="font-bold">Discharge Location:</span>
                                     <span>
                                         {selectedNote?.vehicles && selectedNote.vehicles.length > 0
-                                            ? selectedNote.vehicles.map(v => v.discharge_location).join(', ')
+                                            ? selectedNote.vehicles.map(v => v.dischargeLocation).join(', ')
                                             : '-'}
                                     </span>
                                 </div>
@@ -311,9 +311,9 @@ const DeliveryNotes: React.FC = () => {
                                         <div className="flex flex-col text-[10px] leading-tight uppercase font-medium">
                                             {selectedNote?.vehicles && selectedNote.vehicles.length > 0 ? (
                                                 <>
-                                                    <span>{selectedNote.vehicles[0].driver_name}</span>
-                                                    <span>{selectedNote.vehicles[0].driver_contact}</span>
-                                                    <span>{selectedNote.vehicles[0].vehicle_name || selectedNote.vehicles[0].vehicle_id || '-'}</span>
+                                                    <span>{selectedNote.vehicles[0].driver}</span>
+                                                    <span>{selectedNote.vehicles[0].driverContact}</span>
+                                                    <span>{selectedNote.vehicles[0].vehicleId || selectedNote.vehicles[0].vehicleId || '-'}</span>
                                                 </>
                                             ) : (
                                                 <span>-</span>
@@ -405,7 +405,7 @@ const DeliveryNotes: React.FC = () => {
                     <label className="text-xs font-bold text-gray-400 uppercase">Discharge Location</label>
                     <p className="font-medium text-gray-900">
                         {selectedNote?.vehicles && selectedNote.vehicles.length > 0
-                            ? selectedNote.vehicles.map(v => v.discharge_location).join(', ')
+                            ? selectedNote.vehicles.map(v => v.dischargeLocation).join(', ')
                             : '-'}
                     </p>
                 </div>
