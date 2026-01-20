@@ -204,7 +204,7 @@ const DeliveryNotes: React.FC = () => {
                 }}
             >
                 {/* Header Image */}
-                <div className="w-full flex-shrink-0 font-none leading-none">
+                <div className="absolute top-0 left-0 w-full z-20 font-none leading-none">
                     <img
                         src={seaflowHeader}
                         alt="Header"
@@ -214,7 +214,7 @@ const DeliveryNotes: React.FC = () => {
                     />
                 </div>
 
-                <div className="px-12 py-6 flex-1">
+                <div className="px-12 pt-24 pb-24 h-full flex flex-col z-10 relative">
                     <div className="flex justify-between items-start mb-6 mt-2">
                         <div className="w-1/2 flex items-center gap-4">
                             {/* Logo and Address */}
@@ -394,7 +394,7 @@ const DeliveryNotes: React.FC = () => {
                 </div>
 
                 {/* Footer Image */}
-                <div className="w-full absolute bottom-0 left-0 flex-shrink-0 font-none leading-none">
+                <div className="absolute bottom-0 left-0 w-full z-20 font-none leading-none">
                     <img
                         src={seaflowFooter}
                         alt="Footer"
