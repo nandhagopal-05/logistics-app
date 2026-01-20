@@ -45,7 +45,7 @@ const ScheduleClearanceDrawer: React.FC<ScheduleClearanceDrawerProps> = ({ isOpe
                 port: '',
                 bl_awb: job?.bl_awb_no || job?.bl_awb || '',
                 transport_mode: job?.transport_mode ? (job.transport_mode.charAt(0).toUpperCase() + job.transport_mode.slice(1).toLowerCase()) : '',
-                packages: '',
+                packages: job?.packages || '',
                 clearance_method: '',
                 remarks: '',
                 reschedule_reason: ''
