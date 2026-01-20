@@ -35,8 +35,19 @@ const DeliveryNoteDrawer: React.FC<DeliveryNoteDrawerProps> = ({ isOpen, onClose
     useEffect(() => {
         if (isOpen) {
             fleetAPI.getAll().then(res => setVehiclesList(res.data)).catch(console.error);
+            // Initialize with default vehicle and pre-filled discharge location from the first selected schedule's port
+            setAddedVehicles([
+                {
+                    id: '1',
+                    vehicleId: '',
+                    driver: '',
+                    driverContact: '',
+                    dischargeLocation: selectedSchedules[0]?.port || ''
+                }
+            ]);
+            setStep(1); // Reset step
         }
-    }, [isOpen]);
+    }, [isOpen, selectedSchedules]);
 
     if (!isOpen) return null;
 
@@ -53,7 +64,13 @@ const DeliveryNoteDrawer: React.FC<DeliveryNoteDrawerProps> = ({ isOpen, onClose
     const handleAddVehicle = () => {
         setAddedVehicles(prev => [
             ...prev,
-            { id: Date.now().toString(), vehicleId: '', driver: '', driverContact: '', dischargeLocation: '' }
+            {
+                id: Date.now().toString(),
+                vehicleId: '',
+                driver: '',
+                driverContact: '',
+                dischargeLocation: selectedSchedules[0]?.port || ''
+            }
         ]);
     };
 
