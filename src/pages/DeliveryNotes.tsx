@@ -725,74 +725,12 @@ const DeliveryNotes: React.FC = () => {
                 )}
             </div>
             <style>{`
-            /* Print Styles */
-            @media print {
-                @page {
-                    size: A4 portrait;
-                    margin: 0;
-                }
-                body {
-                    margin: 0;
-                    padding: 0;
-                    -webkit-print-color-adjust: exact;
-                }
-                /* Hide everything by default */
-                body * {
-                    visibility: hidden;
-                }
-                /* Make printable content visible */
-                #printable-content, #printable-content * {
-                    visibility: visible;
-                }
-                /* Position the content to fill the page */
-                #printable-content {
-                    position: absolute;
-                    left: 0;
-                    top: 0;
-                    width: 210mm !important;
-                    height: 297mm !important;
-                    margin: 0;
-                    padding: 0 !important;
-                    background: white;
-                    border: none !important;
-                    box-shadow: none !important;
-                    overflow: hidden !important;
-                    z-index: 9999;
-                }
-                /* Hide buttons/UI during print */
-                button, .no-print {
-                    display: none !important;
-                }
-            }
 
-            .custom-scrollbar::-webkit-scrollbar {
-                width: 6px;
+            @media print {
+                @page {size: A4; margin: 0;}
+                html, body {margin: 0;padding: 0;}
             }
-            .custom-scrollbar::-webkit-scrollbar-track {
-                background: transparent;
-            }
-            .custom-scrollbar::-webkit-scrollbar-thumb {
-                background-color: rgba(229, 231, 235, 0.5);
-                border-radius: 20px;
-            }
-            .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-                background-color: rgba(209, 213, 219, 0.8);
-            }
-            @keyframes slideInRight {
-                from { transform: translateX(100%); opacity: 0; }
-                to { transform: translateX(0); opacity: 1; }
-            }
-            @keyframes scaleIn {
-                from { transform: scale(0.95); opacity: 0; }
-                to { transform: scale(1); opacity: 1; }
-            }
-            .animate-slide-in-right {
-                animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-            }
-            .animate-scale-in {
-                animation: scaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-            }
-        `}</style>
+            `}</style>
         </Layout >
     );
 };
