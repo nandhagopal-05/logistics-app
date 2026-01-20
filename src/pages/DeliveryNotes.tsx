@@ -186,7 +186,7 @@ const DeliveryNotes: React.FC = () => {
     };
 
     // Render the Document Preview (Image 1 style)
-    // Render the Document Preview (Image 1 style)
+    // Render the Document Preview
     const renderDocument = () => (
         <div className="flex justify-center w-full bg-gray-100/50 py-8 text-black">
             <div
@@ -203,43 +203,47 @@ const DeliveryNotes: React.FC = () => {
                     backgroundColor: 'white'
                 }}
             >
-                {/* Header Image */}
-                <div className="absolute top-0 left-0 w-full z-20 font-none leading-none">
+                {/* 1. Header Image (Fixed Top Red Box) */}
+                <div className="absolute top-0 left-0 w-full z-20 font-none leading-none pointer-events-none">
                     <img
                         src={seaflowHeader}
                         alt="Header"
                         className="w-full h-auto block"
-                        style={{ width: '100%', height: 'auto', display: 'block' }}
+                        style={{ maxWidth: '100%', maxHeight: '40mm' }} // Limit height to ensure padding works
                         crossOrigin="anonymous"
                     />
                 </div>
 
-                <div className="px-12 pt-24 pb-24 h-full flex flex-col z-10 relative">
-                    <div className="flex justify-between items-start mb-6 mt-2">
-                        <div className="w-1/2 flex items-center gap-4">
-                            {/* Logo and Address */}
-                            <div className="w-16 h-16 flex-shrink-0">
-                                <img src={seaflowLogo} alt="Logo" className="w-full h-full object-contain" crossOrigin="anonymous" />
-                            </div>
-                            <div>
-                                <h2 className="text-lg font-bold text-sky-900 italic leading-tight">Seaflow Logistics</h2>
-                                <p className="text-[9px] text-gray-600 leading-snug">Hulhumale' Lot 11393, </p>
-                                <p className="text-[9px] text-gray-600 leading-snug">Saima Hingun, Rep of Maldives, 23000 </p>
-                                <p className="text-[9px] text-gray-600 leading-snug">e: info@seaflowlogistic.com, ph: +960 9990371/+960 9995768 </p>
-                            </div>
-                        </div>
-                        <div className="text-right">
-                            <div className="bg-gray-300 text-gray-800 font-bold px-3 py-1.5 mb-2 inline-block text-xs">GOODS DELIVERY NOTE</div>
-                        </div>
-                    </div>
+                {/* Main Content Wrapper - Defines the Safe Area between Header and Footer */}
+                <div className="absolute inset-0 z-10 flex flex-col px-12 pt-32 pb-24 h-full">
 
-                    <div className="border border-gray-800 p-3 mb-4 grid grid-cols-2 gap-8">
-                        <div>
-                            <p className="mb-1"><span className="font-bold">Customer:</span> {selectedNote?.consignee}</p>
-                            <p className="mb-1"><span className="font-bold">Phone:</span> {consignees.find(c => c.name === selectedNote?.consignee)?.phone || selectedNote?.consignee_phone || '-'}</p>
-                            <p className="mb-1"><span className="font-bold">Email:</span> {consignees.find(c => c.name === selectedNote?.consignee)?.email || selectedNote?.consignee_email || '-'}</p>
+                    {/* 2. Top Static Section (Logo/Title & Customer Info) */}
+                    <div className="flex-none">
+                        {/* Logo & Title Row */}
+                        <div className="flex justify-between items-start mb-4">
+                            <div className="w-1/2 flex items-center gap-4">
+                                <div className="w-16 h-16 flex-shrink-0">
+                                    <img src={seaflowLogo} alt="Logo" className="w-full h-full object-contain" crossOrigin="anonymous" />
+                                </div>
+                                <div>
+                                    <h2 className="text-lg font-bold text-sky-900 italic leading-tight">Seaflow Logistics</h2>
+                                    <p className="text-[9px] text-gray-600 leading-snug">Hulhumale' Lot 11393, </p>
+                                    <p className="text-[9px] text-gray-600 leading-snug">Saima Hingun, Rep of Maldives, 23000 </p>
+                                    <p className="text-[9px] text-gray-600 leading-snug">e: info@seaflowlogistic.com, ph: +960 9990371/+960 9995768 </p>
+                                </div>
+                            </div>
+                            <div className="text-right pt-2">
+                                <div className="bg-gray-300 text-gray-800 font-bold px-3 py-1.5 inline-block text-xs">GOODS DELIVERY NOTE</div>
+                            </div>
                         </div>
-                        <div>
+
+                        {/* Customer & Delivery Details Row */}
+                        <div className="border border-gray-800 p-2 mb-4 grid grid-cols-2 gap-8">
+                            <div>
+                                <p className="mb-1"><span className="font-bold">Customer:</span> {selectedNote?.consignee}</p>
+                                <p className="mb-1"><span className="font-bold">Phone:</span> {consignees.find(c => c.name === selectedNote?.consignee)?.phone || selectedNote?.consignee_phone || '-'}</p>
+                                <p className="mb-1"><span className="font-bold">Email:</span> {consignees.find(c => c.name === selectedNote?.consignee)?.email || selectedNote?.consignee_email || '-'}</p>
+                            </div>
                             <div>
                                 <div className="border-b border-gray-300 pb-1 mb-1 flex justify-between">
                                     <span className="font-bold">Delivery:</span> <span>{selectedNote?.id}</span>
@@ -258,8 +262,6 @@ const DeliveryNotes: React.FC = () => {
                                             if (vehicleLocs.length > 0) {
                                                 return vehicleLocs.join(', ');
                                             }
-
-                                            // Fallback to the port from the schedule of the first item
                                             return selectedNote?.items?.[0]?.schedule_port || '-';
                                         })()}
                                     </span>
@@ -268,138 +270,130 @@ const DeliveryNotes: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Job Table */}
-                    <div className="mb-6">
-                        <table className="w-full border-collapse text-[10px]">
-                            <thead className="bg-gray-200 font-bold border-y border-gray-400">
-                                <tr>
-                                    <th className="py-1 px-2 text-left w-1/5">Job No</th>
-                                    <th className="py-1 px-2 text-left w-2/5">Shipper</th>
-                                    <th className="py-1 px-2 text-left w-1/5">BL/AWB #</th>
-                                    <th className="py-1 px-2 text-left w-1/5">Qty</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-200">
-                                {selectedNote?.items?.map((item, idx) => (
-                                    <tr key={idx} className="border-b border-gray-200">
-                                        <td className="py-1 px-2 align-top">{item.job_id}</td>
-                                        <td className="py-1 px-2 align-top font-medium uppercase">{item.sender_name || selectedNote.exporter}</td>
-                                        <td className="py-1 px-2 align-top">{item.bl_awb_no || '-'}</td>
-                                        <td className="py-1 px-2 align-top font-bold">{item.packages} {item.package_type || ''}</td>
+                    {/* 3. Dynamic Middle Section (The Yellow Box Content) */}
+                    <div className="flex-grow flex flex-col min-h-0">
+                        {/* Green Box 1: Jobs Table (Expands) */}
+                        <div className="mb-4">
+                            <table className="w-full border-collapse text-[10px]">
+                                <thead className="bg-gray-200 font-bold border-y border-gray-400">
+                                    <tr>
+                                        <th className="py-1 px-2 text-left w-1/5">Job No</th>
+                                        <th className="py-1 px-2 text-left w-2/5">Shipper</th>
+                                        <th className="py-1 px-2 text-left w-1/5">BL/AWB #</th>
+                                        <th className="py-1 px-2 text-left w-1/5">Qty</th>
                                     </tr>
-                                ))}
-                                {/* Empty rows for consistent height if needed, OR just leave dynamic */}
-                            </tbody>
-                        </table>
-                    </div>
+                                </thead>
+                                <tbody className="divide-y divide-gray-200">
+                                    {selectedNote?.items?.map((item, idx) => (
+                                        <tr key={idx} className="border-b border-gray-200">
+                                            <td className="py-1 px-2 align-top">{item.job_id}</td>
+                                            <td className="py-1 px-2 align-top font-medium uppercase">{item.sender_name || selectedNote.exporter}</td>
+                                            <td className="py-1 px-2 align-top">{item.bl_awb_no || '-'}</td>
+                                            <td className="py-1 px-2 align-top font-bold">{item.packages} {item.package_type || ''}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
 
-                    {/* Goods Delivered / Received Section */}
-                    <div className="border border-gray-800 flex mb-6 text-[10px]">
-                        {/* GOODS DELIVERED BY (66.66%) */}
-                        <div className="w-2/3 border-r border-gray-800 flex flex-col">
-                            <div className="bg-gray-200 p-1.5 font-bold border-b border-gray-800">GOODS DELIVERED BY</div>
-                            <div className="grid grid-cols-2 flex-grow min-h-[100px]">
-                                {/* Column 1: Issued By */}
-                                <div className="p-2 border-r border-gray-800 relative flex flex-col">
-                                    <div className="grid grid-cols-[40px_1fr] gap-1 mb-2">
-                                        <span className="font-bold">Name:</span>
-                                        <span className="uppercase font-medium">{selectedNote?.issued_by}</span>
-                                    </div>
-                                    <div className="mt-auto">
-                                        <div className="grid grid-cols-[50px_1fr] gap-1 mb-1 relative z-10">
-                                            <span className="font-bold">Signature:</span>
-                                            <div className="h-6"></div> {/* Space for signature */}
+                        {/* Green Box 2: Signatures (Pushed down by table) */}
+                        <div className="border border-gray-800 flex mb-4 text-[10px] flex-shrink-0">
+                            {/* GOODS DELIVERED BY */}
+                            <div className="w-2/3 border-r border-gray-800 flex flex-col">
+                                <div className="bg-gray-200 p-1.5 font-bold border-b border-gray-800">GOODS DELIVERED BY</div>
+                                <div className="grid grid-cols-2 flex-grow min-h-[80px]">
+                                    <div className="p-2 border-r border-gray-800 relative flex flex-col justify-between">
+                                        <div className="grid grid-cols-[40px_1fr] gap-1">
+                                            <span className="font-bold">Name:</span>
+                                            <span className="uppercase font-medium">{selectedNote?.issued_by}</span>
                                         </div>
-                                        {/* Digital Seal centered/placed below signature area */}
-                                        <div className="flex justify-center mt-1">
-                                            <div className="w-16 h-16 opacity-90 mix-blend-multiply">
-                                                <img src={seaflowDigitalSeal} alt="Seal" className="w-full h-full object-contain" crossOrigin="anonymous" />
+                                        <div>
+                                            <div className="grid grid-cols-[50px_1fr] gap-1 mb-1 items-end">
+                                                <span className="font-bold">Signature:</span>
+                                                <div className="h-4"></div>
+                                            </div>
+                                            <div className="flex justify-center -mb-2">
+                                                <div className="w-14 h-14 opacity-90 mix-blend-multiply">
+                                                    <img src={seaflowDigitalSeal} alt="Seal" className="w-full h-full object-contain" crossOrigin="anonymous" />
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                {/* Column 2: Driver Details */}
-                                <div className="p-2 flex flex-col">
-                                    <div className="grid grid-cols-[40px_1fr] gap-1 mb-2">
-                                        <span className="font-bold">Name:</span>
-                                        <div className="uppercase font-medium whitespace-nowrap overflow-hidden">
-                                            {selectedNote?.vehicles && selectedNote.vehicles.length > 0 ? (
-                                                <span>
-                                                    {[
+                                    <div className="p-2 flex flex-col justify-between">
+                                        <div className="grid grid-cols-[40px_1fr] gap-1">
+                                            <span className="font-bold">Name:</span>
+                                            <div className="uppercase font-medium whitespace-nowrap overflow-hidden text-[9px]">
+                                                {selectedNote?.vehicles && selectedNote.vehicles.length > 0 ? (
+                                                    [
                                                         selectedNote.vehicles[0].vehicleName || selectedNote.vehicles[0].vehicleId,
-                                                        selectedNote.vehicles[0].driver,
-                                                        selectedNote.vehicles[0].driverContact
-                                                    ].filter(Boolean).join(' / ')}
-                                                </span>
-                                            ) : (
-                                                <span>-</span>
-                                            )}
+                                                        selectedNote.vehicles[0].driver
+                                                    ].filter(Boolean).join(' / ')
+                                                ) : '-'}
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div className="mt-auto mb-4">
-                                        <div className="grid grid-cols-[50px_1fr] gap-1">
+                                        <div className="grid grid-cols-[50px_1fr] gap-1 items-end mb-2">
                                             <span className="font-bold">Signature:</span>
-                                            <div className="border-b border-gray-400 h-6"></div>
+                                            <div className="border-b border-gray-400 h-4"></div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
-                        {/* GOODS RECEIVED BY (33.33%) */}
-                        <div className="w-1/3 flex flex-col">
-                            <div className="bg-gray-200 p-1.5 font-bold border-b border-gray-800">GOODS RECEIVED BY</div>
-                            <div className="p-2 flex-grow flex flex-col min-h-[100px]">
-                                <div className="grid grid-cols-[40px_1fr] gap-1 mb-2">
-                                    <span className="font-bold">Name:</span>
-                                    <div className="border-b border-gray-400 h-4 mt-1"></div>
-                                </div>
-                                <div className="mt-auto mb-4">
-                                    <div className="grid grid-cols-[50px_1fr] gap-1">
+                            {/* GOODS RECEIVED BY */}
+                            <div className="w-1/3 flex flex-col">
+                                <div className="bg-gray-200 p-1.5 font-bold border-b border-gray-800">GOODS RECEIVED BY</div>
+                                <div className="p-2 flex-grow flex flex-col justify-between min-h-[80px]">
+                                    <div className="grid grid-cols-[40px_1fr] gap-1">
+                                        <span className="font-bold">Name:</span>
+                                        <div className="border-b border-gray-400 h-4 mt-1"></div>
+                                    </div>
+                                    <div className="grid grid-cols-[50px_1fr] gap-1 items-end mb-2">
                                         <span className="font-bold">Signature:</span>
-                                        <div className="border-b border-gray-400 h-6"></div>
+                                        <div className="border-b border-gray-400 h-4"></div>
                                     </div>
                                 </div>
                             </div>
                         </div>
+
+                        {/* Green Box 3: Disclaimer */}
+                        <p className="text-[9px] text-center text-gray-500 mb-2 flex-shrink-0">
+                            Any Shortage or damage must be notified within 72 hours of receipt of goods. <br />
+                            Should you have any enquiries concerning this delivery note, please contact us. <br />
+                            Thank you for your business!
+                        </p>
                     </div>
 
-                    <p className="text-[9px] text-center text-gray-500 mt-6">
-                        Any Shortage or damage must be notified within 72 hours of receipt of goods. <br />
-                        Should you have any enquiries concerning this delivery note, please contact us. <br />
-                        Thank you for your business!
-                    </p>
+                    {/* Address / Footer Info (Pinned to bottom of content area) */}
+                    <div className="mt-auto pt-2 text-[10px] text-gray-600 font-medium flex flex-col items-center flex-none">
+                        <div className="flex flex-wrap justify-center gap-x-6 gap-y-1 items-center mb-1">
+                            <div className="flex items-center gap-2">
+                                <Mail className="w-3 h-3 text-black" />
+                                <span>info@seaflowlogistic.com</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Phone className="w-3 h-3 text-black" />
+                                <span>+960 9990371/+960 9995768</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Globe className="w-3 h-3 text-black" />
+                                <span>www.seaflowlogistic.com</span>
+                            </div>
+                        </div>
+                        <div className="flex items-center justify-center gap-2">
+                            <MapPin className="w-3 h-3 text-black" />
+                            <span>Hulhumale' Lot 11393, Saima Hingun, Rep of Maldives, 23000</span>
+                        </div>
+                    </div>
                 </div>
 
-                <div className="px-10 mb-4 text-[10px] text-gray-600 font-medium flex flex-col items-center">
-                    <div className="flex flex-wrap justify-center gap-x-8 gap-y-2 items-center mb-1">
-                        <div className="flex items-center gap-2">
-                            <Mail className="w-4 h-4 text-black" />
-                            <span>info@seaflowlogistic.com</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Phone className="w-4 h-4 text-black" />
-                            <span>+960 9990371/+960 9995768</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Globe className="w-4 h-4 text-black" />
-                            <span>www.seaflowlogistic.com</span>
-                        </div>
-                    </div>
-                    <div className="flex items-center justify-center gap-2">
-                        <MapPin className="w-4 h-4 text-black" />
-                        <span>Hulhumale' Lot 11393, Saima Hingun, Rep of Maldives, 23000</span>
-                    </div>
-                </div>
-
-                {/* Footer Image */}
-                <div className="absolute bottom-0 left-0 w-full z-20 font-none leading-none">
+                {/* 4. Footer Image (Fixed Bottom Red Box) */}
+                <div className="absolute bottom-0 left-0 w-full z-20 font-none leading-none pointer-events-none">
                     <img
                         src={seaflowFooter}
                         alt="Footer"
                         className="w-full h-auto block"
-                        style={{ width: '100%', height: 'auto', display: 'block' }}
+                        style={{ maxWidth: '100%', maxHeight: '30mm' }}
                         crossOrigin="anonymous"
                     />
                 </div>
