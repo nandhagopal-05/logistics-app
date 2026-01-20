@@ -725,11 +725,15 @@ const DeliveryNotes: React.FC = () => {
                 )}
             </div>
             <style>{`
-
+            /* Print Styles */
             @media print {
-                @page {size: A4; margin: 0;}
+                @page {
+                    size: A4 portrait;
+                    margin: 0;
+                }
                 html, body {margin: 0;padding: 0;}
-            }                body * {
+                /* Hide everything by default */
+                body * {
                     visibility: hidden;
                 }
                 /* Make printable content visible */
@@ -784,7 +788,7 @@ const DeliveryNotes: React.FC = () => {
             .animate-scale-in {
                 animation: scaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
             }
-            `}</style>
+        `}</style>
         </Layout >
     );
 };
