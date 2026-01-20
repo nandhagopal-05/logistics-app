@@ -342,6 +342,7 @@ const ClearanceSchedule: React.FC = () => {
                         onSave={handleSave}
                         initialData={editingSchedule}
                         job={editingSchedule}
+                        isReschedule={true}
                     />
                 )}
 

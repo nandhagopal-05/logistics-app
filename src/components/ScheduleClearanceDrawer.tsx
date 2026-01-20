@@ -7,9 +7,11 @@ interface ScheduleClearanceDrawerProps {
     onSave: (data: any) => void;
     job?: any;
     initialData?: any;
+    title?: string;
+    isReschedule?: boolean;
 }
 
-const ScheduleClearanceDrawer: React.FC<ScheduleClearanceDrawerProps> = ({ isOpen, onClose, onSave, job, initialData }) => {
+const ScheduleClearanceDrawer: React.FC<ScheduleClearanceDrawerProps> = ({ isOpen, onClose, onSave, job, initialData, title, isReschedule = false }) => {
     const [formData, setFormData] = useState({
         date: '',
         type: '',
@@ -23,7 +25,7 @@ const ScheduleClearanceDrawer: React.FC<ScheduleClearanceDrawerProps> = ({ isOpe
     });
 
     useEffect(() => {
-        if (initialData) {
+        if (initialData && isReschedule) {
             setFormData({
                 date: initialData.clearance_date ? new Date(initialData.clearance_date).toISOString().split('T')[0] : '',
                 type: initialData.clearance_type || '',
@@ -36,11 +38,12 @@ const ScheduleClearanceDrawer: React.FC<ScheduleClearanceDrawerProps> = ({ isOpe
                 reschedule_reason: initialData.reschedule_reason || ''
             });
         } else {
+            // New Schedule Defaults
             setFormData({
-                date: '',
+                date: new Date().toISOString().split('T')[0],
                 type: '',
                 port: '',
-                bl_awb: '',
+                bl_awb: job?.bl_awb_no || job?.bl_awb || '',
                 transport_mode: job?.transport_mode ? (job.transport_mode.charAt(0).toUpperCase() + job.transport_mode.slice(1).toLowerCase()) : '',
                 packages: '',
                 clearance_method: '',
@@ -48,11 +51,10 @@ const ScheduleClearanceDrawer: React.FC<ScheduleClearanceDrawerProps> = ({ isOpe
                 reschedule_reason: ''
             });
         }
-    }, [initialData, isOpen, job]);
-
+    }, [initialData, isOpen, job, isReschedule]);
 
     // Derived options from job
-    // Assuming job has properties master_bl and house_bl (even if currently placeholders in UI, intention is clear)
+    // Assuming job has properties master_bl and house_bl
     const blOptions = [job?.bl_awb_no, job?.house_bl].filter((opt) => opt && opt !== '-');
 
     if (!isOpen) return null;
@@ -81,7 +83,9 @@ const ScheduleClearanceDrawer: React.FC<ScheduleClearanceDrawerProps> = ({ isOpe
 
                     {/* Header */}
                     <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-                        <h2 className="text-xl font-bold text-gray-900">{initialData ? 'Reschedule Clearance' : 'New schedule clearance'}</h2>
+                        <h2 className="text-xl font-bold text-gray-900">
+                            {title ? title : (isReschedule ? 'Reschedule Clearance' : 'Schedule Clearance')}
+                        </h2>
                         <button
                             onClick={onClose}
                             className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400 hover:text-gray-600"
@@ -146,7 +150,7 @@ const ScheduleClearanceDrawer: React.FC<ScheduleClearanceDrawerProps> = ({ isOpe
                         </div>
 
                         {/* Reschedule Reason (Only for Edit/Reschedule) */}
-                        {initialData && (
+                        {isReschedule && (
                             <div className="form-group">
                                 <label className="block text-sm font-semibold text-gray-700 mb-2">Reschedule Reason</label>
                                 <div className="relative">

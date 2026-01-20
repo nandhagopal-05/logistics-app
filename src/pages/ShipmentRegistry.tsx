@@ -2049,7 +2049,7 @@ const ShipmentRegistry: React.FC = () => {
                     onClose={() => { setPopupType(null); setPopupJob(null); }}
                     onSave={handleScheduleSave}
                     job={popupJob}
-                    initialData={editFormData}
+                    title="Schedule Clearance"
                 />
             )}
 
