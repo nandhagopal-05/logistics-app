@@ -157,15 +157,18 @@ router.get('/:id', authenticateToken, async (req, res) => {
 
         // Fetch Items with Shipment Details (BL/AWB, etc.)
         // Fetch Items with Shipment Details
-        // Joining to get BL/AWB, Shipper (Sender), Packages from shipments table
+        // Joining to get BL/AWB, Shipper (Sender), Packages
+        // PRIORITIZE details from Clearance Schedule (cs) if they exist (user might have updated them during scheduling)
+        // Fallback to Shipment (s) details
         const itemsResult = await pool.query(`
             SELECT dni.*, 
-                   s.bl_awb_no, 
+                   COALESCE(cs.bl_awb, s.bl_awb_no) as bl_awb_no, 
                    s.sender_name, 
-                   s.no_of_pkgs as packages, 
+                   COALESCE(cs.packages, s.no_of_pkgs) as packages, 
                    s.container_type as package_type, 
                    s.container_no
             FROM delivery_note_items dni
+            LEFT JOIN clearance_schedules cs ON dni.schedule_id = cs.id
             LEFT JOIN shipments s ON dni.job_id = s.id
             WHERE dni.delivery_note_id = $1
         `, [id]);

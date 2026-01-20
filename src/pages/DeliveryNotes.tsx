@@ -257,26 +257,27 @@ const DeliveryNotes: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Job Table Mock */}
+                    {/* Job Table */}
                     <div className="mb-8">
-                        <table className="w-full border-collapse border border-gray-300 text-xs">
-                            <thead className="bg-gray-200">
+                        <table className="w-full border-collapse text-xs">
+                            <thead className="bg-gray-200 font-bold border-y border-gray-400">
                                 <tr>
-                                    <th className="border border-gray-300 p-2 text-left">Job No</th>
-                                    <th className="border border-gray-300 p-2 text-left">Shipper</th>
-                                    <th className="border border-gray-300 p-2 text-left">BL/AWB #</th>
-                                    <th className="border border-gray-300 p-2 text-left">Qty</th>
+                                    <th className="py-1 px-2 text-left w-1/5">Job No</th>
+                                    <th className="py-1 px-2 text-left w-2/5">Shipper</th>
+                                    <th className="py-1 px-2 text-left w-1/5">BL/AWB #</th>
+                                    <th className="py-1 px-2 text-left w-1/5">Qty</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody className="divide-y divide-gray-200">
                                 {selectedNote?.items?.map((item, idx) => (
-                                    <tr key={idx}>
-                                        <td className="border border-gray-300 p-2">{item.job_id}</td>
-                                        <td className="border border-gray-300 p-2">{item.sender_name || selectedNote.exporter}</td>
-                                        <td className="border border-gray-300 p-2">{item.bl_awb_no || '-'}</td>
-                                        <td className="border border-gray-300 p-2">{item.packages || '-'}</td>
+                                    <tr key={idx} className="border-b border-gray-200">
+                                        <td className="py-1 px-2 align-top">{item.job_id}</td>
+                                        <td className="py-1 px-2 align-top font-medium uppercase">{item.sender_name || selectedNote.exporter}</td>
+                                        <td className="py-1 px-2 align-top">{item.bl_awb_no || '-'}</td>
+                                        <td className="py-1 px-2 align-top font-bold">{item.packages} {item.package_type || ''}</td>
                                     </tr>
                                 ))}
+                                {/* Empty rows for consistent height if needed, OR just leave dynamic */}
                             </tbody>
                         </table>
                     </div>
