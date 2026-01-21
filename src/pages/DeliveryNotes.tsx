@@ -204,7 +204,7 @@ const DeliveryNotes: React.FC = () => {
                 }}
             >
                 {/* 1. FIXED HEADER (Red Box) */}
-                <div className="absolute top-0 left-0 w-full z-0 font-none leading-none">
+                <div className="absolute margin-5% top-0 left-0 w-full z-0 font-none leading-none">
                     <img
                         src={seaflowHeader}
                         alt="Header"
@@ -404,7 +404,7 @@ const DeliveryNotes: React.FC = () => {
                 </div>
 
                 {/* 4. FIXED FOOTER (Red Box) */}
-                <div className="absolute bottom-0 left-0 w-full z-0 font-none leading-none">
+                <div className="absolute margin-5% bottom-0 left-0 w-full z-0 font-none leading-none">
                     <img
                         src={seaflowFooter}
                         alt="Footer"
