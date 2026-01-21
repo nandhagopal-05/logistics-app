@@ -204,7 +204,7 @@ const DeliveryNotes: React.FC = () => {
                 }}
             >
                 {/* 1. FIXED HEADER (Red Box) */}
-                <div className="absolute margin-5% top-0 left-0 w-full z-0 font-none leading-none">
+                <div className="absolute top-0 left-0 w-full z-0 font-none leading-none">
                     <img
                         src={seaflowHeader}
                         alt="Header"
@@ -381,7 +381,7 @@ const DeliveryNotes: React.FC = () => {
                     </div>
 
                     {/* Contact Info (Bottom text) */}
-                    <div className="px-10 mt-auto text-[10px] text-gray-600 font-medium flex flex-col items-center flex-shrink-0 relative z-10 pb-2">
+                    <div className="px-8 mt-auto text-[10px] text-gray-600 font-medium flex flex-col items-center flex-shrink-0 relative z-10 pb-2">
                         <div className="flex flex-wrap justify-center gap-x-8 gap-y-2 items-center mb-1">
                             <div className="flex items-center gap-2">
                                 <Mail className="w-4 h-4 text-black" />
@@ -404,7 +404,7 @@ const DeliveryNotes: React.FC = () => {
                 </div>
 
                 {/* 4. FIXED FOOTER (Red Box) */}
-                <div className="absolute margin-5% bottom-0 left-0 w-full z-0 font-none leading-none">
+                <div className="absolute bottom-0 left-0 w-full z-0 font-none leading-none">
                     <img
                         src={seaflowFooter}
                         alt="Footer"
