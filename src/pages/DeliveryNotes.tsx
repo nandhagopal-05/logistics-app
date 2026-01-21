@@ -404,7 +404,7 @@ const DeliveryNotes: React.FC = () => {
                 </div>
 
                 {/* 4. FIXED FOOTER (Red Box) */}
-                <div className="absolute bottom-0 left-0 w-full z-0 font-none leading-none">
+                <div className="absolute bottom-0 left-0 w-full z-0 font-none leading-none print:fixed print:bottom-0">
                     <img
                         src={seaflowFooter}
                         alt="Footer"
@@ -741,8 +741,9 @@ const DeliveryNotes: React.FC = () => {
                     height: 297mm !important;
                     margin: 0 !important;
                     padding: 0 !important;
-                    overflow: auto !important;
-                    -webkit-print-color-adjust: exact;
+                    overflow: hidden !important;
+                    -webkit-print-color-adjust: exact !important;
+                    print-color-adjust: exact !important;
                 }
 
                 @page {
