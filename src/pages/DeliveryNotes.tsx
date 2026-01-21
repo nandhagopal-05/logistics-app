@@ -736,41 +736,69 @@ const DeliveryNotes: React.FC = () => {
             <style>{`
             /* Print Styles */
             @media print {
+                html, body {
+                    width: 210mm !important;
+                    height: 297mm !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    overflow: hidden !important;
+                    -webkit-print-color-adjust: exact;
+                }
+
                 @page {
                     size: A4 portrait;
                     margin: 0;
                 }
-                body {
-                    margin: 0;
-                    padding: 0;
-                    -webkit-print-color-adjust: exact;
+
+                /* Absolutely hide everything else */
+                body > *:not(#root) {
+                    display: none !important;
                 }
-                /* Hide everything by default */
+                
+                #root {
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    width: 100% !important;
+                    height: 100% !important;
+                }
+
+                /* Hide all non-printable children */
                 body * {
                     visibility: hidden;
                 }
-                /* Make printable content visible */
-                #printable-content, #printable-content * {
-                    visibility: visible;
+
+                /* Target the printable content and ensure it's visible and positioned */
+                #printable-content, 
+                #printable-content * {
+                    visibility: visible !important;
                 }
-                /* Position the content to fill the page, ignoring parent padding */
+
                 #printable-content {
-                    position: fixed;
-                    left: 0;
-                    top: 0;
-                    width: 210mm;
-                    height: 297mm;
-                    margin: 0;
-                    padding: 0;
-                    background: white;
-                    border: none;
-                    box-shadow: none;
-                    overflow: hidden;
-                    z-index: 9999;
+                    position: fixed !important;
+                    left: 0 !important;
+                    top: 0 !important;
+                    width: 210mm !important;
+                    height: 297mm !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    border: none !important;
+                    box-shadow: none !important;
+                    z-index: 2147483647 !important; /* Max z-index */
+                    background: white !important;
+                    overflow: hidden !important;
+                    display: block !important;
+                    transform: none !important; /* Reset any potential transforms */
                 }
-                /* Hide buttons/UI during print */
+
+                /* Ensure image scales correctly */
+                #printable-content img {
+                    max-width: 100% !important;
+                    height: auto !important;
+                }
+
+                /* Hide buttons */
                 button, .no-print {
-                    display: none;
+                    display: none !important;
                 }
             }
 
