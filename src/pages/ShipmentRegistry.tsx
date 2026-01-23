@@ -1398,11 +1398,8 @@ const ShipmentRegistry: React.FC = () => {
                                 )}
                             </div>
                             {/* Packages List within BL/AWB Card */}
-                            <div className="mt-6 pt-6 border-t border-gray-100">
-                                <h4 className="text-sm font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                    <Package className="w-4 h-4 text-gray-400" />
-                                    Package Details
-                                </h4>
+                            <div className="mt-4">
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Packages</label>
                                 {selectedJob.packages && selectedJob.packages.length > 0 ? (
                                     <div className="bg-gray-50 rounded-lg overflow-hidden border border-gray-100">
                                         <table className="w-full text-sm text-left">
@@ -1431,8 +1428,8 @@ const ShipmentRegistry: React.FC = () => {
                                         </table>
                                     </div>
                                 ) : (
-                                    <div className="text-center py-4 text-gray-400 text-sm italic border border-dashed border-gray-200 rounded-lg">
-                                        No packages added. Click 'Add' or 'Edit' on BL to add packages.
+                                    <div className="text-gray-400 text-sm italic">
+                                        No packages added.
                                     </div>
                                 )}
                             </div>
