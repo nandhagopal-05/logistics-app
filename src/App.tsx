@@ -15,6 +15,7 @@ import DeliveryNotes from './pages/DeliveryNotes';
 import ChangePassword from './pages/ChangePassword';
 import ResetPassword from './pages/ResetPassword';
 import ForgotPassword from './pages/ForgotPassword';
+import Payments from './pages/Payments';
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -103,6 +104,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <DeliveryNotes />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/payments"
+            element={
+              <ProtectedRoute>
+                <Payments />
               </ProtectedRoute>
             }
           />

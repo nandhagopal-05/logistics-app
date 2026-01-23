@@ -215,6 +215,7 @@ export const clearanceAPI = {
 // Payments API
 export const paymentsAPI = {
     getAll: (jobId: string) => api.get(`/payments/job/${jobId}`),
+    getListing: (params?: { search?: string; page?: number; limit?: number }) => api.get('/payments', { params }),
     create: (data: any) => api.post('/payments', data),
     delete: (id: number | string) => api.delete(`/payments/${id}`),
 };

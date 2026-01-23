@@ -11,7 +11,8 @@ import {
     UserCircle,
     Settings,
     Container,
-    ClipboardList
+    ClipboardList,
+    CreditCard
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -25,6 +26,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     const userRole = user?.role || '';
     const isAdministrator = userRole === 'Administrator';
     const isClearance = ['Clearance Manager', 'Clearance Manager Assistant', 'Clearance Agent', 'Accountant', 'Accountant Assistant'].includes(userRole);
+    const isAccountant = ['Accountant', 'Accountant Assistant', 'Administrator'].includes(userRole);
 
     const menuItems = [
         { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
@@ -45,6 +47,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             { icon: Calendar, label: 'Clearance Schedule', path: '/schedule' },
             { icon: ClipboardList, label: 'Delivery Notes', path: '/delivery-notes' },
             { icon: Container, label: 'Containers', path: '/containers' }
+        );
+    }
+
+    // Accountant Access
+    if (isAccountant) {
+        menuItems.push(
+            { icon: CreditCard, label: 'Payments', path: '/payments' }
         );
     }
 
