@@ -1921,12 +1921,13 @@ const ShipmentRegistry: React.FC = () => {
                                 </div>
                                 <div>
                                     <label className="block text-sm font-semibold text-gray-700 mb-2">Vendor *</label>
-                                    <select name="vendor" value={editFormData.vendor || ''} onChange={handleEditChange} className="w-full p-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
-                                        <option value="">Select Vendor</option>
-                                        {vendorsList.map((v: any) => (
-                                            <option key={v.id} value={v.name}>{v.name}</option>
-                                        ))}
-                                    </select>
+                                    <SearchableSelect
+                                        options={vendorsList.map((v: any) => ({ id: v.id, label: v.name, value: v.name }))}
+                                        value={editFormData.vendor || ''}
+                                        onChange={(val) => setEditFormData((prev: any) => ({ ...prev, vendor: val }))}
+                                        placeholder="Select Vendor"
+                                        required
+                                    />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-semibold text-gray-700 mb-2">Amount *</label>
