@@ -156,15 +156,22 @@ const ShipmentRegistry: React.FC = () => {
                 await shipmentsAPI.update(selectedJob.id, { packages: updatedJobPackages });
             }
 
-            // Update Local State
-            const updatedJob = {
-                ...selectedJob,
-                bls: updatedBLList,
-                packages: updatedJobPackages
-            };
-
-            setSelectedJob(updatedJob);
-            setJobs(prev => prev.map(j => j.id === selectedJob.id ? updatedJob : j));
+            // 3. Refresh Details from Server to ensure consistency
+            try {
+                const refreshed = await shipmentsAPI.getById(selectedJob.id);
+                setSelectedJob(refreshed.data);
+                setJobs(prev => prev.map(j => j.id === selectedJob.id ? { ...j, ...refreshed.data } : j));
+            } catch (refreshErr) {
+                console.error("Error refreshing job after save", refreshErr);
+                // Fallback to local update if refresh fails
+                const updatedJob = {
+                    ...selectedJob,
+                    bls: updatedBLList,
+                    packages: updatedJobPackages
+                };
+                setSelectedJob(updatedJob);
+                setJobs(prev => prev.map(j => j.id === selectedJob.id ? updatedJob : j));
+            }
 
             setIsBLDrawerOpen(false);
             setNewBL({ master_bl: '', house_bl: '', loading_port: '', vessel: '', etd: '', eta: '', delivery_agent: '' });
