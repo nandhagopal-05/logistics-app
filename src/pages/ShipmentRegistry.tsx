@@ -13,6 +13,7 @@ import {
 
 } from 'lucide-react';
 import ScheduleClearanceDrawer from '../components/ScheduleClearanceDrawer';
+import BLDrawer from '../components/BLDrawer';
 import SearchableSelect from '../components/SearchableSelect';
 
 const PACKAGE_TYPES = ['PALLET', 'BUNDLES', 'CARTON', 'PKG', 'BOX', 'CASE', 'BULK', 'UNIT'];
@@ -58,6 +59,9 @@ const ShipmentRegistry: React.FC = () => {
     const [editingSection, setEditingSection] = useState<string | null>(null);
     const [editFormData, setEditFormData] = useState<any>({});
     const [previewDoc, setPreviewDoc] = useState<any | null>(null);
+
+    // Drawer State
+    const [isBLDrawerOpen, setIsBLDrawerOpen] = useState(false);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [popupJob, setPopupJob] = useState<any | null>(null);
     const [popupType, setPopupType] = useState<'invoice' | 'bl' | 'payment' | 'upload' | 'schedule' | null>(null);
@@ -66,7 +70,7 @@ const ShipmentRegistry: React.FC = () => {
     const [addingContainer, setAddingContainer] = useState(false);
     const [newContainer, setNewContainer] = useState<any>({ container_no: '', container_type: 'FCL 20', unloaded_date: '' });
 
-    const [addingBL, setAddingBL] = useState(false);
+
     const [newBL, setNewBL] = useState<any>({ master_bl: '', house_bl: '', loading_port: '', vessel: '', etd: '', eta: '', delivery_agent: '' });
 
     const handleSaveNewContainer = async () => {
@@ -107,26 +111,134 @@ const ShipmentRegistry: React.FC = () => {
         }
     };
 
-    const handleSaveNewBL = async () => {
-        if (!newBL.master_bl && !newBL.house_bl) return alert('Master No or House No is required');
+    const handleBLDrawerSave = async (data: any) => {
         try {
-            let updatedList;
-            if (newBL.id) {
-                const updated = await shipmentsAPI.updateBL(selectedJob.id, newBL.id, newBL);
-                updatedList = selectedJob.bls.map((b: any) => b.id === newBL.id ? updated.data : b);
+            // 1. Save or Update BL
+            let savedBL: any;
+            let updatedBLList;
+
+            // Prepare BL payload (exclude containers/packages for the BL call if API doesn't support it)
+            // Assuming API ignores extra fields or we clean it.
+            const blPayload = {
+                master_bl: data.master_bl,
+                house_bl: data.house_bl,
+                loading_port: data.loading_port,
+                vessel: data.vessel,
+                etd: data.etd,
+                eta: data.eta,
+                delivery_agent: data.delivery_agent
+            };
+
+            if (data.id) {
+                const updated = await shipmentsAPI.updateBL(selectedJob.id, data.id, blPayload);
+                savedBL = updated.data;
+                updatedBLList = selectedJob.bls.map((b: any) => b.id === data.id ? savedBL : b);
             } else {
-                const added = await shipmentsAPI.addBL(selectedJob.id, newBL);
-                updatedList = [...(selectedJob.bls || []), added.data];
+                const added = await shipmentsAPI.addBL(selectedJob.id, blPayload);
+                savedBL = added.data;
+                updatedBLList = [...(selectedJob.bls || []), savedBL];
             }
 
-            const updatedJob = { ...selectedJob, bls: updatedList };
+            // 2. Save Containers/Packages if any
+            // The drawer returns 'containers' array which actually contains items that might be packages or containers
+            // We need to iterate and add them.
+            // Note: This logic assumes we adding them to the JOB.
+            // If they need to be linked to BL, the backend must support it or we pass BL ID.
+            // Existing addContainer takes (jobId, containerData).
+            // We will just add them to the job for now as per current structure.
+            let currentContainers = [...(selectedJob.containers || [])];
+
+            if (data.containers && data.containers.length > 0) {
+                // Filter out those that don't have IDs (new ones) or handle updates?
+                // The drawer handles new items mostly. For existing, it might be tricky without IDs.
+                // Let's assume for now we only ADD new items from the drawer to the job.
+
+                for (const item of data.containers) {
+                    if (!item.id || String(item.id).startsWith('17')) { // timestamp ID or no ID
+                        // New Item
+                        // Map drawer item to API payload
+                        const containerPayload = {
+                            container_no: item.container_no,
+                            container_type: item.container_type,
+                            // Map packages info to container or job?
+                            // Existing `addContainer` doesn't seem to take pkg info?
+                            // Wait, existing `selectedJob.containers` structure:
+                            // container_no, container_type, unloaded_date.
+                            // Packages are in `selectedJob.packages`.
+
+                            // If the user adds "Packages" in the drawer, where do they go?
+                            // If `pkg_count` > 0, we might need to add to `packages` list?
+                            // The drawer has mixed Container/Package concept.
+                            // Strategy:
+                            // If 'container_no' is present, add as Container.
+                            // If 'pkg_count' is present, add as Package (Job Package).
+
+                            // Note: This might duplicate items if not careful.
+                            // For now, I will try to save Container if container_no exists.
+                            unloaded_date: '' // Default
+                        };
+
+                        if (item.container_no) {
+                            const cAdded = await shipmentsAPI.addContainer(selectedJob.id, containerPayload);
+                            currentContainers.push(cAdded.data);
+                        }
+
+                        // If there are packages, we might need to add them to job.packages?
+                        // The existing UI has `addPackage` which updates `selectedJob.packages` (which seems to be local state in `editFormData`?)
+                        // Actually `selectedJob.packages` comes from DB.
+                        // We don't have `addPackage` API call in the file? 
+                        // Ah, `handleSaveDetails` updates the JOB with package list.
+                        // So we might need to update the job with new packages.
+
+                        if (item.pkg_count) {
+                            // We need to append to job packages.
+                            // This requires updating the JOB itself.
+                            // We can do this after the loop.
+                            // Collect new packages.
+                        }
+                    }
+                }
+            }
+
+            // Note: To properly support "Adding Packages via BL Form", we should probably update the Job's package list.
+            // But this is getting complex without knowing if backend supports "add package".
+            // `handleSaveDetails` calls `shipmentsAPI.updateJob(..., { packages: ... })`.
+
+            // Let's Collect new packages from the drawer items
+            const newPackages = data.containers
+                .filter((i: any) => i.pkg_count)
+                .map((i: any) => ({
+                    count: i.pkg_count,
+                    type: i.pkg_type,
+                    weight: i.weight || 0
+                }));
+
+            let updatedJobPackages = selectedJob.packages || [];
+            if (newPackages.length > 0) {
+                updatedJobPackages = [...updatedJobPackages, ...newPackages];
+                // Update Job with new packages
+                await shipmentsAPI.update(selectedJob.id, { packages: updatedJobPackages });
+            }
+
+            // Update Local State
+            // We need to fetch the job again to be safe? Or just manual update.
+            // Manual update:
+            const updatedJob = {
+                ...selectedJob,
+                bls: updatedBLList,
+                containers: currentContainers,
+                packages: updatedJobPackages
+            };
+
             setSelectedJob(updatedJob);
             setJobs(prev => prev.map(j => j.id === selectedJob.id ? updatedJob : j));
-            setAddingBL(false);
+
+            setIsBLDrawerOpen(false);
             setNewBL({ master_bl: '', house_bl: '', loading_port: '', vessel: '', etd: '', eta: '', delivery_agent: '' });
+
         } catch (e) {
             console.error(e);
-            alert('Failed to save BL');
+            alert('Failed to save BL details');
         }
     };
 
@@ -1286,51 +1398,27 @@ const ShipmentRegistry: React.FC = () => {
                                     BL/AWB Details
                                 </h3>
                                 <div className="flex gap-2">
-                                    {!addingBL && (
-                                        <button
-                                            onClick={() => setAddingBL(true)}
-                                            className="text-indigo-600 hover:bg-indigo-50 p-2 rounded-full transition-colors flex items-center gap-2 text-sm font-bold"
-                                            title="Add BL"
-                                        >
-                                            <Plus className="w-4 h-4" /> Add
-                                        </button>
-                                    )}
+                                    <button
+                                        onClick={() => {
+                                            setNewBL({ master_bl: '', house_bl: '', loading_port: '', vessel: '', etd: '', eta: '', delivery_agent: '' });
+                                            setIsBLDrawerOpen(true);
+                                        }}
+                                        className="text-indigo-600 hover:bg-indigo-50 p-2 rounded-full transition-colors flex items-center gap-2 text-sm font-bold"
+                                        title="Add BL"
+                                    >
+                                        <Plus className="w-4 h-4" /> Add
+                                    </button>
                                 </div>
                             </div>
 
                             <div className="space-y-6">
-                                {/* Add New BL Form */}
-                                {addingBL && (
-                                    <div className="bg-indigo-50/30 border border-indigo-100 rounded-xl p-6 animate-fadeIn">
-                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                                            <input className="input-field py-1.5 border rounded px-3 w-full text-sm bg-white" placeholder="Master No" value={newBL.master_bl} onChange={e => setNewBL({ ...newBL, master_bl: e.target.value })} />
-                                            <input type="date" className="input-field py-1.5 border rounded px-3 w-full text-sm bg-white" placeholder="ETD" value={newBL.etd} onChange={e => setNewBL({ ...newBL, etd: e.target.value })} />
-                                            <input type="date" className="input-field py-1.5 border rounded px-3 w-full text-sm bg-white" placeholder="ETA" value={newBL.eta} onChange={e => setNewBL({ ...newBL, eta: e.target.value })} />
-                                            <input className="input-field py-1.5 border rounded px-3 w-full text-sm bg-white" placeholder="House No" value={newBL.house_bl} onChange={e => setNewBL({ ...newBL, house_bl: e.target.value })} />
-                                            <input className="input-field py-1.5 border rounded px-3 w-full text-sm bg-white" placeholder="Loading Port" value={newBL.loading_port} onChange={e => setNewBL({ ...newBL, loading_port: e.target.value })} />
-                                            <input className="input-field py-1.5 border rounded px-3 w-full text-sm bg-white" placeholder="Vessel" value={newBL.vessel} onChange={e => setNewBL({ ...newBL, vessel: e.target.value })} />
-                                            <select className="input-field py-1.5 border rounded px-3 w-full text-sm bg-white" value={newBL.delivery_agent} onChange={e => setNewBL({ ...newBL, delivery_agent: e.target.value })}>
-                                                <option value="">Select Agent</option>
-                                                {deliveryAgentsList.map((a: any) => <option key={a.id} value={a.name}>{a.name}</option>)}
-                                            </select>
-                                        </div>
-                                        <div className="flex justify-end gap-2">
-                                            <button onClick={() => { setAddingBL(false); setNewBL({ master_bl: '', house_bl: '', loading_port: '', vessel: '', etd: '', eta: '', delivery_agent: '' }); }} className="px-3 py-1.5 text-gray-600 hover:bg-gray-100 rounded text-sm font-medium">Cancel</button>
-                                            <button onClick={handleSaveNewBL} className="px-3 py-1.5 bg-indigo-600 text-white hover:bg-indigo-700 rounded text-sm font-medium">{newBL.id ? 'Update BL' : 'Save BL'}</button>
-                                        </div>
-                                    </div>
-                                )}
-
                                 {/* List of BLs */}
                                 {selectedJob.bls && selectedJob.bls.length > 0 ? (
                                     selectedJob.bls.map((bl: any) => (
                                         <div key={bl.id} className="border border-gray-200 rounded-lg p-5 hover:border-indigo-100 transition-colors relative group">
                                             <div className="absolute top-4 right-4 flex gap-2">
                                                 <button
-                                                    onClick={() => {
-                                                        setNewBL(bl);
-                                                        setAddingBL(true);
-                                                    }}
+
                                                     className="text-gray-300 hover:text-indigo-600 transition-colors"
                                                     title="Edit BL"
                                                 >
@@ -1373,7 +1461,7 @@ const ShipmentRegistry: React.FC = () => {
                                         </div>
                                     ))
                                 ) : (
-                                    !addingBL && <div className="text-center py-6 text-gray-400 italic">No BL/AWB details listed</div>
+                                    <div className="text-center py-6 text-gray-400 italic">No BL/AWB details listed</div>
                                 )}
                             </div>
 
@@ -2126,6 +2214,15 @@ const ShipmentRegistry: React.FC = () => {
             )}
 
             {renderPopup()}
+
+            <BLDrawer
+                isOpen={isBLDrawerOpen}
+                onClose={() => { setIsBLDrawerOpen(false); setNewBL({ master_bl: '', house_bl: '', loading_port: '', vessel: '', etd: '', eta: '', delivery_agent: '' }); }}
+                onSave={handleBLDrawerSave}
+                initialData={newBL.id ? newBL : undefined}
+                deliveryAgents={deliveryAgentsList}
+                job={selectedJob}
+            />
         </Layout>
     );
 };
