@@ -139,94 +139,27 @@ const ShipmentRegistry: React.FC = () => {
                 updatedBLList = [...(selectedJob.bls || []), savedBL];
             }
 
-            // 2. Save Containers/Packages if any
-            // The drawer returns 'containers' array which actually contains items that might be packages or containers
-            // We need to iterate and add them.
-            // Note: This logic assumes we adding them to the JOB.
-            // If they need to be linked to BL, the backend must support it or we pass BL ID.
-            // Existing addContainer takes (jobId, containerData).
-            // We will just add them to the job for now as per current structure.
-            let currentContainers = [...(selectedJob.containers || [])];
+            // 2. Save Packages Only (User requested separation)
+            // The drawer now returns 'packages' array
 
-            if (data.containers && data.containers.length > 0) {
-                // Filter out those that don't have IDs (new ones) or handle updates?
-                // The drawer handles new items mostly. For existing, it might be tricky without IDs.
-                // Let's assume for now we only ADD new items from the drawer to the job.
+            let updatedJobPackages = selectedJob.packages || [];
 
-                for (const item of data.containers) {
-                    if (!item.id || String(item.id).startsWith('17')) { // timestamp ID or no ID
-                        // New Item
-                        // Map drawer item to API payload
-                        const containerPayload = {
-                            container_no: item.container_no,
-                            container_type: item.container_type,
-                            // Map packages info to container or job?
-                            // Existing `addContainer` doesn't seem to take pkg info?
-                            // Wait, existing `selectedJob.containers` structure:
-                            // container_no, container_type, unloaded_date.
-                            // Packages are in `selectedJob.packages`.
-
-                            // If the user adds "Packages" in the drawer, where do they go?
-                            // If `pkg_count` > 0, we might need to add to `packages` list?
-                            // The drawer has mixed Container/Package concept.
-                            // Strategy:
-                            // If 'container_no' is present, add as Container.
-                            // If 'pkg_count' is present, add as Package (Job Package).
-
-                            // Note: This might duplicate items if not careful.
-                            // For now, I will try to save Container if container_no exists.
-                            unloaded_date: '' // Default
-                        };
-
-                        if (item.container_no) {
-                            const cAdded = await shipmentsAPI.addContainer(selectedJob.id, containerPayload);
-                            currentContainers.push(cAdded.data);
-                        }
-
-                        // If there are packages, we might need to add them to job.packages?
-                        // The existing UI has `addPackage` which updates `selectedJob.packages` (which seems to be local state in `editFormData`?)
-                        // Actually `selectedJob.packages` comes from DB.
-                        // We don't have `addPackage` API call in the file? 
-                        // Ah, `handleSaveDetails` updates the JOB with package list.
-                        // So we might need to update the job with new packages.
-
-                        if (item.pkg_count) {
-                            // We need to append to job packages.
-                            // This requires updating the JOB itself.
-                            // We can do this after the loop.
-                            // Collect new packages.
-                        }
-                    }
-                }
-            }
-
-            // Note: To properly support "Adding Packages via BL Form", we should probably update the Job's package list.
-            // But this is getting complex without knowing if backend supports "add package".
-            // `handleSaveDetails` calls `shipmentsAPI.updateJob(..., { packages: ... })`.
-
-            // Let's Collect new packages from the drawer items
-            const newPackages = data.containers
-                .filter((i: any) => i.pkg_count)
-                .map((i: any) => ({
+            if (data.packages && data.packages.length > 0) {
+                const newPackages = data.packages.map((i: any) => ({
                     count: i.pkg_count,
                     type: i.pkg_type,
                     weight: i.weight || 0
                 }));
 
-            let updatedJobPackages = selectedJob.packages || [];
-            if (newPackages.length > 0) {
                 updatedJobPackages = [...updatedJobPackages, ...newPackages];
                 // Update Job with new packages
                 await shipmentsAPI.update(selectedJob.id, { packages: updatedJobPackages });
             }
 
             // Update Local State
-            // We need to fetch the job again to be safe? Or just manual update.
-            // Manual update:
             const updatedJob = {
                 ...selectedJob,
                 bls: updatedBLList,
-                containers: currentContainers,
                 packages: updatedJobPackages
             };
 

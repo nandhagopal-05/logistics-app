@@ -25,12 +25,10 @@ const BLDrawer: React.FC<BLDrawerProps> = ({ isOpen, onClose, onSave, initialDat
         packages: []
     });
 
-    const [newContainer, setNewContainer] = useState<any>({
-        container_type: 'FCL 20',
-        container_no: '',
-        cbm: '', // Based on screenshot
+    const [newPackage, setNewPackage] = useState<any>({
         pkg_count: '',
-        pkg_type: 'PKG' // Default
+        pkg_type: 'PKG', // Default
+        weight: ''
     });
 
     useEffect(() => {
@@ -55,12 +53,10 @@ const BLDrawer: React.FC<BLDrawerProps> = ({ isOpen, onClose, onSave, initialDat
                 });
             }
             // Reset temp line item
-            setNewContainer({
-                container_type: 'FCL 20',
-                container_no: '',
-                cbm: '',
+            setNewPackage({
                 pkg_count: '',
-                pkg_type: 'PKG'
+                pkg_type: 'PKG',
+                weight: ''
             });
         }
     }, [isOpen, initialData]);
@@ -70,42 +66,34 @@ const BLDrawer: React.FC<BLDrawerProps> = ({ isOpen, onClose, onSave, initialDat
         setFormData((prev: any) => ({ ...prev, [name]: value }));
     };
 
-    const handleContainerChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const handlePackageChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
-        setNewContainer((prev: any) => ({ ...prev, [name]: value }));
+        setNewPackage((prev: any) => ({ ...prev, [name]: value }));
     };
 
     const addLineItem = () => {
-        // Validation
-        // For SEA, container no might be required. For AIR just packages?
-        // The screenshot shows "Container & Package Details" with "Container No" field.
-        // Assuming SEA mode primarily or generic.
-        if (!newContainer.pkg_count && !newContainer.container_no) {
-            alert("Please enter Container No or Package Count");
+        if (!newPackage.pkg_count) {
+            alert("Please enter Package Count");
             return;
         }
 
-        const item = { ...newContainer, id: Date.now() }; // Temporary ID
+        const item = { ...newPackage, id: Date.now() }; // Temporary ID
         setFormData((prev: any) => ({
             ...prev,
-            containers: [...(prev.containers || []), item]
-            // Note: complex mapping might be needed if packages are separate from containers in backend
-            // But for this UI form, we store them as a list of Items
+            packages: [...(prev.packages || []), item]
         }));
 
-        setNewContainer({
-            container_type: 'FCL 20',
-            container_no: '',
-            cbm: '',
+        setNewPackage({
             pkg_count: '',
-            pkg_type: 'PKG'
+            pkg_type: 'PKG',
+            weight: ''
         });
     };
 
     const removeLineItem = (index: number) => {
         setFormData((prev: any) => ({
             ...prev,
-            containers: prev.containers.filter((_: any, i: number) => i !== index)
+            packages: prev.packages.filter((_: any, i: number) => i !== index)
         }));
     };
 
@@ -158,9 +146,15 @@ const BLDrawer: React.FC<BLDrawerProps> = ({ isOpen, onClose, onSave, initialDat
                             </div>
                         </div>
 
-                        <div>
-                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">ETA</label>
-                            <input type="date" name="eta" value={formData.eta} onChange={handleInputChange} className="input-field w-full py-2 px-3 border rounded text-sm" />
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">ETD</label>
+                                <input type="date" name="etd" value={formData.etd} onChange={handleInputChange} className="input-field w-full py-2 px-3 border rounded text-sm" />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">ETA</label>
+                                <input type="date" name="eta" value={formData.eta} onChange={handleInputChange} className="input-field w-full py-2 px-3 border rounded text-sm" />
+                            </div>
                         </div>
 
                         <div>
@@ -174,42 +168,28 @@ const BLDrawer: React.FC<BLDrawerProps> = ({ isOpen, onClose, onSave, initialDat
                             </div>
                         </div>
 
-                        {/* Container & Package Details Section */}
+                        {/* Package Details Section */}
                         <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
                             <div className="flex justify-between items-center mb-4">
-                                <h3 className="text-sm font-bold text-gray-900">Container & Package Details</h3>
+                                <h3 className="text-sm font-bold text-gray-900">Package Details</h3>
                                 <button className="text-gray-400 hover:text-gray-600"><Plus className="w-4 h-4" /></button>
                             </div>
 
                             <div className="space-y-4 mb-4">
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Container Type*</label>
-                                    <select name="container_type" value={newContainer.container_type} onChange={handleContainerChange} className="input-field w-full py-2 px-3 border rounded text-sm bg-white">
-                                        <option value="FCL 20">FCL 20</option>
-                                        <option value="FCL 40">FCL 40</option>
-                                        <option value="LCL 20">LCL 20</option>
-                                        <option value="LCL 40">LCL 40</option>
-                                        <option value="Loose cargo">Loose cargo</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Container No.</label>
-                                    <input name="container_no" value={newContainer.container_no} onChange={handleContainerChange} className="input-field w-full py-2 px-3 border rounded text-sm" />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">CBM</label>
-                                    <input name="cbm" value={newContainer.cbm} onChange={handleContainerChange} className="input-field w-full py-2 px-3 border rounded text-sm" />
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-3 gap-3">
                                     <div>
                                         <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Packages*</label>
-                                        <input type="number" name="pkg_count" value={newContainer.pkg_count} onChange={handleContainerChange} className="input-field w-full py-2 px-3 border rounded text-sm" />
+                                        <input type="number" name="pkg_count" value={newPackage.pkg_count} onChange={handlePackageChange} className="input-field w-full py-2 px-3 border rounded text-sm" placeholder="Count" />
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Package Type*</label>
-                                        <select name="pkg_type" value={newContainer.pkg_type} onChange={handleContainerChange} className="input-field w-full py-2 px-3 border rounded text-sm bg-white">
+                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Type*</label>
+                                        <select name="pkg_type" value={newPackage.pkg_type} onChange={handlePackageChange} className="input-field w-full py-2 px-3 border rounded text-sm bg-white">
                                             {PACKAGE_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
                                         </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Weight(KG)</label>
+                                        <input type="number" name="weight" value={newPackage.weight} onChange={handlePackageChange} className="input-field w-full py-2 px-3 border rounded text-sm" placeholder="KG" />
                                     </div>
                                 </div>
                                 <div className="flex justify-end">
@@ -218,13 +198,13 @@ const BLDrawer: React.FC<BLDrawerProps> = ({ isOpen, onClose, onSave, initialDat
                             </div>
 
                             {/* List of added items */}
-                            {formData.containers && formData.containers.length > 0 && (
+                            {formData.packages && formData.packages.length > 0 && (
                                 <div className="space-y-2 mt-4 pt-4 border-t border-gray-200">
-                                    {formData.containers.map((c: any, idx: number) => (
+                                    {formData.packages.map((p: any, idx: number) => (
                                         <div key={idx} className="flex justify-between items-center bg-white p-2 rounded border border-gray-100 text-xs">
                                             <div>
-                                                <div className="font-bold">{c.container_no || 'Loose Cargo'}</div>
-                                                <div className="text-gray-500">{c.pkg_count} {c.pkg_type} {c.cbm ? `(${c.cbm} CBM)` : ''}</div>
+                                                <div className="font-bold">{p.pkg_count} {p.pkg_type}</div>
+                                                {p.weight && <div className="text-gray-500">{p.weight} KG</div>}
                                             </div>
                                             <button onClick={() => removeLineItem(idx)} className="text-red-400 hover:text-red-600"><Trash2 className="w-3.5 h-3.5" /></button>
                                         </div>
