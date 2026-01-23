@@ -1371,7 +1371,14 @@ const ShipmentRegistry: React.FC = () => {
                             <div className="space-y-6">
                                 {selectedJob.bls && selectedJob.bls.length > 0 ? (
                                     selectedJob.bls.map((bl: any) => (
-                                        <div key={bl.id} className="border border-gray-200 rounded-lg p-5 hover:border-indigo-100 transition-colors relative group">
+                                        <div
+                                            key={bl.id}
+                                            onClick={() => {
+                                                setNewBL(bl);
+                                                setIsBLDrawerOpen(true);
+                                            }}
+                                            className="border border-gray-200 rounded-lg p-5 hover:border-indigo-300 cursor-pointer transition-colors relative group"
+                                        >
                                             {/* Options Menu (Top Right) */}
                                             <div className="absolute top-4 right-4 flex gap-2">
                                                 <div className="relative">
@@ -1386,25 +1393,21 @@ const ShipmentRegistry: React.FC = () => {
                                                     </button>
 
                                                     {activeMenuBL === bl.id && (
-                                                        <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-100 shadow-lg rounded-md z-10 p-1 animate-fadeIn">
+                                                        <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-100 shadow-lg rounded-md z-10 p-1 animate-fadeIn" onClick={(e) => e.stopPropagation()}>
                                                             <button
-                                                                onClick={() => {
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
                                                                     setNewBL(bl);
                                                                     setIsBLDrawerOpen(true);
                                                                     setActiveMenuBL(null);
                                                                 }}
                                                                 className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded"
                                                             >
-                                                                Edit / View
+                                                                Edit
                                                             </button>
                                                             <button
-                                                                onClick={() => setActiveMenuBL(null)}
-                                                                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded"
-                                                            >
-                                                                Continue Process
-                                                            </button>
-                                                            <button
-                                                                onClick={() => {
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
                                                                     handleDeleteBLItem(bl.id);
                                                                     setActiveMenuBL(null);
                                                                 }}
@@ -1452,7 +1455,6 @@ const ShipmentRegistry: React.FC = () => {
                                                     <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Packages</p>
                                                     <p className="font-semibold text-gray-900">
                                                         {selectedJob.packages?.reduce((acc: number, p: any) => acc + (parseInt(p.count) || 0), 0) || '0'}
-                                                        Next
                                                     </p>
                                                 </div>
                                                 <div>

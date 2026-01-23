@@ -60,7 +60,7 @@ const BLDrawer: React.FC<BLDrawerProps> = ({ isOpen, onClose, onSave, initialDat
                 weight: ''
             });
         }
-    }, [isOpen, initialData]);
+    }, [isOpen]); // Only run on open toggle, ignore initialData updates while open
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
