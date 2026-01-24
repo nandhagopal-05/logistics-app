@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Search } from 'lucide-react';
 import Layout from '../components/Layout';
 import { paymentsAPI } from '../services/api';
+import PaymentDetailsDrawer from '../components/PaymentDetailsDrawer';
 
 const Payments = () => {
     const [payments, setPayments] = useState<any[]>([]);
@@ -10,6 +11,9 @@ const Payments = () => {
     const [activeTab, setActiveTab] = useState<'pending' | 'history'>('pending');
     const [page, setPage] = useState(1);
     const limit = 50;
+
+    const [selectedPayment, setSelectedPayment] = useState<any>(null);
+    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
     useEffect(() => {
         fetchPayments();
@@ -58,6 +62,11 @@ const Payments = () => {
     const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSearchTerm(e.target.value);
         setPage(1);
+    };
+
+    const handleRowClick = (payment: any) => {
+        setSelectedPayment(payment);
+        setIsDrawerOpen(true);
     };
 
     return (
@@ -149,7 +158,11 @@ const Payments = () => {
                                 </tr>
                             ) : (
                                 payments.map((item, index) => (
-                                    <tr key={index} className="group hover:bg-gray-50 transition-colors">
+                                    <tr
+                                        key={index}
+                                        className="group hover:bg-gray-50 transition-colors cursor-pointer"
+                                        onClick={() => handleRowClick(item)}
+                                    >
                                         {activeTab === 'pending' ? (
                                             <>
                                                 {/* Pending Row */}
@@ -175,7 +188,7 @@ const Payments = () => {
                                                 </td>
                                                 <td className="py-4 px-2 align-top">
                                                     <button
-                                                        onClick={() => handleApprove(item.id)}
+                                                        onClick={(e) => { e.stopPropagation(); handleApprove(item.id); }}
                                                         className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors"
                                                     >
                                                         Approve
@@ -218,6 +231,12 @@ const Payments = () => {
                         </tbody>
                     </table>
                 </div>
+
+                <PaymentDetailsDrawer
+                    isOpen={isDrawerOpen}
+                    onClose={() => setIsDrawerOpen(false)}
+                    payment={selectedPayment}
+                />
             </div>
         </Layout>
     );
