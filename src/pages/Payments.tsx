@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Check, X, FileText } from 'lucide-react';
+import { Search, X, FileText } from 'lucide-react';
 import Layout from '../components/Layout';
 import { paymentsAPI } from '../services/api';
 import PaymentDetailsDrawer from '../components/PaymentDetailsDrawer';
