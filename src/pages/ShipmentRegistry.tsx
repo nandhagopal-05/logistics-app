@@ -1689,7 +1689,19 @@ const ShipmentRegistry: React.FC = () => {
                                     <SearchableSelect
                                         options={paymentTypesList.map((p: any) => ({ id: p.id, label: p.name, value: p.name }))}
                                         value={editFormData.payment_type || ''}
-                                        onChange={(val) => setEditFormData((prev: any) => ({ ...prev, payment_type: val }))}
+                                        onChange={(val) => {
+                                            setEditFormData((prev: any) => {
+                                                const updates: any = { payment_type: val };
+                                                const selectedItem = paymentTypesList.find((p: any) => p.name === val);
+                                                if (selectedItem?.vendor_id) {
+                                                    const assignedVendor = vendorsList.find((v: any) => v.id === selectedItem.vendor_id);
+                                                    if (assignedVendor) {
+                                                        updates.vendor = assignedVendor.name;
+                                                    }
+                                                }
+                                                return { ...prev, ...updates };
+                                            });
+                                        }}
                                         placeholder="Select Payment Type"
                                         required
                                     />
