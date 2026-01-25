@@ -75,6 +75,20 @@ const ScheduleClearanceDrawer: React.FC<ScheduleClearanceDrawerProps> = ({ isOpe
         ? job.containers.map((c: any) => `${c.container_type} - ${c.container_no}`)
         : [];
 
+    // Filter packages based on selected BL
+    const getPackageOptions = () => {
+        if (!formData.bl_awb) return [];
+        // Find the BL object
+        const selectedBLObj = job?.bls?.find((b: any) => b.master_bl === formData.bl_awb);
+        if (selectedBLObj && selectedBLObj.packages) {
+            return selectedBLObj.packages.map((p: any) => `${p.pkg_count} ${p.pkg_type}`);
+        }
+        // Fallback if no BL object structure (e.g. legacy job data)
+        return job?.packages ? [job.packages] : [];
+    };
+
+    const packageOptions = getPackageOptions();
+
     if (!isOpen) return null;
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -269,14 +283,24 @@ const ScheduleClearanceDrawer: React.FC<ScheduleClearanceDrawerProps> = ({ isOpe
                         {/* Packages */}
                         <div className="form-group">
                             <label className="block text-sm font-semibold text-gray-700 mb-2">Packages</label>
-                            <input
-                                type="text"
-                                name="packages"
-                                value={formData.packages}
-                                onChange={handleInputChange}
-                                placeholder="e.g. 20 PKG"
-                                className="w-full p-3 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-gray-700"
-                            />
+                            <div className="relative">
+                                <select
+                                    name="packages"
+                                    value={formData.packages}
+                                    onChange={handleInputChange}
+                                    className={`w-full p-3 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none appearance-none ${!formData.packages ? 'text-gray-400' : 'text-gray-700'}`}
+                                >
+                                    <option value="" disabled>Select packages</option>
+                                    {packageOptions.length > 0 ? (
+                                        packageOptions.map((opt: string, idx: number) => (
+                                            <option key={idx} value={opt}>{opt}</option>
+                                        ))
+                                    ) : (
+                                        <option value="" disabled>No packages available for this BL</option>
+                                    )}
+                                </select>
+                                <ChevronDown className="absolute right-3 top-3.5 w-4 h-4 text-gray-400 pointer-events-none" />
+                            </div>
                         </div>
 
                         {/* Container Details */}
