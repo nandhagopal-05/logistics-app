@@ -1209,6 +1209,10 @@ const ShipmentRegistry: React.FC = () => {
                                     <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Registered Date</p>
                                     <p className="font-bold text-gray-900">{new Date(selectedJob.created_at).toLocaleDateString()}</p>
                                 </div>
+                                <div>
+                                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Office</p>
+                                    <p className="font-bold text-gray-900 uppercase">{selectedJob.office || '-'}</p>
+                                </div>
                             </div>
                         </div>
 
@@ -1261,53 +1265,82 @@ const ShipmentRegistry: React.FC = () => {
                             {/* Displaying Single BL or First BL for summary view as per design implies singular card fields */}
                             {/* If multiple BLs, we might list them. But requirement 5 lists single fields. */}
                             {/* I will display the first BL if available, or dashes. */}
-                            {(() => {
-                                const bl = selectedJob.bls && selectedJob.bls.length > 0 ? selectedJob.bls[0] : {};
-                                return (
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                                        <div>
-                                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Master No.</p>
-                                            <p className="font-bold text-gray-900">{bl.master_bl || '-'}</p>
+                            {selectedJob.bls && selectedJob.bls.length > 0 ? (
+                                selectedJob.bls.map((bl: any, index: number) => (
+                                    <div key={index} className={index > 0 ? "mt-8 pt-8 border-t-2 border-dashed border-gray-100 relative" : "relative"}>
+                                        {/* Edit Action per BL for convenience */}
+                                        <div className="absolute top-0 right-0">
+                                            <button
+                                                onClick={() => { setNewBL(bl); setIsBLDrawerOpen(true); }}
+                                                className="text-gray-300 hover:text-indigo-600 p-1"
+                                                title="Edit this BL"
+                                            >
+                                                <Pencil className="w-3.5 h-3.5" />
+                                            </button>
                                         </div>
-                                        <div>
-                                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">House No.</p>
-                                            <p className="font-bold text-gray-900">{bl.house_bl || '-'}</p>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-6">
+                                            <div>
+                                                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Master No.</p>
+                                                <p className="font-bold text-gray-900 break-all">{bl.master_bl || '-'}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">House No.</p>
+                                                <p className="font-bold text-gray-900 break-all">{bl.house_bl || '-'}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">ETD</p>
+                                                <p className="font-bold text-gray-900">{bl.etd ? new Date(bl.etd).toLocaleDateString() : '-'}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">ETA</p>
+                                                <p className="font-bold text-gray-900">{bl.eta ? new Date(bl.eta).toLocaleDateString() : '-'}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Loading Port</p>
+                                                <p className="font-bold text-gray-900">{bl.loading_port || '-'}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Vessel</p>
+                                                <p className="font-bold text-gray-900">{bl.vessel || '-'}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Delivery Agent</p>
+                                                <p className="font-bold text-gray-900">{bl.delivery_agent || '-'}</p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">ETD</p>
-                                            <p className="font-bold text-gray-900">{bl.etd ? new Date(bl.etd).toLocaleDateString() : '-'}</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">ETA</p>
-                                            <p className="font-bold text-gray-900">{bl.eta ? new Date(bl.eta).toLocaleDateString() : '-'}</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Loading Port</p>
-                                            <p className="font-bold text-gray-900">{bl.loading_port || '-'}</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Vessel</p>
-                                            <p className="font-bold text-gray-900">{bl.vessel || '-'}</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Delivery Agent</p>
-                                            <p className="font-bold text-gray-900">{bl.delivery_agent || '-'}</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Packages</p>
-                                            <p className="font-bold text-gray-900">
-                                                {bl.packages?.reduce((acc: number, p: any) => acc + (parseInt(p.pkg_count) || 0), 0) || '-'}
-                                            </p>
-                                        </div>
-                                        <div>
-                                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Package Type</p>
-                                            <p className="font-bold text-gray-900">
-                                                {bl.packages?.map((p: any) => p.pkg_type).join(', ') || '-'}
-                                            </p>
+
+                                        {/* Packages List */}
+                                        <div className="bg-gray-50 rounded-xl p-5 border border-gray-100">
+                                            <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Packages Breakdown</h4>
+                                            {bl.packages && bl.packages.length > 0 ? (
+                                                <div className="space-y-3">
+                                                    {/* Header Row */}
+                                                    <div className="grid grid-cols-3 gap-4 pb-2 border-b border-gray-200">
+                                                        <div className="text-xs font-bold text-gray-500 uppercase">Count</div>
+                                                        <div className="text-xs font-bold text-gray-500 uppercase">Weight</div>
+                                                        <div className="text-xs font-bold text-gray-500 uppercase">Type</div>
+                                                    </div>
+                                                    {/* Items */}
+                                                    {bl.packages.map((pkg: any, idx: number) => (
+                                                        <div key={idx} className="grid grid-cols-3 gap-4 items-center">
+                                                            <div className="font-bold text-gray-900 text-sm">{pkg.pkg_count || 0}</div>
+                                                            <div className="font-medium text-gray-700 text-sm">{pkg.weight || '-'} <span className="text-xs text-gray-400 font-normal">kg</span></div>
+                                                            <div className="font-bold text-gray-900 text-sm uppercase">{pkg.pkg_type || '-'}</div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <p className="text-sm text-gray-400 italic">No package details specified</p>
+                                            )}
                                         </div>
                                     </div>
-                                );
-                            })()}
+                                ))
+                            ) : (
+                                <div className="text-center py-8 text-gray-400 italic">
+                                    No BL/AWB details available. Click 'Add' to register one.
+                                </div>
+                            )}
                         </div>
 
                         {/* Containers Section (6) */}
