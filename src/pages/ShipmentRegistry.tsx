@@ -1618,15 +1618,6 @@ const ShipmentRegistry: React.FC = () => {
                                         <td className="py-4 px-6 text-center">
                                             <div className="flex items-center justify-center gap-2">
                                                 <button
-                                                    onClick={() => {
-                                                        alert('Approve logic coming soon');
-                                                    }}
-                                                    className="w-8 h-8 rounded-full hover:bg-green-50 text-gray-400 hover:text-green-600 transition-colors flex items-center justify-center"
-                                                    title="Approve"
-                                                >
-                                                    <Check className="w-4 h-4" />
-                                                </button>
-                                                <button
                                                     onClick={async () => {
                                                         if (window.confirm('Delete payment?')) {
                                                             try {
