@@ -1044,70 +1044,50 @@ const ShipmentRegistry: React.FC = () => {
     const renderJobDetails = () => {
         if (!selectedJob) return null;
 
-        const isEditingInvoice = editingSection === 'invoice';
-        // const isEditingBL = editingSection === 'bl'; // Removed as unused
+        const isDeliveryNoteIssued = !!selectedJob.delivery_note || (selectedJob.documents && selectedJob.documents.some((d: any) => d.document_type === 'Delivery Note'));
+        const isClearanceComplete = isDeliveryNoteIssued;
+        const isAccountsReady = isClearanceComplete; // Logic: show Send to Account after clearance (delivery note)
+
+        // Progress Calculations
+        const isDocComplete = selectedJob.documents && selectedJob.documents.length > 0;
+        const isAccountsComplete = isAccountsReady && (selectedJob.payment_status === 'Paid' || selectedJob.payment_status === 'Approved');
+        const isJobCompleted = selectedJob.status === 'Completed';
+
+        let activeStage = 0; // 0: Document, 1: Clearance, 2: Accounts, 3: Completed
+        if (isDocComplete) activeStage = 1; // Documents done, waiting for clearance
+        if (isClearanceComplete) activeStage = 2; // Clearance done, waiting for accounts
+        if (isAccountsComplete) activeStage = 3; // Accounts done
+        if (isJobCompleted) activeStage = 4; // All done
 
         return (
             <div className="h-full flex flex-col animate-fade-in bg-white font-sans text-gray-900">
                 {/* Header Section */}
-                <div className="px-8 pt-8 pb-0 border-b border-gray-200">
+                <div className="px-8 pt-6 pb-0 border-b border-gray-200">
                     <div className="flex justify-between items-start mb-6">
                         <div>
-                            <div className="flex items-center gap-2 mb-2">
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); handleOpenPopup('invoice', selectedJob); }}
-                                    className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors"
-                                    title="Shipment Invoice"
-                                >
-                                    <Receipt className="w-4 h-4" />
-                                </button>
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); handleOpenPopup('bl', selectedJob); }}
-                                    className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                                    title="BL/AWB Details"
-                                >
-                                    <FileSpreadsheet className="w-4 h-4" />
-                                </button>
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); handleOpenPopup('payment', selectedJob); }}
-                                    className="p-1.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded transition-colors"
-                                    title="Payment"
-                                >
-                                    <CreditCard className="w-4 h-4" />
-                                </button>
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); handleOpenPopup('upload', selectedJob); }}
-                                    className="p-1.5 text-gray-400 hover:text-violet-600 hover:bg-violet-50 rounded transition-colors"
-                                    title="Upload Document"
-                                >
-                                    <UploadCloud className="w-4 h-4" />
-                                </button>
-                            </div>
-                            <h1 className="text-2xl font-bold text-gray-900 uppercase">
-                                {selectedJob.customer || 'Customer Name'} / {selectedJob.id?.split('-')[1] || 'JOB'}
+                            <h1 className="text-2xl font-extrabold text-gray-900 uppercase tracking-tight">
+                                {selectedJob.customer || 'Customer Name'}
                             </h1>
-                            <p className="text-sm text-gray-500 mt-1">
+                            <p className="text-sm text-gray-500 mt-1 font-medium">
                                 Registered on {new Date(selectedJob.created_at || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
                             </p>
                         </div>
                         <div className="flex items-center gap-3">
-                            <div className="text-right">
-                                <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${getPaymentColor(selectedJob.payment_status)}`}>
-                                    {selectedJob.status || 'New'}
-                                </span>
-                            </div>
+                            <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${getPaymentColor(selectedJob.payment_status)}`}>
+                                {selectedJob.status || 'New'}
+                            </span>
                         </div>
                     </div>
 
                     {/* Tabs */}
-                    <div className="flex gap-8 text-sm font-medium">
+                    <div className="flex gap-8 text-sm font-bold tracking-wide">
                         {['Details', 'Documents', 'Payments', 'History'].map(tab => (
                             <button
                                 key={tab}
                                 onClick={() => setActiveTab(tab)}
                                 className={`pb-3 border-b-2 transition-colors ${activeTab === tab
                                     ? 'border-indigo-600 text-indigo-600'
-                                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                                    : 'border-transparent text-gray-500 hover:text-gray-800'
                                     }`}
                             >
                                 {tab}
@@ -1119,441 +1099,278 @@ const ShipmentRegistry: React.FC = () => {
                 {/* Content Scrollable Area */}
                 <div className="flex-1 overflow-y-auto p-8 bg-gray-50">
 
-                    {/* Top Stats Row */}
+                    {/* Job Summary Section (3.1) */}
                     <div className="flex justify-between items-end mb-8">
                         <div className="flex gap-12">
                             <div>
-                                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Job Number</p>
-                                <p className="font-bold text-lg text-gray-900">{selectedJob.id}</p>
+                                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Job Number</p>
+                                <p className="font-bold text-xl text-gray-900">{selectedJob.id}</p>
                             </div>
                             <div>
-                                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Mode</p>
-                                <p className="font-bold text-lg text-gray-900">{selectedJob.transport_mode || 'SEA'}</p>
+                                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Mode</p>
+                                <p className="font-bold text-xl text-gray-900">{selectedJob.transport_mode || 'SEA'}</p>
                             </div>
                             <div>
-                                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Service</p>
-                                <p className="font-medium text-gray-900">{selectedJob.service || (['Form Filling', 'Clearance', 'Form Filling & Clearance', 'DR'].includes(selectedJob.description) ? selectedJob.description : 'Clearance')}</p>
+                                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Service</p>
+                                <p className="font-bold text-xl text-gray-900">{selectedJob.service || 'Clearance'}</p>
                             </div>
                         </div>
-                        {selectedJob.clearance_schedule ? (
-                            <button className="px-4 py-2 bg-black text-white text-sm font-bold rounded flex items-center gap-2 hover:bg-gray-800 transition-colors shadow-lg">
-                                Send to Accounts
-                            </button>
-                        ) : (
-                            <button
-                                onClick={() => handleOpenPopup('schedule', selectedJob)}
-                                className="px-4 py-2 bg-indigo-600 text-white text-sm font-bold rounded flex items-center gap-2 hover:bg-indigo-700 transition-colors shadow-lg"
-                            >
-                                <Calendar className="w-4 h-4" /> Schedule Clearance
-                            </button>
-                        )}
+                        <div>
+                            {isAccountsReady ? (
+                                <button className="px-5 py-2.5 bg-black text-white text-sm font-bold rounded-lg flex items-center gap-2 hover:bg-gray-800 transition-colors shadow-lg shadow-gray-200">
+                                    Send to Accounts
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={() => handleOpenPopup('schedule', selectedJob)}
+                                    className="px-5 py-2.5 bg-indigo-600 text-white text-sm font-bold rounded-lg flex items-center gap-2 hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200"
+                                >
+                                    <Calendar className="w-4 h-4" /> Schedule Clearance
+                                </button>
+                            )}
+                        </div>
                     </div>
 
-                    {/* Progress Bar */}
-                    <div className="mb-8">
-                        {(() => {
-                            // Progress Logic
-                            const isDocComplete = selectedJob.documents && selectedJob.documents.length > 0;
-                            const isClearanceComplete = isDocComplete && selectedJob.clearance_schedule?.clearance_date && selectedJob.delivery_note?.id;
-                            const isAccountsComplete = isClearanceComplete && (selectedJob.payment_status === 'Paid' || selectedJob.payment_status === 'Approved');
-                            const isJobCompleted = isAccountsComplete && selectedJob.status === 'Completed';
-
-                            let progressWidth = '5%';
-                            if (isDocComplete) progressWidth = '25%';
-                            if (isClearanceComplete) progressWidth = '50%';
-                            if (isAccountsComplete) progressWidth = '75%';
-                            if (isJobCompleted) progressWidth = '100%';
-
-                            return (
-                                <>
-                                    <div className="flex justify-between text-xs font-semibold text-gray-500 mb-2 px-1">
-                                        <span className={isDocComplete ? "text-indigo-600" : ""}>Document</span>
-                                        <span className={isClearanceComplete ? "text-indigo-600" : ""}>Clearance</span>
-                                        <span className={isAccountsComplete ? "text-indigo-600" : ""}>Accounts</span>
-                                        <span className={isJobCompleted ? "text-indigo-600" : ""}>Completed</span>
-                                    </div>
-                                    <div className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
-                                        <div className="h-full bg-indigo-600 transition-all duration-500 ease-in-out" style={{ width: progressWidth }}></div>
-                                    </div>
-                                </>
-                            );
-                        })()}
+                    {/* Progress Bar (3.1) */}
+                    <div className="mb-10">
+                        <div className="flex justify-between text-xs font-bold text-gray-400 mb-3 uppercase tracking-wider">
+                            <span className={activeStage >= 0 ? "text-indigo-600" : ""}>Document</span>
+                            <span className={activeStage >= 1 ? "text-indigo-600" : ""}>Clearance</span>
+                            <span className={activeStage >= 2 ? "text-indigo-600" : ""}>Accounts</span>
+                            <span className={activeStage >= 3 ? "text-indigo-600" : ""}>Completed</span>
+                        </div>
+                        <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
+                            <div className="h-full bg-indigo-600 transition-all duration-700 ease-in-out" style={{ width: `${(activeStage / 3) * 100}%` }}></div>
+                        </div>
                     </div>
 
                     {activeTab === 'Details' && (<>
-                        {/* Dark Info Card */}
+
+                        {/* Exporter / Consignee Block (3.2) - Dark Card */}
                         <div className="bg-slate-900 text-white rounded-xl p-8 mb-6 shadow-xl relative group">
-                            <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button onClick={handleEditJobClick} className="p-2 bg-white/10 text-white rounded-full hover:bg-white/20"><Pencil className="w-4 h-4" /></button>
+                            <div className="absolute top-6 right-6">
+                                <button className="text-slate-400 hover:text-white transition-colors" title="Options">
+                                    <MoreHorizontal className="w-6 h-6" />
+                                </button>
                             </div>
-                            <div className="grid grid-cols-3 gap-8 mb-8">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
                                 <div>
-                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Exporter</p>
-                                    <p className="font-bold text-lg">{selectedJob.exporter || selectedJob.sender_name || '-'}</p>
+                                    <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Exporter</p>
+                                    <p className="font-bold text-lg text-slate-100">{selectedJob.exporter || selectedJob.sender_name || '-'}</p>
                                 </div>
                                 <div>
-                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Type</p>
-                                    <p className="font-medium">{selectedJob.shipment_type || 'IMP'}</p>
+                                    <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Consignee</p>
+                                    <p className="font-bold text-lg text-slate-100">{selectedJob.consignee || selectedJob.receiver_name || '-'}</p>
                                 </div>
                                 <div>
-                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Registered Date</p>
-                                    <p className="font-medium">{new Date(selectedJob.created_at || Date.now()).toLocaleDateString()}</p>
+                                    <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Type</p>
+                                    <p className="font-bold text-lg text-slate-100">{selectedJob.shipment_type || 'IMP'}</p>
                                 </div>
                             </div>
-                            <div className="grid grid-cols-3 gap-8">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                                 <div>
-                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Consignee</p>
-                                    <p className="font-medium">{selectedJob.consignee || selectedJob.receiver_name || '-'}</p>
+                                    <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Billing Contact</p>
+                                    <p className="font-medium text-slate-200">{selectedJob.billing_contact || '-'}</p>
                                 </div>
                                 <div>
-                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Billing Contact</p>
-                                    <p className="font-medium">{selectedJob.billing_contact || '-'}</p>
+                                    <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Registered Date</p>
+                                    <p className="font-medium text-slate-200">{new Date(selectedJob.created_at || Date.now()).toLocaleString()}</p>
                                 </div>
                                 <div>
-                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Job Invoice</p>
-                                    <p className="font-medium text-slate-200">{selectedJob.invoice_id || selectedJob.invoice?.id || <span className="text-slate-500 italic">Not Generated</span>}</p>
+                                    <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Job Invoice</p>
+                                    <p className="font-medium text-slate-200">{selectedJob.invoice?.invoice_no || selectedJob.invoice_id || <span className="opacity-50 italic">Not Generated</span>}</p>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Shipment Invoice Card */}
-                        <div
-                            onClick={() => setIsInvoiceDrawerOpen(true)}
-                            className="bg-white rounded-xl shadow-sm p-8 mb-6 border border-gray-100 transition-all cursor-pointer hover:border-indigo-300"
-                        >
-                            <div className="flex justify-between items-center mb-6">
-                                <h3 className="font-bold text-gray-900 flex items-center gap-3 text-lg">
-                                    <FileText className="w-5 h-5 text-gray-400" />
-                                    Shipment Invoice
-                                </h3>
-                                <button className="text-gray-400 hover:text-indigo-600 p-2 hover:bg-indigo-50 rounded-full transition-colors">
-                                    <Pencil className="w-4 h-4" />
+                        {/* Shipment Invoice Section (4) */}
+                        <div className="bg-white rounded-xl shadow-sm p-8 mb-6 border border-gray-200 relative">
+                            <div className="absolute top-6 right-6 flex gap-2">
+                                <button
+                                    onClick={() => handleOpenPopup('invoice', selectedJob)}
+                                    className="text-gray-400 hover:text-indigo-600 transition-colors"
+                                    title="Edit Invoice"
+                                >
+                                    <MoreHorizontal className="w-6 h-6" />
                                 </button>
                             </div>
-                            <div className="grid grid-cols-3 gap-8">
+                            <h3 className="font-bold text-gray-900 text-lg mb-6 flex items-center gap-2">
+                                <FileText className="w-5 h-5 text-indigo-600" />
+                                Shipment Invoice
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                                 <div>
                                     <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Invoice No.</p>
-                                    {isEditingInvoice ? (
-                                        <input name="invoice_no" value={editFormData.invoice_no || ''} onChange={handleEditChange} className="input-field py-1 border rounded px-2 w-full text-sm" placeholder="-" />
-                                    ) : (
-                                        <p className="font-semibold text-gray-900">{selectedJob.invoice_no || '-'}</p>
-                                    )}
+                                    <p className="font-bold text-gray-900">{selectedJob.invoice_no || '-'}</p>
                                 </div>
                                 <div>
                                     <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Cargo Type</p>
-                                    {isEditingInvoice ? (
-                                        <select name="cargo_type" value={editFormData.cargo_type || 'GENERAL'} onChange={handleEditChange} className="input-field py-1 border rounded px-2 w-full text-sm bg-white">
-                                            <option value="GENERAL">GENERAL</option>
-                                            <option value="PERISHABLE">PERISHABLE</option>
-                                            <option value="HARDWARE">HARDWARE</option>
-                                            <option value="GARMENTS">GARMENTS</option>
-                                            <option value="ELECTRONICS">ELECTRONICS</option>
-                                            <option value="DRY FOODS">DRY FOODS</option>
-                                            <option value="FURNITURE">FURNITURE</option>
-                                            <option value="OTHER">OTHER</option>
-                                        </select>
-                                    ) : (
-                                        <p className="font-semibold text-gray-900 uppercase">{selectedJob.cargo_type || 'GENERAL'}</p>
-                                    )}
+                                    <p className="font-bold text-gray-900 uppercase">{selectedJob.cargo_type || '-'}</p>
                                 </div>
                                 <div>
                                     <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">No. Items</p>
-                                    {isEditingInvoice ? (
-                                        <input name="no_of_pkgs" value={editFormData.no_of_pkgs || ''} onChange={handleEditChange} className="input-field py-1 border rounded px-2 w-full text-sm" placeholder="0" />
-                                    ) : (
-                                        <p className="font-semibold text-gray-900">{selectedJob.no_of_pkgs || selectedJob.invoice_items || '0'}</p>
-                                    )}
+                                    <p className="font-bold text-gray-900">{selectedJob.no_of_pkgs || '0'}</p>
                                 </div>
                                 <div>
                                     <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Customs Form No.</p>
-                                    {isEditingInvoice ? (
-                                        <input name="customs_r_form" value={editFormData.customs_r_form || ''} onChange={handleEditChange} className="input-field py-1 border rounded px-2 w-full text-sm" placeholder="-" />
-                                    ) : (
-                                        <p className="font-semibold text-gray-900">{selectedJob.customs_r_form || '-'}</p>
-                                    )}
-                                </div>
-                                <div>
-                                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Office</p>
-                                    {isEditingInvoice ? (
-                                        <select name="office" value={editFormData.office || ''} onChange={handleEditChange} className="input-field py-1 border rounded px-2 w-full text-sm bg-white">
-                                            <option value="">Select Office</option>
-                                            <option value="00MP">00MP</option>
-                                            <option value="00AP">00AP</option>
-                                            <option value="00HA">00HA</option>
-                                            <option value="00BW">00BW</option>
-                                            <option value="00HK">00HK</option>
-                                            <option value="00HM">00HM</option>
-                                            <option value="00PO">00PO</option>
-                                            <option value="00SG">00SG</option>
-                                            <option value="00SH">00SH</option>
-                                        </select>
-                                    ) : (
-                                        <p className="font-semibold text-gray-900">{selectedJob.office || '-'}</p>
-                                    )}
+                                    <p className="font-bold text-gray-900">{selectedJob.customs_r_form || '-'}</p>
                                 </div>
                                 <div>
                                     <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Registered Date</p>
-                                    <p className="font-semibold text-gray-900">{new Date(selectedJob.created_at).toLocaleDateString()}</p>
+                                    <p className="font-bold text-gray-900">{new Date(selectedJob.created_at).toLocaleDateString()}</p>
                                 </div>
                             </div>
                         </div>
 
-
-
-
-
-
-
-                        {/* BL/AWB Details Card */}
-                        <div className="bg-white rounded-xl shadow-sm p-8 mb-6 border border-gray-100 transition-all">
-                            <div className="flex justify-between items-center mb-6">
-                                <h3 className="font-bold text-gray-900 flex items-center gap-3 text-lg">
-                                    <FileText className="w-5 h-5 text-gray-400" />
-                                    BL/AWB Details
-                                </h3>
-                                <div className="flex gap-2">
-                                    <button
-                                        onClick={() => {
-                                            setNewBL({ master_bl: '', house_bl: '', loading_port: '', vessel: '', etd: '', eta: '', delivery_agent: '' });
-                                            setIsBLDrawerOpen(true);
-                                        }}
-                                        className="text-indigo-600 hover:bg-indigo-50 p-2 rounded-full transition-colors flex items-center gap-2 text-sm font-bold"
-                                        title="Add BL"
-                                    >
-                                        <Plus className="w-4 h-4" /> Add
-                                    </button>
-                                </div>
+                        {/* BL/AWB Details Section (5) */}
+                        <div className="bg-white rounded-xl shadow-sm p-8 mb-6 border border-gray-200 relative">
+                            <div className="absolute top-6 right-6 flex gap-2">
+                                <button
+                                    onClick={() => {
+                                        setNewBL({ master_bl: '', house_bl: '', loading_port: '', vessel: '', etd: '', eta: '', delivery_agent: '' });
+                                        // If existing BLs, maybe prefill the first one for editing? The text says "options menu".
+                                        // I'll stick to opening the drawer. If BL exists, we should probably pass it.
+                                        // For now, assume adding or editing list. Using handleOpenPopup logic or direct drawer.
+                                        // Let's iterate if BLs exist.
+                                        setIsBLDrawerOpen(true);
+                                    }}
+                                    className="text-gray-400 hover:text-indigo-600 transition-colors"
+                                    title="Manage BL/AWB"
+                                >
+                                    <MoreHorizontal className="w-6 h-6" />
+                                </button>
                             </div>
+                            <h3 className="font-bold text-gray-900 text-lg mb-6 flex items-center gap-2">
+                                <FileSpreadsheet className="w-5 h-5 text-blue-600" />
+                                BL/AWB Details
+                            </h3>
 
-                            <div className="space-y-6">
-                                {selectedJob.bls && selectedJob.bls.length > 0 ? (
-                                    selectedJob.bls.map((bl: any) => (
-                                        <div
-                                            key={bl.id}
-                                            onClick={() => {
-                                                setNewBL(bl);
-                                                setIsBLDrawerOpen(true);
-                                            }}
-                                            className="border border-gray-200 rounded-lg p-5 hover:border-indigo-300 cursor-pointer transition-colors relative group"
-                                        >
-                                            {/* Options Menu (Top Right) */}
-                                            <div className="absolute top-4 right-4 flex gap-2">
-                                                <div className="relative">
-                                                    <button
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            setActiveMenuBL(activeMenuBL === bl.id ? null : bl.id);
-                                                        }}
-                                                        className="text-gray-400 hover:text-indigo-600 p-1 rounded-full hover:bg-gray-100"
-                                                    >
-                                                        <MoreHorizontal className="w-5 h-5" />
-                                                    </button>
-
-                                                    {activeMenuBL === bl.id && (
-                                                        <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-100 shadow-lg rounded-md z-10 p-1 animate-fadeIn" onClick={(e) => e.stopPropagation()}>
-                                                            <button
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    setNewBL(bl);
-                                                                    setIsBLDrawerOpen(true);
-                                                                    setActiveMenuBL(null);
-                                                                }}
-                                                                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded"
-                                                            >
-                                                                Edit
-                                                            </button>
-                                                            <button
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    handleDeleteBLItem(bl.id);
-                                                                    setActiveMenuBL(null);
-                                                                }}
-                                                                className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded"
-                                                            >
-                                                                Delete
-                                                            </button>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-
-                                            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                                                <div>
-                                                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Master No.</p>
-                                                    <p className="font-semibold text-gray-900">{bl.master_bl || '-'}</p>
-                                                </div>
-                                                <div>
-                                                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">House No.</p>
-                                                    <p className="font-semibold text-gray-900">{bl.house_bl || '-'}</p>
-                                                </div>
-                                                <div>
-                                                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">ETD</p>
-                                                    <p className="font-semibold text-gray-900">{bl.etd ? new Date(bl.etd).toLocaleDateString() : '-'}</p>
-                                                </div>
-                                                <div>
-                                                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">ETA</p>
-                                                    <p className="font-semibold text-gray-900">{bl.eta ? new Date(bl.eta).toLocaleDateString() : '-'}</p>
-                                                </div>
-                                                <div>
-                                                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Loading Port</p>
-                                                    <p className="font-semibold text-gray-900">{bl.loading_port || '-'}</p>
-                                                </div>
-                                                <div>
-                                                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Vessel</p>
-                                                    <p className="font-semibold text-gray-900">{bl.vessel || '-'}</p>
-                                                </div>
-                                                <div>
-                                                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Delivery Agent</p>
-                                                    <p className="font-semibold text-gray-900">{bl.delivery_agent || '-'}</p>
-                                                </div>
-
-                                                {/* Packages Fields in BL Card */}
-                                                <div>
-                                                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Packages</p>
-                                                    <p className="font-semibold text-gray-900">
-                                                        {bl.packages?.reduce((acc: number, p: any) => acc + (parseInt(p.count) || 0), 0) || ''}
-                                                    </p>
-                                                </div>
-                                                <div>
-                                                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Package Type</p>
-                                                    <p className="font-semibold text-gray-900 uppercase">
-                                                        {bl.packages?.map((p: any) => p.type).filter((v: any, i: any, a: any) => a.indexOf(v) === i).join(', ') || '-'}
-                                                    </p>
-                                                </div>
-                                                <div>
-                                                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Weight</p>
-                                                    <p className="font-semibold text-gray-900">
-                                                        {bl.packages?.reduce((acc: number, p: any) => acc + (parseFloat(p.weight) || 0), 0).toFixed(2) || ''} KGS
-                                                    </p>
-                                                </div>
-                                            </div>
+                            {/* Displaying Single BL or First BL for summary view as per design implies singular card fields */}
+                            {/* If multiple BLs, we might list them. But requirement 5 lists single fields. */}
+                            {/* I will display the first BL if available, or dashes. */}
+                            {(() => {
+                                const bl = selectedJob.bls && selectedJob.bls.length > 0 ? selectedJob.bls[0] : {};
+                                return (
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                                        <div>
+                                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Master No.</p>
+                                            <p className="font-bold text-gray-900">{bl.master_bl || '-'}</p>
                                         </div>
-                                    ))
-                                ) : (
-                                    <div className="text-center py-6 text-gray-400 italic">No BL/AWB details listed</div>
-                                )}
-                            </div>
-                        </div>
-
-                        {selectedJob.transport_mode === 'SEA' && (
-
-                            <>
-                                {/* Containers Card - Multi-Container Support */}
-                                <div className="bg-white rounded-xl shadow-sm p-8 mb-6 border border-gray-100 transition-all">
-                                    <div className="flex justify-between items-center mb-6">
-                                        <h3 className="font-bold text-gray-900 flex items-center gap-3 text-lg">
-                                            <Package className="w-5 h-5 text-gray-400" />
-                                            Containers
-                                        </h3>
-                                        <div className="flex gap-2">
-                                            {!addingContainer && (
-                                                <button
-                                                    onClick={() => setAddingContainer(true)}
-                                                    className="text-indigo-600 hover:bg-indigo-50 p-2 rounded-full transition-colors flex items-center gap-2 text-sm font-bold"
-                                                    title="Add Container"
-                                                >
-                                                    <Plus className="w-4 h-4" /> Add
-                                                </button>
-                                            )}
+                                        <div>
+                                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">House No.</p>
+                                            <p className="font-bold text-gray-900">{bl.house_bl || '-'}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">ETD</p>
+                                            <p className="font-bold text-gray-900">{bl.etd ? new Date(bl.etd).toLocaleDateString() : '-'}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">ETA</p>
+                                            <p className="font-bold text-gray-900">{bl.eta ? new Date(bl.eta).toLocaleDateString() : '-'}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Loading Port</p>
+                                            <p className="font-bold text-gray-900">{bl.loading_port || '-'}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Vessel</p>
+                                            <p className="font-bold text-gray-900">{bl.vessel || '-'}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Delivery Agent</p>
+                                            <p className="font-bold text-gray-900">{bl.delivery_agent || '-'}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Packages</p>
+                                            <p className="font-bold text-gray-900">
+                                                {bl.packages?.reduce((acc: number, p: any) => acc + (parseInt(p.pkg_count) || 0), 0) || '-'}
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Package Type</p>
+                                            <p className="font-bold text-gray-900">
+                                                {bl.packages?.map((p: any) => p.pkg_type).join(', ') || '-'}
+                                            </p>
                                         </div>
                                     </div>
-                                    <table className="w-full text-sm text-left">
-                                        <thead className="text-xs text-gray-500 uppercase bg-gray-50/50 border-b border-gray-100">
-                                            <tr>
-                                                <th className="py-3 px-4 font-bold">Number</th>
-                                                <th className="py-3 px-4 font-bold">Size</th>
-                                                <th className="py-3 px-4 font-bold">Unloaded Date</th>
-                                                <th className="py-3 px-4 font-bold text-center">Actions</th>
+                                );
+                            })()}
+                        </div>
+
+                        {/* Containers Section (6) */}
+                        <div className="bg-white rounded-xl shadow-sm p-8 mb-6 border border-gray-200">
+                            <div className="flex justify-between items-center mb-6">
+                                <h3 className="font-bold text-gray-900 text-lg flex items-center gap-2">
+                                    <Package className="w-5 h-5 text-orange-600" />
+                                    Containers
+                                </h3>
+                                <button
+                                    onClick={() => setAddingContainer(true)}
+                                    className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg text-sm font-bold flex items-center gap-2"
+                                >
+                                    <Plus className="w-4 h-4" /> Add Container
+                                </button>
+                            </div>
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-sm text-left">
+                                    <thead className="text-xs text-gray-500 uppercase bg-gray-50/50 border-b border-gray-100">
+                                        <tr>
+                                            <th className="py-3 px-4 font-bold">Number</th>
+                                            <th className="py-3 px-4 font-bold">Size</th>
+                                            <th className="py-3 px-4 font-bold">Unloaded Date</th>
+                                            <th className="py-3 px-4 font-bold text-right">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-50">
+                                        {/* Add Container Row */}
+                                        {addingContainer && (
+                                            <tr className="bg-indigo-50/30">
+                                                <td className="p-2">
+                                                    <input value={newContainer.container_no} onChange={e => setNewContainer({ ...newContainer, container_no: e.target.value })} className="input-field w-full py-1 px-2 border rounded" placeholder="No." autoFocus />
+                                                </td>
+                                                <td className="p-2">
+                                                    <select value={newContainer.container_type} onChange={e => setNewContainer({ ...newContainer, container_type: e.target.value })} className="input-field w-full py-1 px-2 border rounded bg-white">
+                                                        <option value="FCL 20">FCL 20</option>
+                                                        <option value="FCL 40">FCL 40</option>
+                                                        <option value="LCL 20">LCL 20</option>
+                                                        <option value="LCL 40">LCL 40</option>
+                                                    </select>
+                                                </td>
+                                                <td className="p-2">
+                                                    <input type="date" value={newContainer.unloaded_date} onChange={e => setNewContainer({ ...newContainer, unloaded_date: e.target.value })} className="input-field w-full py-1 px-2 border rounded" />
+                                                </td>
+                                                <td className="p-2 text-right">
+                                                    <button onClick={handleSaveNewContainer} className="text-green-600 hover:bg-green-100 p-1 rounded mr-2"><Check className="w-4 h-4" /></button>
+                                                    <button onClick={() => setAddingContainer(false)} className="text-gray-500 hover:bg-gray-100 p-1 rounded"><X className="w-4 h-4" /></button>
+                                                </td>
                                             </tr>
-                                        </thead>
-                                        <tbody>
-                                            {/* Add New Container Row */}
-                                            {addingContainer && (
-                                                <tr className="bg-indigo-50/30 border-b border-indigo-100 animate-fadeIn">
-                                                    <td className="py-3 px-4">
-                                                        <input
-                                                            autoFocus
-                                                            className="input-field py-1 border rounded px-2 w-full text-sm"
-                                                            placeholder="Container No"
-                                                            value={newContainer.container_no}
-                                                            onChange={e => setNewContainer({ ...newContainer, container_no: e.target.value })}
-                                                        />
-                                                    </td>
-                                                    <td className="py-3 px-4">
-                                                        <select
-                                                            className="input-field py-1 border rounded px-2 w-full text-sm bg-white"
-                                                            value={newContainer.container_type}
-                                                            onChange={e => setNewContainer({ ...newContainer, container_type: e.target.value })}
-                                                        >
-                                                            <option value="FCL 20">FCL 20</option>
-                                                            <option value="FCL 40">FCL 40</option>
-                                                            <option value="LCL 20">LCL 20</option>
-                                                            <option value="LCL 40">LCL 40</option>
-                                                            <option value="OT 20">OT 20</option>
-                                                            <option value="OT 40">OT 40</option>
-                                                            <option value="FR 20">FR 20</option>
-                                                            <option value="FR 40">FR 40</option>
-                                                            <option value="D/R">D/R</option>
-                                                            <option value="Reefer 20">Reefer 20ft</option>
-                                                            <option value="Reefer 40">Reefer 40ft</option>
-                                                            <option value="Loose cargo">Loose cargo</option>
-                                                        </select>
-                                                    </td>
-                                                    <td className="py-3 px-4">
-                                                        <input
-                                                            type="date"
-                                                            className="input-field py-1 border rounded px-2 w-full text-sm"
-                                                            value={newContainer.unloaded_date}
-                                                            onChange={e => setNewContainer({ ...newContainer, unloaded_date: e.target.value })}
-                                                        />
-                                                    </td>
-                                                    <td className="py-3 px-4 text-center flex items-center justify-center gap-2">
-                                                        <button onClick={handleSaveNewContainer} className="bg-green-100 text-green-700 p-1.5 rounded hover:bg-green-200" title={newContainer.id ? 'Update' : 'Save'}><Check className="w-4 h-4" /></button>
-                                                        <button onClick={() => { setAddingContainer(false); setNewContainer({ container_no: '', container_type: 'FCL 20', unloaded_date: '' }); }} className="bg-gray-100 text-gray-600 p-1.5 rounded hover:bg-gray-200" title="Cancel"><X className="w-4 h-4" /></button>
+                                        )}
+                                        {selectedJob.containers && selectedJob.containers.length > 0 ? (
+                                            selectedJob.containers.map((c: any) => (
+                                                <tr key={c.id} className="hover:bg-gray-50 transition-colors">
+                                                    <td className="py-3 px-4 font-bold text-gray-900">{c.container_no}</td>
+                                                    <td className="py-3 px-4 text-gray-600">{c.container_type}</td>
+                                                    <td className="py-3 px-4 text-gray-600">{c.unloaded_date ? new Date(c.unloaded_date).toLocaleDateString() : '-'}</td>
+                                                    <td className="py-3 px-4 text-right">
+                                                        <div className="flex justify-end gap-2">
+                                                            <button className="text-gray-400 hover:text-indigo-600 p-1.5 rounded hover:bg-indigo-50"><Search className="w-4 h-4" /></button>
+                                                            <button onClick={() => handleDeleteContainerItem(c.id)} className="text-gray-400 hover:text-red-600 p-1.5 rounded hover:bg-red-50"><Trash2 className="w-4 h-4" /></button>
+                                                        </div>
                                                     </td>
                                                 </tr>
-                                            )}
+                                            ))
+                                        ) : (
+                                            !addingContainer && (
+                                                <tr>
+                                                    <td colSpan={4} className="py-8 text-center text-gray-400 italic">No containers listed</td>
+                                                </tr>
+                                            )
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
 
-                                            {/* Existing Containers */}
-                                            {selectedJob.containers && selectedJob.containers.length > 0 ? (
-                                                selectedJob.containers.map((c: any) => (
-                                                    <tr key={c.id} className="border-b border-gray-50 hover:bg-gray-50">
-                                                        <td className="py-4 px-4 font-medium text-gray-900">{c.container_no}</td>
-                                                        <td className="py-4 px-4 text-gray-600">{c.container_type}</td>
-                                                        <td className="py-4 px-4 text-gray-600">{c.unloaded_date ? new Date(c.unloaded_date).toLocaleDateString() : '-'}</td>
-                                                        <td className="py-4 px-4 text-center flex justify-center gap-2">
-                                                            <button
-                                                                onClick={() => {
-                                                                    setNewContainer(c);
-                                                                    setAddingContainer(true);
-                                                                }}
-                                                                className="text-gray-400 hover:text-indigo-600 p-1.5 rounded-full hover:bg-indigo-50 transition-colors"
-                                                                title="Edit"
-                                                            >
-                                                                <Pencil className="w-4 h-4" />
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleDeleteContainerItem(c.id)}
-                                                                className="text-gray-400 hover:text-red-600 p-1.5 rounded-full hover:bg-red-50 transition-colors"
-                                                                title="Delete"
-                                                            >
-                                                                <Trash2 className="w-4 h-4" />
-                                                            </button>
-                                                        </td>
-                                                    </tr>
-                                                ))
-                                            ) : (
-                                                !addingContainer && (
-                                                    <tr>
-                                                        <td colSpan={4} className="py-8 text-center text-gray-400 italic">No containers listed</td>
-                                                    </tr>
-                                                )
-                                            )}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </>
-                        )}
                     </>)}
 
                     {activeTab === 'Documents' && renderDocumentsTab()}
