@@ -11,7 +11,7 @@ interface BLDrawerProps {
 }
 
 const PACKAGE_TYPES = ['PALLET', 'BUNDLES', 'CARTON', 'PKG', 'BOX', 'CASE', 'BULK', 'UNIT'];
-const CONTAINER_TYPES = ['FCL 20', 'FCL 40', 'LCL 20', 'LCL 40', 'OT 20', 'OT 40', 'FR 20', 'FR 40', 'D/R', 'Reefer 20 ft', 'Reefer 40 ft', 'Loose Cargo'];
+
 
 
 const BLDrawer: React.FC<BLDrawerProps> = ({ isOpen, onClose, onSave, initialData, deliveryAgents = [] }) => {
@@ -28,12 +28,11 @@ const BLDrawer: React.FC<BLDrawerProps> = ({ isOpen, onClose, onSave, initialDat
     });
 
     const [newPackage, setNewPackage] = useState<any>({
-        container_type: 'FCL 20',
-        container_no: '',
+
         cbm: '',
         pkg_count: '',
         pkg_type: 'PKG', // Default
-        weight: ''
+
     });
 
     useEffect(() => {
@@ -60,12 +59,11 @@ const BLDrawer: React.FC<BLDrawerProps> = ({ isOpen, onClose, onSave, initialDat
             }
             // Reset temp line item
             setNewPackage({
-                container_type: 'FCL 20',
-                container_no: '',
+
                 cbm: '',
                 pkg_count: '',
                 pkg_type: 'PKG',
-                weight: ''
+
             });
         }
     }, [isOpen]); // Only run on open toggle, ignore initialData updates while open
@@ -93,12 +91,11 @@ const BLDrawer: React.FC<BLDrawerProps> = ({ isOpen, onClose, onSave, initialDat
         }));
 
         setNewPackage({
-            container_type: 'FCL 20',
-            container_no: '',
+
             cbm: '',
             pkg_count: '',
             pkg_type: 'PKG',
-            weight: ''
+
         });
     };
 
@@ -180,33 +177,15 @@ const BLDrawer: React.FC<BLDrawerProps> = ({ isOpen, onClose, onSave, initialDat
                             </div>
                         </div>
 
-                        {/* Container & Package Details Section */}
+                        {/* Package Details Section */}
                         <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
                             <div className="flex justify-between items-center mb-4">
-                                <h3 className="text-sm font-bold text-gray-900">Container & Package Details</h3>
+                                <h3 className="text-sm font-bold text-gray-900">Package Details</h3>
                                 <button className="text-gray-400 hover:text-gray-600"><Plus className="w-4 h-4" /></button>
                             </div>
 
                             <div className="space-y-4 mb-4">
-                                {/* Row 1: Container Info */}
-                                <div className="grid grid-cols-3 gap-3">
-                                    <div>
-                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Container Type</label>
-                                        <select name="container_type" value={newPackage.container_type} onChange={handlePackageChange} className="input-field w-full py-2 px-3 border rounded text-sm bg-white">
-                                            {CONTAINER_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Container No.</label>
-                                        <input type="text" name="container_no" value={newPackage.container_no} onChange={handlePackageChange} className="input-field w-full py-2 px-3 border rounded text-sm" placeholder="Container No" />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">CBM</label>
-                                        <input type="text" name="cbm" value={newPackage.cbm} onChange={handlePackageChange} className="input-field w-full py-2 px-3 border rounded text-sm" placeholder="CBM" />
-                                    </div>
-                                </div>
-
-                                {/* Row 2: Package Info */}
+                                {/* Package Info */}
                                 <div className="grid grid-cols-3 gap-3">
                                     <div>
                                         <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Packages*</label>
@@ -220,8 +199,8 @@ const BLDrawer: React.FC<BLDrawerProps> = ({ isOpen, onClose, onSave, initialDat
                                     </div>
                                     <div className="flex items-end justify-between gap-2">
                                         <div className="flex-1">
-                                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Weight(KG)</label>
-                                            <input type="number" name="weight" value={newPackage.weight} onChange={handlePackageChange} className="input-field w-full py-2 px-3 border rounded text-sm" placeholder="KG" />
+                                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">CBM</label>
+                                            <input type="number" name="cbm" value={newPackage.cbm} onChange={handlePackageChange} className="input-field w-full py-2 px-3 border rounded text-sm" placeholder="CBM" />
                                         </div>
                                         <button onClick={addLineItem} className="mb-0.5 px-3 py-2 bg-gray-200 text-gray-700 text-xs font-bold rounded hover:bg-gray-300 h-[38px]">Add</button>
                                     </div>
@@ -234,10 +213,9 @@ const BLDrawer: React.FC<BLDrawerProps> = ({ isOpen, onClose, onSave, initialDat
                                     {formData.packages.map((p: any, idx: number) => (
                                         <div key={idx} className="flex justify-between items-center bg-white p-2 rounded border border-gray-100 text-xs">
                                             <div className="grid grid-cols-2 gap-x-4 gap-y-1 w-full mr-2">
-                                                <div className="font-bold text-indigo-700">{p.container_type} - {p.container_no || 'N/A'}</div>
-                                                <div className="text-right text-gray-500">CBM: {p.cbm || '-'}</div>
                                                 <div className="font-medium">{p.pkg_count} {p.pkg_type}</div>
-                                                <div className="text-right text-gray-500">{p.weight} KG</div>
+                                                <div className="text-right text-gray-500">CBM: {p.cbm || '-'}</div>
+
                                             </div>
                                             <button onClick={() => removeLineItem(idx)} className="text-red-400 hover:text-red-600"><Trash2 className="w-3.5 h-3.5" /></button>
                                         </div>
