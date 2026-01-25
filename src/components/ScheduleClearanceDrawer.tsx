@@ -19,6 +19,9 @@ const ScheduleClearanceDrawer: React.FC<ScheduleClearanceDrawerProps> = ({ isOpe
         bl_awb: '',
         transport_mode: '',
         packages: '',
+        container_details: '',
+        container_no: '',
+        container_type: '',
         clearance_method: '',
         remarks: '',
         reschedule_reason: ''
@@ -33,6 +36,9 @@ const ScheduleClearanceDrawer: React.FC<ScheduleClearanceDrawerProps> = ({ isOpe
                 bl_awb: initialData.bl_awb || '',
                 transport_mode: initialData.transport_mode || '',
                 packages: initialData.packages || '',
+                container_details: initialData.container_details || '',
+                container_no: initialData.container_no || '',
+                container_type: initialData.container_type || '',
                 clearance_method: initialData.clearance_method || '',
                 remarks: initialData.remarks || '',
                 reschedule_reason: initialData.reschedule_reason || ''
@@ -49,6 +55,9 @@ const ScheduleClearanceDrawer: React.FC<ScheduleClearanceDrawerProps> = ({ isOpe
                 bl_awb: defaultBL,
                 transport_mode: job?.transport_mode ? (job.transport_mode.charAt(0).toUpperCase() + job.transport_mode.slice(1).toLowerCase()) : '',
                 packages: job?.packages || '',
+                container_details: '',
+                container_no: '',
+                container_type: '',
                 clearance_method: '',
                 remarks: '',
                 reschedule_reason: ''
@@ -62,11 +71,30 @@ const ScheduleClearanceDrawer: React.FC<ScheduleClearanceDrawerProps> = ({ isOpe
         ? job.bls.map((b: any) => b.master_bl).filter(Boolean)
         : [job?.bl_awb_no].filter((opt) => opt && opt !== '-');
 
+    const containerOptions = (job?.containers && job.containers.length > 0)
+        ? job.containers.map((c: any) => `${c.container_type} - ${c.container_no}`)
+        : [];
+
     if (!isOpen) return null;
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        setFormData(prev => {
+            const updates: any = { [name]: value };
+
+            // If changing container details, perform lookup to set type/no
+            if (name === 'container_details' && job?.containers) {
+                // value format: "TYPE - NO"
+                const parts = value.split(' - ');
+                if (parts.length >= 2) {
+                    const cType = parts[0];
+                    const cNo = parts.slice(1).join(' - '); // handle potential extra dashes
+                    updates.container_type = cType;
+                    updates.container_no = cNo;
+                }
+            }
+            return { ...prev, ...updates };
+        });
     };
 
     const handleSubmit = () => {
@@ -249,6 +277,29 @@ const ScheduleClearanceDrawer: React.FC<ScheduleClearanceDrawerProps> = ({ isOpe
                                 placeholder="e.g. 20 PKG"
                                 className="w-full p-3 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-gray-700"
                             />
+                        </div>
+
+                        {/* Container Details */}
+                        <div className="form-group">
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">Container Details</label>
+                            <div className="relative">
+                                <select
+                                    name="container_details"
+                                    value={formData.container_details}
+                                    onChange={handleInputChange}
+                                    className={`w-full p-3 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none appearance-none ${!formData.container_details ? 'text-gray-400' : 'text-gray-700'}`}
+                                >
+                                    <option value="" disabled>Select an option</option>
+                                    {containerOptions.length > 0 ? (
+                                        containerOptions.map((opt: string, idx: number) => (
+                                            <option key={idx} value={opt}>{opt}</option>
+                                        ))
+                                    ) : (
+                                        <option value="" disabled>No containers available</option>
+                                    )}
+                                </select>
+                                <ChevronDown className="absolute right-3 top-3.5 w-4 h-4 text-gray-400 pointer-events-none" />
+                            </div>
                         </div>
 
                         {/* Remarks */}
