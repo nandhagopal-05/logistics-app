@@ -219,6 +219,7 @@ export const paymentsAPI = {
     create: (data: any) => api.post('/payments', data),
     updateStatus: (id: number | string, status: string) => api.put(`/payments/${id}/status`, { status }),
     delete: (id: number | string) => api.delete(`/payments/${id}`),
+    sendBatch: (paymentIds: string[]) => api.post('/payments/send-batch', { paymentIds }),
 };
 
 // Payment Items Settings API

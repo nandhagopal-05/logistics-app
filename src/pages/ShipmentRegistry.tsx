@@ -292,6 +292,23 @@ const ShipmentRegistry: React.FC = () => {
         }
     };
 
+    const handleSendToAccounts = async () => {
+        const draftIds = jobPayments.filter((p: any) => p.status === 'Draft').map((p: any) => p.id);
+        if (draftIds.length === 0) return;
+
+        try {
+            setLoading(true);
+            await paymentsAPI.sendBatch(draftIds);
+            alert('Payments sent to accounts successfully!');
+            loadPayments(selectedJob.id);
+        } catch (e) {
+            console.error(e);
+            alert('Failed to send payments to accounts');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const loadDropdownData = async () => {
         try {
             const [consigneesRes, exportersRes, deliveryAgentsRes, vendorsRes] = await Promise.all([
@@ -1520,6 +1537,18 @@ const ShipmentRegistry: React.FC = () => {
             <div className="p-8 font-sans">
                 <div className="flex justify-between items-center mb-6">
                     <h3 className="text-lg font-bold text-gray-900">Payments</h3>
+                    {jobPayments.some((p: any) => p.status === 'Draft') && (
+                        <button
+                            onClick={handleSendToAccounts}
+                            className="px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm flex items-center gap-2"
+                        >
+                            <span className="relative flex h-2 w-2">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-200 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-100"></span>
+                            </span>
+                            Send to Accounts ({jobPayments.filter((p: any) => p.status === 'Draft').length})
+                        </button>
+                    )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 mb-8">
@@ -1568,8 +1597,12 @@ const ShipmentRegistry: React.FC = () => {
                                         <td className="py-4 px-6 text-center">
                                             <div className="flex justify-center">
                                                 {payment.status === 'Approved' ? (
-                                                    <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center text-green-600">
+                                                    <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center text-green-600" title="Approved">
                                                         <Check className="w-3.5 h-3.5" />
+                                                    </div>
+                                                ) : payment.status === 'Draft' ? (
+                                                    <div className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-gray-100 text-gray-500 border border-gray-200" title="Draft">
+                                                        Draft
                                                     </div>
                                                 ) : (
                                                     <div className="w-6 h-6 rounded-full bg-red-100 flex items-center justify-center text-red-600" title="Pending">

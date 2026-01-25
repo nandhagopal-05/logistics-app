@@ -143,7 +143,7 @@ router.post('/', authenticateToken, async (req, res) => {
 
         const result = await pool.query(
             `INSERT INTO job_payments (job_id, payment_type, vendor, amount, bill_ref_no, paid_by, requested_by, status)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, 'Pending')
+             VALUES ($1, $2, $3, $4, $5, $6, $7, 'Draft')
              RETURNING *`,
             [job_id, payment_type, vendor, amount, bill_ref_no, paid_by, requested_by]
         );
@@ -157,6 +157,32 @@ router.post('/', authenticateToken, async (req, res) => {
         res.status(201).json(result.rows[0]);
     } catch (error) {
         console.error('Create payment error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Send Batch to Accounts (Update Draft -> Pending)
+router.post('/send-batch', authenticateToken, async (req, res) => {
+    try {
+        const { paymentIds } = req.body; // Array of IDs
+
+        if (!paymentIds || !Array.isArray(paymentIds) || paymentIds.length === 0) {
+            return res.status(400).json({ error: 'No Start Payment IDs provided' });
+        }
+
+        const result = await pool.query(
+            "UPDATE job_payments SET status = 'Pending' WHERE id = ANY($1) AND status = 'Draft' RETURNING *",
+            [paymentIds]
+        );
+
+        await pool.query(
+            'INSERT INTO audit_logs (user_id, action, details, entity_type, entity_id) VALUES ($1, $2, $3, $4, $5)',
+            [req.user.id, 'SEND_PAYMENTS_TO_ACCOUNTS', `Sent ${result.rowCount} payments to accounts`, 'JOB', 'BATCH']
+        );
+
+        res.json({ message: 'Payments sent to accounts', updated: result.rowCount });
+    } catch (error) {
+        console.error('Send batch error:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
