@@ -167,6 +167,9 @@ const DeliveryNotes: React.FC = () => {
 
     // Filter logic
     const filteredNotes = deliveryNotes.filter(note => {
+        // Exclude Delivered notes from the main list
+        if (note.status === 'Delivered') return false;
+
         const matchesSearch =
             note.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
             note.consignee.toLowerCase().includes(searchTerm.toLowerCase()) ||
