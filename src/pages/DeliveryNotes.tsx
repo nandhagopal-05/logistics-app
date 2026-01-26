@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 
 
-import { deliveryNotesAPI, consigneesAPI, FILE_BASE_URL } from '../services/api';
+import { deliveryNotesAPI, consigneesAPI, API_BASE_URL } from '../services/api';
 
 import seaflowHeader from '../assets/seaflow-header.jpg';
 import seaflowFooter from '../assets/seaflow-footer.jpg';
@@ -686,7 +686,7 @@ const DeliveryNotes: React.FC = () => {
                                                     {row.documents.map((doc, dIdx) => (
                                                         <a
                                                             key={dIdx}
-                                                            href={`${FILE_BASE_URL}${doc.url}`}
+                                                            href={`${API_BASE_URL}/delivery-notes/document/view?path=${encodeURIComponent(doc.url)}&token=${localStorage.getItem('token') || sessionStorage.getItem('token')}`}
                                                             target="_blank"
                                                             rel="noreferrer"
                                                             className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100 transition-colors text-xs font-medium border border-blue-100"

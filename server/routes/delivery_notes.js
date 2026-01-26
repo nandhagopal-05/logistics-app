@@ -339,4 +339,26 @@ router.put('/:id', authenticateToken, upload.array('files'), async (req, res) =>
     }
 });
 
+// Serve Document safely
+router.get('/document/view', authenticateToken, async (req, res) => {
+    try {
+        const { path: filePath } = req.query;
+        if (!filePath) return res.status(400).send('Path required');
+
+        // Extract filename from the stored path (e.g. /uploads/filename.ext -> filename.ext)
+        const filename = path.basename(filePath);
+        const absolutePath = path.join(__dirname, '../uploads', filename);
+
+        if (fs.existsSync(absolutePath)) {
+            res.sendFile(absolutePath);
+        } else {
+            console.error(`File not found at: ${absolutePath}`);
+            res.status(404).json({ error: 'File not found on server' });
+        }
+    } catch (e) {
+        console.error('Error serving document:', e);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 export default router;
