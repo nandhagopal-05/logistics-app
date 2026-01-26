@@ -132,7 +132,9 @@ export const deliveryNotesAPI = {
         api.get('/delivery-notes', { params }),
     getById: (id: string) => api.get(`/delivery-notes/${id}`),
     create: (data: any) => api.post('/delivery-notes', data),
-    update: (id: string, data: any) => api.put(`/delivery-notes/${id}`, data),
+    update: (id: string, data: any) => api.put(`/delivery-notes/${id}`, data, {
+        headers: data instanceof FormData ? { 'Content-Type': 'multipart/form-data' } : undefined
+    }),
     updateStatus: (id: string, status: string) => api.put(`/delivery-notes/${id}/status`, { status }),
     delete: (id: string) => api.delete(`/delivery-notes/${id}`),
 };
