@@ -377,15 +377,47 @@ router.put('/:id/containers/:containerId', authenticateToken, async (req, res) =
 });
 
 // --- SUB-RESOURCES: BL/AWB ---
+// --- SUB-RESOURCES: BL/AWB ---
 router.post('/:id/bls', authenticateToken, async (req, res) => {
     try {
         const { id } = req.params;
-        const { master_bl, house_bl, loading_port, vessel, etd, eta, delivery_agent } = req.body;
+        const { master_bl, house_bl, loading_port, vessel, etd, eta, delivery_agent, containers } = req.body;
+
+        // Ensure packages column exists in shipment_containers
+        await pool.query('ALTER TABLE shipment_containers ADD COLUMN IF NOT EXISTS packages JSONB DEFAULT \'[]\'');
+
+        // Allow legacy packages input if containers is missing, but prefer containers
+        // If containers provided, structure them into 'packages' col of BL for storage
+        // (BL packages column now acts as a content store, which can be flat or structured. Frontend handles view).
+        const blContent = containers ? JSON.stringify(containers) : (req.body.packages ? JSON.stringify(req.body.packages) : '[]');
 
         const result = await pool.query(
             'INSERT INTO shipment_bls (shipment_id, master_bl, house_bl, loading_port, vessel, etd, eta, delivery_agent, packages) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *',
-            [id, master_bl, house_bl, loading_port, vessel, etd || null, eta || null, delivery_agent, req.body.packages ? JSON.stringify(req.body.packages) : '[]']
+            [id, master_bl, house_bl, loading_port, vessel, etd || null, eta || null, delivery_agent, blContent]
         );
+
+        // Sync Containers to shipment_containers table
+        if (containers && Array.isArray(containers)) {
+            for (const c of containers) {
+                if (!c.container_no) continue;
+
+                // Check if container already exists for this shipment
+                const check = await pool.query('SELECT id FROM shipment_containers WHERE shipment_id = $1 AND container_no = $2', [id, c.container_no]);
+
+                if (check.rows.length > 0) {
+                    await pool.query(
+                        'UPDATE shipment_containers SET container_type = $1, packages = $2 WHERE id = $3',
+                        [c.container_type, JSON.stringify(c.packages || []), check.rows[0].id]
+                    );
+                } else {
+                    await pool.query(
+                        'INSERT INTO shipment_containers (shipment_id, container_no, container_type, packages) VALUES ($1, $2, $3, $4)',
+                        [id, c.container_no, c.container_type, JSON.stringify(c.packages || [])]
+                    );
+                }
+            }
+        }
+
         res.json(result.rows[0]);
     } catch (e) {
         console.error(e);
@@ -395,12 +427,40 @@ router.post('/:id/bls', authenticateToken, async (req, res) => {
 
 router.put('/:id/bls/:blId', authenticateToken, async (req, res) => {
     try {
-        const { blId } = req.params;
-        const { master_bl, house_bl, loading_port, vessel, etd, eta, delivery_agent } = req.body;
+        const { id, blId } = req.params;
+        const { master_bl, house_bl, loading_port, vessel, etd, eta, delivery_agent, containers } = req.body;
+
+        // Ensure packages column exists
+        await pool.query('ALTER TABLE shipment_containers ADD COLUMN IF NOT EXISTS packages JSONB DEFAULT \'[]\'');
+
+        const blContent = containers ? JSON.stringify(containers) : (req.body.packages ? JSON.stringify(req.body.packages) : '[]');
+
         const result = await pool.query(
             'UPDATE shipment_bls SET master_bl = $1, house_bl = $2, loading_port = $3, vessel = $4, etd = $5, eta = $6, delivery_agent = $7, packages = $8 WHERE id = $9 RETURNING *',
-            [master_bl, house_bl, loading_port, vessel, etd || null, eta || null, delivery_agent, req.body.packages ? JSON.stringify(req.body.packages) : '[]', blId]
+            [master_bl, house_bl, loading_port, vessel, etd || null, eta || null, delivery_agent, blContent, blId]
         );
+
+        // Sync Containers
+        if (containers && Array.isArray(containers)) {
+            for (const c of containers) {
+                if (!c.container_no) continue;
+
+                const check = await pool.query('SELECT id FROM shipment_containers WHERE shipment_id = $1 AND container_no = $2', [id, c.container_no]);
+
+                if (check.rows.length > 0) {
+                    await pool.query(
+                        'UPDATE shipment_containers SET container_type = $1, packages = $2 WHERE id = $3',
+                        [c.container_type, JSON.stringify(c.packages || []), check.rows[0].id]
+                    );
+                } else {
+                    await pool.query(
+                        'INSERT INTO shipment_containers (shipment_id, container_no, container_type, packages) VALUES ($1, $2, $3, $4)',
+                        [id, c.container_no, c.container_type, JSON.stringify(c.packages || [])]
+                    );
+                }
+            }
+        }
+
         res.json(result.rows[0]);
     } catch (e) {
         console.error(e);

@@ -14,7 +14,7 @@ const PACKAGE_TYPES = ['PALLET', 'BUNDLES', 'CARTON', 'PKG', 'BOX', 'CASE', 'BUL
 
 
 
-const BLDrawer: React.FC<BLDrawerProps> = ({ isOpen, onClose, onSave, initialData, deliveryAgents = [] }) => {
+const BLDrawer: React.FC<BLDrawerProps> = ({ isOpen, onClose, onSave, initialData, deliveryAgents = [], job }) => {
     const [formData, setFormData] = useState<any>({
         master_bl: '',
         house_bl: '',
@@ -23,16 +23,7 @@ const BLDrawer: React.FC<BLDrawerProps> = ({ isOpen, onClose, onSave, initialDat
         etd: '',
         eta: '',
         delivery_agent: '',
-        containers: [],
-        packages: []
-    });
-
-    const [newPackage, setNewPackage] = useState<any>({
-
-        cbm: '',
-        pkg_count: '',
-        pkg_type: 'PKG', // Default
-
+        containers: [] // Nested structure: { container_no, container_type, packages: [] }
     });
 
     useEffect(() => {
@@ -44,71 +35,107 @@ const BLDrawer: React.FC<BLDrawerProps> = ({ isOpen, onClose, onSave, initialDat
             etd: '',
             eta: '',
             delivery_agent: '',
-            containers: [],
-            packages: []
+            containers: []
         };
 
         if (isOpen) {
             if (initialData) {
+                // Compatibility: If initialData has flat packages but no containers, we might want to show them?
+                // Or assume data migration. For now, strict mapping.
+                // If initialData.containers exists (from new DB structure), used it.
+                // If not, but legacy packages exist, maybe put them in a "General/Loose" container? 
+                // For this task, we assume we are creating NEW structure or editing existing NEW structure.
                 setFormData({
                     ...defaultState,
                     ...initialData,
+                    containers: initialData.containers || []
                 });
             } else {
                 setFormData(defaultState);
             }
-            // Reset temp line item
-            setNewPackage({
 
-                cbm: '',
-                pkg_count: '',
-                pkg_type: 'PKG',
-
-            });
         }
-    }, [isOpen]); // Only run on open toggle, ignore initialData updates while open
+    }, [isOpen]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setFormData((prev: any) => ({ ...prev, [name]: value }));
     };
 
-    const handlePackageChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        const { name, value } = e.target;
-        setNewPackage((prev: any) => ({ ...prev, [name]: value }));
-    };
+    // --- Container Logic ---
 
-    const addLineItem = () => {
-        if (!newPackage.pkg_count) {
-            alert("Please enter Package Count");
-            return;
-        }
-
-        const item = { ...newPackage, id: Date.now() }; // Temporary ID
+    const handleAddContainer = () => {
         setFormData((prev: any) => ({
             ...prev,
-            packages: [...(prev.packages || []), item]
+            containers: [
+                ...(prev.containers || []),
+                {
+                    container_no: '',
+                    container_type: 'FCL 20', // Default
+                    packages: []
+                }
+            ]
         }));
+    };
 
-        setNewPackage({
+    const handleRemoveContainer = (index: number) => {
+        setFormData((prev: any) => ({
+            ...prev,
+            containers: prev.containers.filter((_: any, i: number) => i !== index)
+        }));
+    };
 
-            cbm: '',
-            pkg_count: '',
-            pkg_type: 'PKG',
-
+    const handleContainerChange = (index: number, field: string, value: any) => {
+        setFormData((prev: any) => {
+            const updated = [...prev.containers];
+            updated[index] = { ...updated[index], [field]: value };
+            return { ...prev, containers: updated };
         });
     };
 
-    const removeLineItem = (index: number) => {
-        setFormData((prev: any) => ({
-            ...prev,
-            packages: prev.packages.filter((_: any, i: number) => i !== index)
-        }));
+    // --- Package Logic within Container ---
+
+    const handleAddPackage = (containerIndex: number) => {
+        setFormData((prev: any) => {
+            const updatedContainers = [...prev.containers];
+            const container = updatedContainers[containerIndex];
+            container.packages = [
+                ...(container.packages || []),
+                { pkg_count: '', pkg_type: 'PKG', cbm: '', weight: '' }
+            ];
+            return { ...prev, containers: updatedContainers };
+        });
     };
+
+    const handleRemovePackage = (containerIndex: number, pkgIndex: number) => {
+        setFormData((prev: any) => {
+            const updatedContainers = [...prev.containers];
+            const container = updatedContainers[containerIndex];
+            container.packages = container.packages.filter((_: any, i: number) => i !== pkgIndex);
+            return { ...prev, containers: updatedContainers };
+        });
+    };
+
+    const handlePackageChange = (containerIndex: number, pkgIndex: number, field: string, value: any) => {
+        setFormData((prev: any) => {
+            const updatedContainers = [...prev.containers];
+            const container = updatedContainers[containerIndex];
+            const updatedPackages = [...container.packages];
+            updatedPackages[pkgIndex] = { ...updatedPackages[pkgIndex], [field]: value };
+            container.packages = updatedPackages;
+            return { ...prev, containers: updatedContainers };
+        });
+    };
+
 
     const handleSubmit = () => {
         if (!formData.master_bl && !formData.house_bl) {
             alert("Master No or House No is required");
+            return;
+        }
+        // Basic validation: ensure containers have numbers?
+        if (formData.containers && formData.containers.some((c: any) => !c.container_no)) {
+            alert("All containers must have a Container Number");
             return;
         }
         onSave(formData);
@@ -117,10 +144,12 @@ const BLDrawer: React.FC<BLDrawerProps> = ({ isOpen, onClose, onSave, initialDat
 
     if (!isOpen) return null;
 
+    const isSea = (job?.transport_mode || 'SEA') === 'SEA';
+
     return (
         <div className="fixed inset-0 z-50 overflow-hidden">
             <div className="absolute inset-0 bg-black/20 backdrop-blur-sm transition-opacity" onClick={onClose}></div>
-            <div className="absolute inset-y-0 right-0 max-w-md w-full flex">
+            <div className="absolute inset-y-0 right-0 max-w-2xl w-full flex"> {/* Increased width for nested tables */}
                 <div className="h-full w-full bg-white shadow-2xl flex flex-col animate-slide-in-right">
 
                     {/* Header */}
@@ -177,51 +206,109 @@ const BLDrawer: React.FC<BLDrawerProps> = ({ isOpen, onClose, onSave, initialDat
                             </div>
                         </div>
 
-                        {/* Package Details Section */}
-                        <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                        {/* Containers Section */}
+                        <div className="border-t border-gray-200 pt-6">
                             <div className="flex justify-between items-center mb-4">
-                                <h3 className="text-sm font-bold text-gray-900">Package Details</h3>
-                                <button className="text-gray-400 hover:text-gray-600"><Plus className="w-4 h-4" /></button>
+                                <h3 className="text-sm font-bold text-gray-900">Containers & Packages</h3>
+                                <button
+                                    onClick={handleAddContainer}
+                                    className="px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg text-xs font-bold hover:bg-indigo-100 flex items-center gap-1"
+                                >
+                                    <Plus className="w-3 h-3" /> Add Container
+                                </button>
                             </div>
 
-                            <div className="space-y-4 mb-4">
-                                {/* Package Info */}
-                                <div className="grid grid-cols-3 gap-3">
-                                    <div>
-                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Packages*</label>
-                                        <input type="number" name="pkg_count" value={newPackage.pkg_count} onChange={handlePackageChange} className="input-field w-full py-2 px-3 border rounded text-sm" placeholder="Count" />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Type*</label>
-                                        <select name="pkg_type" value={newPackage.pkg_type} onChange={handlePackageChange} className="input-field w-full py-2 px-3 border rounded text-sm bg-white">
-                                            {PACKAGE_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-                                        </select>
-                                    </div>
-                                    <div className="flex items-end justify-between gap-2">
-                                        <div className="flex-1">
-                                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">CBM</label>
-                                            <input type="number" name="cbm" value={newPackage.cbm} onChange={handlePackageChange} className="input-field w-full py-2 px-3 border rounded text-sm" placeholder="CBM" />
-                                        </div>
-                                        <button onClick={addLineItem} className="mb-0.5 px-3 py-2 bg-gray-200 text-gray-700 text-xs font-bold rounded hover:bg-gray-300 h-[38px]">Add</button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* List of added items */}
-                            {formData.packages && formData.packages.length > 0 && (
-                                <div className="space-y-2 mt-4 pt-4 border-t border-gray-200">
-                                    {formData.packages.map((p: any, idx: number) => (
-                                        <div key={idx} className="flex justify-between items-center bg-white p-2 rounded border border-gray-100 text-xs">
-                                            <div className="grid grid-cols-2 gap-x-4 gap-y-1 w-full mr-2">
-                                                <div className="font-medium">{p.pkg_count} {p.pkg_type}</div>
-                                                <div className="text-right text-gray-500">CBM: {p.cbm || '-'}</div>
-
+                            <div className="space-y-6">
+                                {formData.containers?.map((container: any, cIdx: number) => (
+                                    <div key={cIdx} className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                                        {/* Container Header Line */}
+                                        <div className="flex gap-4 items-end mb-4 pb-4 border-b border-gray-200">
+                                            <div className="flex-1">
+                                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Container No.</label>
+                                                <input
+                                                    value={container.container_no}
+                                                    onChange={(e) => handleContainerChange(cIdx, 'container_no', e.target.value)}
+                                                    className="w-full py-1.5 px-2 text-sm border rounded bg-white"
+                                                    placeholder="ABCD1234567"
+                                                />
                                             </div>
-                                            <button onClick={() => removeLineItem(idx)} className="text-red-400 hover:text-red-600"><Trash2 className="w-3.5 h-3.5" /></button>
+                                            <div className="flex-1">
+                                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Type</label>
+                                                <select
+                                                    value={container.container_type}
+                                                    onChange={(e) => handleContainerChange(cIdx, 'container_type', e.target.value)}
+                                                    className="w-full py-1.5 px-2 text-sm border rounded bg-white"
+                                                >
+                                                    <option value="FCL 20">FCL 20</option>
+                                                    <option value="FCL 40">FCL 40</option>
+                                                    <option value="LCL 20">LCL 20</option>
+                                                    <option value="LCL 40">LCL 40</option>
+                                                    <option value="OT 20">OT 20</option>
+                                                    <option value="OT 40">OT 40</option>
+                                                </select>
+                                            </div>
+                                            <button onClick={() => handleRemoveContainer(cIdx)} className="mb-0.5 p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded">
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
                                         </div>
-                                    ))}
-                                </div>
-                            )}
+
+                                        {/* Packages within Container */}
+                                        <div className="pl-2">
+                                            <div className="grid grid-cols-12 gap-2 text-[10px] font-bold text-gray-400 uppercase mb-2">
+                                                <div className="col-span-3">Count</div>
+                                                <div className="col-span-4">Type</div>
+                                                <div className="col-span-4">{isSea ? 'CBM' : 'Weight'}</div>
+                                                <div className="col-span-1"></div>
+                                            </div>
+
+                                            <div className="space-y-2 mb-2">
+                                                {container.packages?.map((pkg: any, pIdx: number) => (
+                                                    <div key={pIdx} className="grid grid-cols-12 gap-2 items-center">
+                                                        <div className="col-span-3">
+                                                            <input
+                                                                type="text"
+                                                                value={pkg.pkg_count}
+                                                                onChange={(e) => handlePackageChange(cIdx, pIdx, 'pkg_count', e.target.value)}
+                                                                className="w-full py-1 px-2 text-xs border rounded"
+                                                                placeholder="0"
+                                                            />
+                                                        </div>
+                                                        <div className="col-span-4">
+                                                            <select
+                                                                value={pkg.pkg_type}
+                                                                onChange={(e) => handlePackageChange(cIdx, pIdx, 'pkg_type', e.target.value)}
+                                                                className="w-full py-1 px-2 text-xs border rounded bg-white"
+                                                            >
+                                                                {PACKAGE_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                                                            </select>
+                                                        </div>
+                                                        <div className="col-span-4">
+                                                            <input
+                                                                type="text"
+                                                                value={isSea ? pkg.cbm : pkg.weight}
+                                                                onChange={(e) => handlePackageChange(cIdx, pIdx, isSea ? 'cbm' : 'weight', e.target.value)}
+                                                                className="w-full py-1 px-2 text-xs border rounded"
+                                                                placeholder={isSea ? '0.00' : '0.00'}
+                                                            />
+                                                        </div>
+                                                        <div className="col-span-1 text-right">
+                                                            <button onClick={() => handleRemovePackage(cIdx, pIdx)} className="text-gray-400 hover:text-red-500">
+                                                                <X className="w-3 h-3" />
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            <button
+                                                onClick={() => handleAddPackage(cIdx)}
+                                                className="text-xs text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1 mt-2"
+                                            >
+                                                <Plus className="w-3 h-3" /> Add Package
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
 
                     </div>

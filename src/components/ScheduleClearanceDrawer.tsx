@@ -293,34 +293,9 @@ const ScheduleClearanceDrawer: React.FC<ScheduleClearanceDrawerProps> = ({ isOpe
                             </div>
                         )}
 
-                        {/* Packages */}
-                        {!isReschedule && (
-                            <div className="form-group">
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">Packages</label>
-                                <div className="relative">
-                                    <select
-                                        name="packages"
-                                        value={formData.packages}
-                                        onChange={handleInputChange}
-                                        className={`w-full p-3 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none appearance-none ${!formData.packages ? 'text-gray-400' : 'text-gray-700'}`}
-                                    >
-                                        <option value="" disabled>Select packages</option>
-                                        {packageOptions.length > 0 ? (
-                                            packageOptions.map((opt: string, idx: number) => (
-                                                <option key={idx} value={opt}>{opt}</option>
-                                            ))
-                                        ) : (
-                                            <option value="" disabled>No packages available for this BL</option>
-                                        )}
-                                    </select>
-                                    <ChevronDown className="absolute right-3 top-3.5 w-4 h-4 text-gray-400 pointer-events-none" />
-                                </div>
-                            </div>
-                        )}
-
                         {/* Container Details (Multi-Select) */}
                         {!isReschedule && (
-                            <div className="form-group">
+                            <div className="form-group mb-6">
                                 <label className="block text-sm font-semibold text-gray-700 mb-2">Container Details (Select Multiple)</label>
                                 <div className="border border-gray-200 rounded-lg p-3 max-h-48 overflow-y-auto bg-white">
                                     {job?.containers && job.containers.length > 0 ? (
@@ -349,10 +324,30 @@ const ScheduleClearanceDrawer: React.FC<ScheduleClearanceDrawerProps> = ({ isOpe
                                                                 }
                                                             }
 
+                                                            const newContainerNo = currentNos.join(', ');
+
+                                                            // Calculate accumulated packages for selected containers
+                                                            let newPackagesStr = formData.packages;
+                                                            if (currentNos.length > 0 && job.containers) {
+                                                                const selectedContainers = job.containers.filter((cont: any) => currentNos.includes(cont.container_no));
+                                                                const allPkgs: string[] = [];
+                                                                selectedContainers.forEach((cont: any) => {
+                                                                    const pList = typeof cont.packages === 'string' ? JSON.parse(cont.packages) : (cont.packages || []);
+                                                                    if (Array.isArray(pList)) {
+                                                                        pList.forEach((p: any) => allPkgs.push(`${p.pkg_count} ${p.pkg_type}`));
+                                                                    }
+                                                                });
+                                                                newPackagesStr = allPkgs.join(', ');
+                                                            } else if (currentNos.length === 0) {
+                                                                // Reset to empty or allow manual selection if no containers
+                                                                newPackagesStr = '';
+                                                            }
+
                                                             setFormData(prev => ({
                                                                 ...prev,
-                                                                container_no: currentNos.join(', '),
-                                                                container_type: currentTypes.join(', ')
+                                                                container_no: newContainerNo,
+                                                                container_type: currentTypes.join(', '),
+                                                                packages: newPackagesStr
                                                             }));
                                                         }}
                                                         className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
@@ -372,6 +367,37 @@ const ScheduleClearanceDrawer: React.FC<ScheduleClearanceDrawerProps> = ({ isOpe
                                 <p className="text-xs text-gray-500 mt-1">
                                     Selected: {formData.container_no || 'None'}
                                 </p>
+                            </div>
+                        )}
+
+                        {/* Packages (Auto-populated if containers selected, else Dropdown) */}
+                        {!isReschedule && (
+                            <div className="form-group">
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">Packages</label>
+                                {formData.container_no ? (
+                                    <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-700 min-h-[46px] flex items-center">
+                                        {formData.packages || 'No packages found in selected containers'}
+                                    </div>
+                                ) : (
+                                    <div className="relative">
+                                        <select
+                                            name="packages"
+                                            value={formData.packages}
+                                            onChange={handleInputChange}
+                                            className={`w-full p-3 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none appearance-none ${!formData.packages ? 'text-gray-400' : 'text-gray-700'}`}
+                                        >
+                                            <option value="" disabled>Select packages</option>
+                                            {packageOptions.length > 0 ? (
+                                                packageOptions.map((opt: string, idx: number) => (
+                                                    <option key={idx} value={opt}>{opt}</option>
+                                                ))
+                                            ) : (
+                                                <option value="" disabled>No packages available for this BL</option>
+                                            )}
+                                        </select>
+                                        <ChevronDown className="absolute right-3 top-3.5 w-4 h-4 text-gray-400 pointer-events-none" />
+                                    </div>
+                                )}
                             </div>
                         )}
 
