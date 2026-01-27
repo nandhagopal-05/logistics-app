@@ -1398,8 +1398,9 @@ const ShipmentRegistry: React.FC = () => {
                             )}
                         </div>
 
-                        {/* Containers Section (6) */}
-                        <div className="bg-white rounded-xl shadow-sm p-8 mb-6 border border-gray-200">
+                        {/* Containers Section (6) - Only for SEA */}
+
+                        <div className={`bg-white rounded-xl shadow-sm p-8 mb-6 border border-gray-200 ${selectedJob.transport_mode !== 'SEA' ? 'hidden' : ''}`}>
                             <div className="flex justify-between items-center mb-6">
                                 <h3 className="font-bold text-gray-900 text-lg flex items-center gap-2">
                                     <Package className="w-5 h-5 text-orange-600" />

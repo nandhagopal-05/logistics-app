@@ -23,7 +23,8 @@ const BLDrawer: React.FC<BLDrawerProps> = ({ isOpen, onClose, onSave, initialDat
         etd: '',
         eta: '',
         delivery_agent: '',
-        containers: [] // Nested structure: { container_no, container_type, packages: [] }
+        containers: [], // Nested structure: { container_no, container_type, packages: [] }
+        packages: [] // Flat structure for Non-Sea modes
     });
 
     useEffect(() => {
@@ -35,20 +36,17 @@ const BLDrawer: React.FC<BLDrawerProps> = ({ isOpen, onClose, onSave, initialDat
             etd: '',
             eta: '',
             delivery_agent: '',
-            containers: []
+            containers: [],
+            packages: []
         };
 
         if (isOpen) {
             if (initialData) {
-                // Compatibility: If initialData has flat packages but no containers, we might want to show them?
-                // Or assume data migration. For now, strict mapping.
-                // If initialData.containers exists (from new DB structure), used it.
-                // If not, but legacy packages exist, maybe put them in a "General/Loose" container? 
-                // For this task, we assume we are creating NEW structure or editing existing NEW structure.
                 setFormData({
                     ...defaultState,
                     ...initialData,
-                    containers: initialData.containers || []
+                    containers: initialData.containers || [],
+                    packages: initialData.packages || []
                 });
             } else {
                 setFormData(defaultState);
@@ -127,18 +125,55 @@ const BLDrawer: React.FC<BLDrawerProps> = ({ isOpen, onClose, onSave, initialDat
         });
     };
 
+    // --- Flat Package Logic (Non-Sea) ---
+
+    const handleAddFlatPackage = () => {
+        setFormData((prev: any) => ({
+            ...prev,
+            packages: [
+                ...(prev.packages || []),
+                { pkg_count: '', pkg_type: 'PKG', cbm: '', weight: '' }
+            ]
+        }));
+    };
+
+    const handleRemoveFlatPackage = (index: number) => {
+        setFormData((prev: any) => ({
+            ...prev,
+            packages: prev.packages.filter((_: any, i: number) => i !== index)
+        }));
+    };
+
+    const handleFlatPackageChange = (index: number, field: string, value: any) => {
+        setFormData((prev: any) => {
+            const updated = [...prev.packages];
+            updated[index] = { ...updated[index], [field]: value };
+            return { ...prev, packages: updated };
+        });
+    };
+
 
     const handleSubmit = () => {
         if (!formData.master_bl && !formData.house_bl) {
             alert("Master No or House No is required");
             return;
         }
-        // Basic validation: ensure containers have numbers?
-        if (formData.containers && formData.containers.some((c: any) => !c.container_no)) {
-            alert("All containers must have a Container Number");
-            return;
+
+        const isSeaMode = (job?.transport_mode || 'SEA') === 'SEA';
+
+        if (isSeaMode) {
+            // Basic validation: ensure containers have numbers?
+            if (formData.containers && formData.containers.some((c: any) => !c.container_no)) {
+                alert("All containers must have a Container Number");
+                return;
+            }
+            // Clear flat packages if saving as Sea
+            onSave({ ...formData, packages: [] });
+        } else {
+            // Clear containers if saving as Non-Sea
+            onSave({ ...formData, containers: [] });
         }
-        onSave(formData);
+
         onClose();
     };
 
@@ -209,105 +244,174 @@ const BLDrawer: React.FC<BLDrawerProps> = ({ isOpen, onClose, onSave, initialDat
                         {/* Containers Section */}
                         <div className="border-t border-gray-200 pt-6">
                             <div className="flex justify-between items-center mb-4">
-                                <h3 className="text-sm font-bold text-gray-900">Containers & Packages</h3>
-                                <button
-                                    onClick={handleAddContainer}
-                                    className="px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg text-xs font-bold hover:bg-indigo-100 flex items-center gap-1"
-                                >
-                                    <Plus className="w-3 h-3" /> Add Container
-                                </button>
+                                <h3 className="text-sm font-bold text-gray-900">{isSea ? 'Containers & Packages' : 'Packages'}</h3>
+                                {isSea && (
+                                    <button
+                                        onClick={handleAddContainer}
+                                        className="px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg text-xs font-bold hover:bg-indigo-100 flex items-center gap-1"
+                                    >
+                                        <Plus className="w-3 h-3" /> Add Container
+                                    </button>
+                                )}
                             </div>
 
                             <div className="space-y-6">
-                                {formData.containers?.map((container: any, cIdx: number) => (
-                                    <div key={cIdx} className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                                        {/* Container Header Line */}
-                                        <div className="flex gap-4 items-end mb-4 pb-4 border-b border-gray-200">
-                                            <div className="flex-1">
-                                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Container No.</label>
-                                                <input
-                                                    value={container.container_no}
-                                                    onChange={(e) => handleContainerChange(cIdx, 'container_no', e.target.value)}
-                                                    className="w-full py-1.5 px-2 text-sm border rounded bg-white"
-                                                    placeholder="ABCD1234567"
-                                                />
+                                {isSea ? (
+                                    // SEA MODE: Containers & Nested Packages
+                                    <>
+                                        {formData.containers?.map((container: any, cIdx: number) => (
+                                            <div key={cIdx} className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                                                {/* Container Header Line */}
+                                                <div className="flex gap-4 items-end mb-4 pb-4 border-b border-gray-200">
+                                                    <div className="flex-1">
+                                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Container No.</label>
+                                                        <input
+                                                            value={container.container_no}
+                                                            onChange={(e) => handleContainerChange(cIdx, 'container_no', e.target.value)}
+                                                            className="w-full py-1.5 px-2 text-sm border rounded bg-white"
+                                                            placeholder="ABCD1234567"
+                                                        />
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Type</label>
+                                                        <select
+                                                            value={container.container_type}
+                                                            onChange={(e) => handleContainerChange(cIdx, 'container_type', e.target.value)}
+                                                            className="w-full py-1.5 px-2 text-sm border rounded bg-white"
+                                                        >
+                                                            <option value="FCL 20">FCL 20</option>
+                                                            <option value="FCL 40">FCL 40</option>
+                                                            <option value="LCL 20">LCL 20</option>
+                                                            <option value="LCL 40">LCL 40</option>
+                                                            <option value="OT 20">OT 20</option>
+                                                            <option value="OT 40">OT 40</option>
+                                                        </select>
+                                                    </div>
+                                                    <button onClick={() => handleRemoveContainer(cIdx)} className="mb-0.5 p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded">
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+
+                                                {/* Packages within Container */}
+                                                <div className="pl-2">
+                                                    <div className="grid grid-cols-12 gap-2 text-[10px] font-bold text-gray-400 uppercase mb-2">
+                                                        <div className="col-span-3">Count</div>
+                                                        <div className="col-span-4">Type</div>
+                                                        <div className="col-span-4">{isSea ? 'CBM' : 'Weight'}</div>
+                                                        <div className="col-span-1"></div>
+                                                    </div>
+
+                                                    <div className="space-y-2 mb-2">
+                                                        {container.packages?.map((pkg: any, pIdx: number) => (
+                                                            <div key={pIdx} className="grid grid-cols-12 gap-2 items-center">
+                                                                <div className="col-span-3">
+                                                                    <input
+                                                                        type="text"
+                                                                        value={pkg.pkg_count}
+                                                                        onChange={(e) => handlePackageChange(cIdx, pIdx, 'pkg_count', e.target.value)}
+                                                                        className="w-full py-1 px-2 text-xs border rounded"
+                                                                        placeholder="0"
+                                                                    />
+                                                                </div>
+                                                                <div className="col-span-4">
+                                                                    <select
+                                                                        value={pkg.pkg_type}
+                                                                        onChange={(e) => handlePackageChange(cIdx, pIdx, 'pkg_type', e.target.value)}
+                                                                        className="w-full py-1 px-2 text-xs border rounded bg-white"
+                                                                    >
+                                                                        {PACKAGE_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                                                                    </select>
+                                                                </div>
+                                                                <div className="col-span-4">
+                                                                    <input
+                                                                        type="text"
+                                                                        value={isSea ? pkg.cbm : pkg.weight}
+                                                                        onChange={(e) => handlePackageChange(cIdx, pIdx, isSea ? 'cbm' : 'weight', e.target.value)}
+                                                                        className="w-full py-1 px-2 text-xs border rounded"
+                                                                        placeholder={isSea ? '0.00' : '0.00'}
+                                                                    />
+                                                                </div>
+                                                                <div className="col-span-1 text-right">
+                                                                    <button onClick={() => handleRemovePackage(cIdx, pIdx)} className="text-gray-400 hover:text-red-500">
+                                                                        <X className="w-3 h-3" />
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                    <button
+                                                        onClick={() => handleAddPackage(cIdx)}
+                                                        className="text-xs text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1 mt-2"
+                                                    >
+                                                        <Plus className="w-3 h-3" /> Add Package
+                                                    </button>
+                                                </div>
                                             </div>
-                                            <div className="flex-1">
-                                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Type</label>
-                                                <select
-                                                    value={container.container_type}
-                                                    onChange={(e) => handleContainerChange(cIdx, 'container_type', e.target.value)}
-                                                    className="w-full py-1.5 px-2 text-sm border rounded bg-white"
-                                                >
-                                                    <option value="FCL 20">FCL 20</option>
-                                                    <option value="FCL 40">FCL 40</option>
-                                                    <option value="LCL 20">LCL 20</option>
-                                                    <option value="LCL 40">LCL 40</option>
-                                                    <option value="OT 20">OT 20</option>
-                                                    <option value="OT 40">OT 40</option>
-                                                </select>
-                                            </div>
-                                            <button onClick={() => handleRemoveContainer(cIdx)} className="mb-0.5 p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded">
-                                                <Trash2 className="w-4 h-4" />
+                                        ))}
+                                    </>
+                                ) : (
+                                    // NON-SEA MODE: Flat Packages Only
+                                    <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                                        <div className="flex justify-between items-center mb-4">
+                                            <h4 className="text-sm font-bold text-gray-700">Package List (No Container)</h4>
+                                            <button
+                                                onClick={handleAddFlatPackage}
+                                                className="px-2 py-1 bg-indigo-50 text-indigo-600 rounded text-xs font-bold hover:bg-indigo-100 flex items-center gap-1"
+                                            >
+                                                <Plus className="w-3 h-3" /> Add Item
                                             </button>
                                         </div>
 
-                                        {/* Packages within Container */}
-                                        <div className="pl-2">
-                                            <div className="grid grid-cols-12 gap-2 text-[10px] font-bold text-gray-400 uppercase mb-2">
-                                                <div className="col-span-3">Count</div>
-                                                <div className="col-span-4">Type</div>
-                                                <div className="col-span-4">{isSea ? 'CBM' : 'Weight'}</div>
-                                                <div className="col-span-1"></div>
-                                            </div>
+                                        <div className="grid grid-cols-12 gap-2 text-[10px] font-bold text-gray-400 uppercase mb-2">
+                                            <div className="col-span-3">Count</div>
+                                            <div className="col-span-4">Type</div>
+                                            <div className="col-span-4">Weight/Dims</div>
+                                            <div className="col-span-1"></div>
+                                        </div>
 
-                                            <div className="space-y-2 mb-2">
-                                                {container.packages?.map((pkg: any, pIdx: number) => (
-                                                    <div key={pIdx} className="grid grid-cols-12 gap-2 items-center">
-                                                        <div className="col-span-3">
-                                                            <input
-                                                                type="text"
-                                                                value={pkg.pkg_count}
-                                                                onChange={(e) => handlePackageChange(cIdx, pIdx, 'pkg_count', e.target.value)}
-                                                                className="w-full py-1 px-2 text-xs border rounded"
-                                                                placeholder="0"
-                                                            />
-                                                        </div>
-                                                        <div className="col-span-4">
-                                                            <select
-                                                                value={pkg.pkg_type}
-                                                                onChange={(e) => handlePackageChange(cIdx, pIdx, 'pkg_type', e.target.value)}
-                                                                className="w-full py-1 px-2 text-xs border rounded bg-white"
-                                                            >
-                                                                {PACKAGE_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-                                                            </select>
-                                                        </div>
-                                                        <div className="col-span-4">
-                                                            <input
-                                                                type="text"
-                                                                value={isSea ? pkg.cbm : pkg.weight}
-                                                                onChange={(e) => handlePackageChange(cIdx, pIdx, isSea ? 'cbm' : 'weight', e.target.value)}
-                                                                className="w-full py-1 px-2 text-xs border rounded"
-                                                                placeholder={isSea ? '0.00' : '0.00'}
-                                                            />
-                                                        </div>
-                                                        <div className="col-span-1 text-right">
-                                                            <button onClick={() => handleRemovePackage(cIdx, pIdx)} className="text-gray-400 hover:text-red-500">
-                                                                <X className="w-3 h-3" />
-                                                            </button>
-                                                        </div>
+                                        <div className="space-y-2">
+                                            {formData.packages?.map((pkg: any, idx: number) => (
+                                                <div key={idx} className="grid grid-cols-12 gap-2 items-center">
+                                                    <div className="col-span-3">
+                                                        <input
+                                                            type="text"
+                                                            value={pkg.pkg_count}
+                                                            onChange={(e) => handleFlatPackageChange(idx, 'pkg_count', e.target.value)}
+                                                            className="w-full py-1 px-2 text-xs border rounded"
+                                                            placeholder="0"
+                                                        />
                                                     </div>
-                                                ))}
-                                            </div>
-                                            <button
-                                                onClick={() => handleAddPackage(cIdx)}
-                                                className="text-xs text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1 mt-2"
-                                            >
-                                                <Plus className="w-3 h-3" /> Add Package
-                                            </button>
+                                                    <div className="col-span-4">
+                                                        <select
+                                                            value={pkg.pkg_type}
+                                                            onChange={(e) => handleFlatPackageChange(idx, 'pkg_type', e.target.value)}
+                                                            className="w-full py-1 px-2 text-xs border rounded bg-white"
+                                                        >
+                                                            {PACKAGE_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                                                        </select>
+                                                    </div>
+                                                    <div className="col-span-4">
+                                                        <input
+                                                            type="text"
+                                                            value={pkg.weight}
+                                                            onChange={(e) => handleFlatPackageChange(idx, 'weight', e.target.value)}
+                                                            className="w-full py-1 px-2 text-xs border rounded"
+                                                            placeholder="Weight/Details"
+                                                        />
+                                                    </div>
+                                                    <div className="col-span-1 text-right">
+                                                        <button onClick={() => handleRemoveFlatPackage(idx)} className="text-gray-400 hover:text-red-500">
+                                                            <X className="w-3 h-3" />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                            {(!formData.packages || formData.packages.length === 0) && (
+                                                <div className="text-xs text-gray-400 italic text-center py-2">No packages added</div>
+                                            )}
                                         </div>
                                     </div>
-                                ))}
+                                )}
                             </div>
                         </div>
 
