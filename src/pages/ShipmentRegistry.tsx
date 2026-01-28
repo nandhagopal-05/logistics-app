@@ -1343,7 +1343,7 @@ const ShipmentRegistry: React.FC = () => {
                                 </>
                             ) : (
                                 <>
-                                    <div className="absolute top-6 right-6 relative">
+                                    <div className="absolute top-6 right-6">
                                         <button
                                             onClick={(e) => { e.stopPropagation(); setOpenMenu(openMenu === 'jobDetails' ? null : 'jobDetails'); }}
                                             className="text-slate-400 hover:text-white transition-colors"
