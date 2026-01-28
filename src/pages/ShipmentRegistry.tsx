@@ -8,7 +8,7 @@ import {
     FileText,
     Check, Pencil,
     Anchor, Plane, Truck, Package, X, Download, Trash2,
-    CreditCard, UploadCloud, FileSpreadsheet, Calendar, MoreHorizontal
+    CreditCard, UploadCloud, FileSpreadsheet, Calendar, MoreHorizontal, ChevronRight, Lock
 
 
 } from 'lucide-react';
@@ -1022,23 +1022,51 @@ const ShipmentRegistry: React.FC = () => {
     const renderJobDetails = () => {
         if (!selectedJob) return null;
 
-        // Progress Calculations based on Backend Status
-        // Clearance is complete if backend says so (set when all BLs are delivered)
-        const isClearanceComplete = selectedJob.status === 'Cleared' || (selectedJob.progress && parseInt(selectedJob.progress) === 100);
-        const isAccountsReady = isClearanceComplete;
+        // Progress Calculations based on 4 Stages
+        const isSea = (selectedJob.transport_mode || 'SEA') === 'SEA';
 
-        const isDocComplete = selectedJob.documents && selectedJob.documents.length > 0;
-        // Accounts Complete means all payments are PAID (calculated by backend as is_fully_paid)
-        const isAccountsComplete = isAccountsReady && selectedJob.is_fully_paid;
+        // Stage 1: Documentation (25%)
+        // Rule: Documents uploaded AND details filled (Invoice, BL/AWB, Containers if Sea)
+        const hasDocuments = selectedJob.documents && selectedJob.documents.length > 0;
+        const hasInvoiceDetails = !!(selectedJob.invoice_no && selectedJob.no_of_pkgs && selectedJob.cargo_type);
+        const hasBLDetails = selectedJob.bls && selectedJob.bls.length > 0;
+        const hasContainerDetails = !isSea || (selectedJob.containers && selectedJob.containers.length > 0);
 
-        // Job is fully completed if accounts are settled (and potentially user manually marks as completed, but for now strict process flow)
-        const isJobCompleted = isAccountsComplete && selectedJob.status === 'Completed';
+        const isDocComplete = hasDocuments && hasInvoiceDetails && hasBLDetails && hasContainerDetails;
+
+        // Stage 2: Clearance (50%)
+        // Rule: All BLs Delivered (Backend sets status='Cleared' or progress=100)
+        // We rely on backend 'Cleared' status which is set when all BLs have delivery notes.
+        const isClearanceComplete = isDocComplete && (selectedJob.status === 'Cleared' || selectedJob.status === 'Completed' || (selectedJob.progress && parseInt(selectedJob.progress) === 100));
+
+        // Stage 3: Accounts (75%)
+        // Rule: Clearance Complete AND All payments processed (is_fully_paid)
+        const isPaymentComplete = selectedJob.is_fully_paid; // Calculated by backend (total > 0 && total == paid)
+        const isAccountsComplete = isClearanceComplete && isPaymentComplete;
+
+        // Stage 4: Completed (100%)
+        // Rule: Manually marked as Completed
+        const isJobCompleted = selectedJob.status === 'Completed';
 
         let activeStage = 0;
         if (isDocComplete) activeStage = 1;
         if (isClearanceComplete) activeStage = 2;
         if (isAccountsComplete) activeStage = 3;
         if (isJobCompleted) activeStage = 4;
+
+        const handleMarkCompleted = async () => {
+            if (!window.confirm('Are you sure you want to mark this job as fully COMPLETED?')) return;
+            try {
+                await shipmentsAPI.update(selectedJob.id, { status: 'Completed' });
+                // Refresh
+                const res = await shipmentsAPI.getById(selectedJob.id);
+                setSelectedJob(res.data);
+                setJobs(prev => prev.map(j => j.id === selectedJob.id ? { ...j, ...res.data } : j));
+            } catch (e) {
+                console.error(e);
+                alert('Failed to update status');
+            }
+        };
 
         return (
             <div className="h-full flex flex-col animate-fade-in bg-white font-sans text-gray-900">
@@ -1129,20 +1157,32 @@ const ShipmentRegistry: React.FC = () => {
                             </div>
                         </div>
                         <div>
-                            {isAccountsReady ? (
-                                <button
-                                    onClick={() => setActiveTab('Payments')}
-                                    className="px-5 py-2.5 bg-black text-white text-sm font-bold rounded-lg flex items-center gap-2 hover:bg-gray-800 transition-colors shadow-lg shadow-gray-200"
-                                >
-                                    Go to Payments
-                                </button>
-                            ) : (
+                            {/* Action Button Logic */}
+                            {!isClearanceComplete ? (
                                 <button
                                     onClick={() => handleOpenPopup('schedule', selectedJob)}
                                     className="px-5 py-2.5 bg-indigo-600 text-white text-sm font-bold rounded-lg flex items-center gap-2 hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200"
                                 >
                                     <Calendar className="w-4 h-4" /> Schedule Clearance
                                 </button>
+                            ) : !isAccountsComplete ? (
+                                <button
+                                    onClick={() => setActiveTab('Payments')}
+                                    className="px-5 py-2.5 bg-black text-white text-sm font-bold rounded-lg flex items-center gap-2 hover:bg-gray-800 transition-colors shadow-lg shadow-gray-200 animate-pulse"
+                                >
+                                    Go to Payments <ChevronRight className="w-4 h-4" />
+                                </button>
+                            ) : !isJobCompleted ? (
+                                <button
+                                    onClick={handleMarkCompleted}
+                                    className="px-5 py-2.5 bg-green-600 text-white text-sm font-bold rounded-lg flex items-center gap-2 hover:bg-green-700 transition-colors shadow-lg shadow-green-200"
+                                >
+                                    <Check className="w-4 h-4" /> Mark Completed
+                                </button>
+                            ) : (
+                                <span className="px-5 py-2.5 bg-gray-100 text-gray-400 text-sm font-bold rounded-lg flex items-center gap-2 cursor-default border border-gray-200">
+                                    <Lock className="w-4 h-4" /> Job Closed
+                                </span>
                             )}
                         </div>
                     </div>
@@ -1150,13 +1190,18 @@ const ShipmentRegistry: React.FC = () => {
                     {/* Progress Bar (3.1) */}
                     <div className="mb-10">
                         <div className="flex justify-between text-xs font-bold text-gray-400 mb-3 uppercase tracking-wider">
-                            <span className={activeStage >= 0 ? "text-indigo-600" : ""}>Document</span>
-                            <span className={activeStage >= 1 ? "text-indigo-600" : ""}>Clearance</span>
-                            <span className={activeStage >= 2 ? "text-indigo-600" : ""}>Accounts</span>
-                            <span className={activeStage >= 3 ? "text-indigo-600" : ""}>Completed</span>
+                            <span className={activeStage >= 1 ? "text-indigo-600" : ""}>Document (25%)</span>
+                            <span className={activeStage >= 2 ? "text-indigo-600" : ""}>Clearance (50%)</span>
+                            <span className={activeStage >= 3 ? "text-indigo-600" : ""}>Accounts (75%)</span>
+                            <span className={activeStage >= 4 ? "text-indigo-600" : ""}>Completed (100%)</span>
                         </div>
-                        <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
-                            <div className="h-full bg-indigo-600 transition-all duration-700 ease-in-out" style={{ width: `${(activeStage / 3) * 100}%` }}></div>
+                        <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden relative">
+                            {/* Background markers for 25, 50, 75 */}
+                            <div className="absolute top-0 bottom-0 left-1/4 w-0.5 bg-white/50 z-10"></div>
+                            <div className="absolute top-0 bottom-0 left-2/4 w-0.5 bg-white/50 z-10"></div>
+                            <div className="absolute top-0 bottom-0 left-3/4 w-0.5 bg-white/50 z-10"></div>
+
+                            <div className="h-full bg-indigo-600 transition-all duration-700 ease-in-out" style={{ width: `${(activeStage / 4) * 100}%` }}></div>
                         </div>
                     </div>
 
