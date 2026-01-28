@@ -1897,47 +1897,98 @@ const ShipmentRegistry: React.FC = () => {
     };
 
     const renderHistoryTab = () => {
+        // Filter and Map Logs
+        const processLogs = historyLogs.map(log => {
+            let label = null;
+            let icon = FileText;
+            let color = "text-gray-400 bg-gray-50";
+
+            if (log.action === 'CREATE_SHIPMENT') {
+                label = 'Job Registered';
+                icon = FileText;
+                color = "text-blue-600 bg-blue-50";
+            }
+            else if (log.action === 'UPDATE_SHIPMENT_INVOICE' || (log.action === 'UPDATE_SHIPMENT' && log.details.includes('Invoice'))) {
+                label = 'Shipment Invoice';
+                icon = FileText;
+                color = "text-purple-600 bg-purple-50";
+            }
+            else if (log.action === 'ADD_BL' || log.action === 'UPDATE_BL') {
+                label = 'BL/AWB Details';
+                icon = FileSpreadsheet;
+                color = "text-indigo-600 bg-indigo-50";
+            }
+            else if (log.action === 'CREATE_CLEARANCE_SCHEDULE') {
+                label = 'Clearance';
+                icon = Calendar;
+                color = "text-orange-600 bg-orange-50";
+            }
+            else if (log.action === 'CLEARANCE' && log.details.includes('Delivery Note')) {
+                label = 'Delivery Note Issued';
+                icon = Truck;
+                color = "text-teal-600 bg-teal-50";
+            }
+            else if (log.action === 'SEND_PAYMENTS_TO_ACCOUNTS') {
+                label = 'Payment Sent (to account)';
+                icon = CreditCard;
+                color = "text-amber-600 bg-amber-50";
+            }
+            else if (log.action === 'PAYMENT_PROCESSED') {
+                label = 'Payment Approved';
+                icon = Check;
+                color = "text-emerald-600 bg-emerald-50";
+            }
+            else if (log.action === 'ALL_PAYMENTS_COMPLETED') {
+                label = 'Payment Completed';
+                icon = CreditCard;
+                color = "text-green-600 bg-green-50";
+            }
+            else if (log.action === 'UPDATE_JOB_INVOICE') {
+                label = 'Job Invoice Entered';
+                icon = FileText;
+                color = "text-blue-600 bg-blue-50";
+            }
+            else if (log.action === 'JOB_COMPLETED') {
+                label = 'Completed';
+                icon = Check;
+                color = "text-green-600 bg-green-100";
+            }
+
+            if (!label) return null;
+
+            return { ...log, label, icon, color };
+        }).filter(Boolean);
+
         return (
             <div className="p-8">
-                <h3 className="text-lg font-bold text-gray-900 mb-6">Activity</h3>
+                <h3 className="text-lg font-bold text-gray-900 mb-6">Process History</h3>
                 <div className="relative border-l-2 border-gray-100 ml-3 space-y-8">
-                    {historyLogs.map((log) => {
-                        let Icon = FileText;
-                        let colorClass = "text-gray-400 bg-gray-50";
-                        // Mapping Action to Icons/Colors
-                        if (log.action.includes('CREATE_SHIPMENT')) { Icon = FileText; colorClass = "text-green-600 bg-green-50"; }
-                        else if (log.action.includes('DOC')) { Icon = UploadCloud; colorClass = "text-blue-600 bg-blue-50"; }
-                        else if (log.action.includes('INVOICE')) { Icon = FileText; colorClass = "text-purple-600 bg-purple-50"; }
-                        else if (log.action.includes('BL')) { Icon = FileSpreadsheet; colorClass = "text-indigo-600 bg-indigo-50"; }
-                        else if (log.action.includes('CLEARANCE')) { Icon = Check; colorClass = "text-emerald-600 bg-emerald-50"; }
-                        else if (log.action.includes('PAYMENT')) { Icon = CreditCard; colorClass = "text-amber-600 bg-amber-50"; }
-                        else if (log.action.includes('COMPLETED')) { Icon = Check; colorClass = "text-green-600 bg-green-100"; }
-
+                    {processLogs.map((log: any) => {
+                        const Icon = log.icon;
                         return (
                             <div key={log.id} className="relative pl-8">
-                                <span className={`absolute -left-[11px] top-0 p-1 rounded-full border border-white ring-2 ring-white ${colorClass}`}>
+                                <span className={`absolute -left-[11px] top-0 p-1 rounded-full border border-white ring-2 ring-white ${log.color}`}>
                                     <Icon className="w-3 h-3" />
                                 </span>
                                 <div>
                                     <p className="text-sm font-bold text-gray-900">
-                                        {formatAction(log.action)} <span className="font-normal text-gray-500">by {log.performed_by}</span>
+                                        {log.label}
                                     </p>
-                                    <p className="text-xs text-gray-400 mt-0.5">{new Date(log.created_at).toLocaleString()}</p>
-                                    {log.details && <p className="text-xs text-gray-500 mt-1">{log.details}</p>}
+                                    <p className="text-xs text-gray-400 mt-0.5">{new Date(log.created_at).toLocaleString()} by {log.performed_by}</p>
+                                    {/* Optional: Show details for BLs or Clearance if multiple */}
+                                    {(log.label === 'BL/AWB Details' || log.label === 'Clearance') && (
+                                        <p className="text-xs text-gray-500 mt-1">{log.details}</p>
+                                    )}
                                 </div>
                             </div>
                         );
                     })}
-                    {historyLogs.length === 0 && (
-                        <p className="text-sm text-gray-400 pl-8">No activity recorded yet.</p>
+                    {processLogs.length === 0 && (
+                        <p className="text-sm text-gray-400 pl-8">No process milestones recorded yet.</p>
                     )}
                 </div>
             </div>
         );
-    };
-
-    const formatAction = (action: string) => {
-        return action.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
     };
 
     const handlePopupSave = async (data: any = {}) => {

@@ -250,10 +250,14 @@ router.post('/send-batch', authenticateToken, async (req, res) => {
             );
         }
 
-        await pool.query(
-            'INSERT INTO audit_logs (user_id, action, details, entity_type, entity_id) VALUES ($1, $2, $3, $4, $5)',
-            [req.user.id, 'SEND_PAYMENTS_TO_ACCOUNTS', `Sent ${result.rowCount} payments to accounts`, 'JOB', 'BATCH']
-        );
+        // Audit Logs per Job
+        const jobsInBatch = [...new Set(valRes.rows.map(r => r.id))];
+        for (const jId of jobsInBatch) {
+            await pool.query(
+                'INSERT INTO audit_logs (user_id, action, details, entity_type, entity_id) VALUES ($1, $2, $3, $4, $5)',
+                [req.user.id, 'SEND_PAYMENTS_TO_ACCOUNTS', `Payment sent for approval`, 'SHIPMENT', jId]
+            );
+        }
 
         // Notify Accountants
         try {
@@ -355,6 +359,11 @@ router.post('/process-batch', authenticateToken, async (req, res) => {
                 if (updateRes.rows.length > 0) {
                     completedJobs.push(updateRes.rows[0]);
                 }
+                // Log Payment Completion separately
+                await pool.query(
+                    'INSERT INTO audit_logs (user_id, action, details, entity_type, entity_id) VALUES ($1, $2, $3, $4, $5)',
+                    [req.user.id, 'ALL_PAYMENTS_COMPLETED', `All payments completed`, 'SHIPMENT', jId]
+                );
             }
         }
 
@@ -372,6 +381,10 @@ router.post('/process-batch', authenticateToken, async (req, res) => {
         for (const job of completedJobs) {
             try {
                 await broadcastToAll('Job Completed', `Job ${job.id} (${job.customer}) is now Completed.`, 'success', `/registry?id=${job.id}`);
+                await pool.query(
+                    'INSERT INTO audit_logs (user_id, action, details, entity_type, entity_id) VALUES ($1, $2, $3, $4, $5)',
+                    [req.user.id, 'JOB_COMPLETED', `Job marked as Completed`, 'SHIPMENT', job.id]
+                );
             } catch (ne) { console.error(ne); }
         }
 
