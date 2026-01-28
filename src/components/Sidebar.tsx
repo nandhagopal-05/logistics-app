@@ -15,6 +15,7 @@ import {
     CreditCard
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import seaflowLogo from '../assets/seaflow-logo.jpg';
 
 interface SidebarProps {
     isOpen: boolean;
@@ -87,8 +88,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                     {/* Logo */}
                     <div className="flex items-center justify-between p-6 border-b border-white/20">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-gradient-to-br from-primary-600 to-accent-600 rounded-xl flex items-center justify-center shadow-lg">
-                                <img src="./assets/seaflow-logo.jpg" className="w-6 h-6 text-white" />
+                            <div className="w-10 h-10 flex items-center justify-center">
+                                <img src={seaflowLogo} alt="Seaflow Logistics" className="w-full h-full object-contain rounded-xl" />
                             </div>
                             <span className="text-xl font-bold bg-gradient-to-r from-primary-700 to-accent-700 bg-clip-text text-transparent">
                                 Seaflow Logistics
