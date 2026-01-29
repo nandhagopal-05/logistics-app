@@ -1,0 +1,6 @@
+CREATE TABLE IF NOT EXISTS payment_items (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    vendor_id UUID REFERENCES vendors(id) ON DELETE SET NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
