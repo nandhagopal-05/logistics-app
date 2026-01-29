@@ -205,26 +205,8 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-// Go up one level from 'routes' to 'server' root
-const uploadDir = path.join(__dirname, '../uploads');
-
-// Ensure upload directory exists
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
-}
-
-// Configure Multer for file upload
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        console.log('[DEBUG] Uploading to:', uploadDir);
-        cb(null, uploadDir);
-    },
-    filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-    }
-});
+// Configure Multer for file upload (Memory Storage for DB)
+const storage = multer.memoryStorage();
 
 const upload = multer({
     storage: storage,
@@ -255,7 +237,18 @@ router.post('/:id/photo', (req, res, next) => {
     }
 
     try {
-        const photoUrl = `/uploads/${req.file.filename}`;
+        // Insert into file_storage
+        const fileRes = await pool.query(
+            `INSERT INTO file_storage (filename, mime_type, data, size) 
+             VALUES ($1, $2, $3, $4) 
+             RETURNING id`,
+            [req.file.originalname, req.file.mimetype, req.file.buffer, req.file.size]
+        );
+        const fileId = fileRes.rows[0].id;
+
+        // Use the generic file view endpoint
+        // NOTE: Frontend needs to handle this new URL format
+        const photoUrl = `/api/files/view/${fileId}`;
 
         const updateResult = await pool.query(
             'UPDATE users SET photo_url = $1 WHERE id = $2',
