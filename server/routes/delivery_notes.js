@@ -30,28 +30,7 @@ const upload = multer({
 const router = express.Router();
 
 // Ensure File Storage Table Exists
-const ensureFileStorageTable = async () => {
-    const client = await pool.connect();
-    try {
-        await client.query(`
-            CREATE TABLE IF NOT EXISTS file_storage (
-                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-                filename TEXT,
-                mime_type TEXT,
-                data BYTEA,
-                size INT,
-                uploaded_at TIMESTAMP DEFAULT current_timestamp
-            );
-        `);
-    } catch (err) {
-        console.error('Error ensuring file_storage table:', err);
-    } finally {
-        client.release();
-    }
-};
-
-// Initialize table on Load (async)
-ensureFileStorageTable();
+// Table creation handled by migration 034_create_file_storage.sql
 
 // Helper to generate DN Number
 const generateDNId = async () => {
@@ -342,7 +321,7 @@ router.put('/:id', authenticateToken, upload.array('files'), async (req, res) =>
         // 2. Process Uploaded Files - SAVE TO DB
         const newDocs = [];
         if (req.files && req.files.length > 0) {
-            await ensureFileStorageTable();
+
 
             for (const file of req.files) {
                 // Insert into file_storage

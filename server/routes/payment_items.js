@@ -35,14 +35,7 @@ router.post('/', authenticateToken, async (req, res) => {
 
     try {
         // Simple check if table exists, if not, create it (Dev convenience)
-        await pool.query(`
-            CREATE TABLE IF NOT EXISTS payment_items (
-                id SERIAL PRIMARY KEY,
-                name VARCHAR(255) NOT NULL,
-                vendor_id UUID REFERENCES vendors(id) ON DELETE SET NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        `);
+        // Table creation handled by migration 033_create_payment_items.sql
 
         const result = await pool.query(
             'INSERT INTO payment_items (name, vendor_id) VALUES ($1, $2) RETURNING *',
@@ -94,14 +87,7 @@ router.post('/import', authenticateToken, upload.single('file'), async (req, res
 
     try {
         // Ensure table exists
-        await pool.query(`
-            CREATE TABLE IF NOT EXISTS payment_items (
-                id SERIAL PRIMARY KEY,
-                name VARCHAR(255) NOT NULL,
-                vendor_id UUID REFERENCES vendors(id) ON DELETE SET NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        `);
+        // Table creation handled by migration 033_create_payment_items.sql
 
         const workbook = XLSX.readFile(req.file.path);
         const sheetName = workbook.SheetNames[0];

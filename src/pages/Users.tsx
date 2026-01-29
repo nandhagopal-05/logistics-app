@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import { usersAPI } from '../services/api';
-import { Trash2, Edit, Plus, X, User as UserIcon, Shield } from 'lucide-react';
+import { Trash2, Edit, Plus, X, User as UserIcon, Shield, Copy } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 interface User {
@@ -277,13 +277,33 @@ const Users: React.FC = () => {
                                 <div>
                                     <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Username</label>
                                     <div className="flex items-center justify-between mt-1">
-                                        <code className="text-sm font-mono font-bold text-gray-900 bg-white px-2 py-1 rounded border">{newUserCredentials.username}</code>
+                                        <code className="text-sm font-mono font-bold text-gray-900 bg-white px-2 py-1 rounded border overflow-hidden text-ellipsis">{newUserCredentials.username}</code>
+                                        <button 
+                                            onClick={() => {
+                                                navigator.clipboard.writeText(newUserCredentials.username);
+                                                // Could add toast here
+                                            }}
+                                            className="ml-2 p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
+                                            title="Copy Username"
+                                        >
+                                            <Copy className="w-4 h-4" />
+                                        </button>
                                     </div>
                                 </div>
                                 <div>
                                     <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Temporary Password</label>
                                     <div className="flex items-center justify-between mt-1">
-                                        <code className="text-lg font-mono font-bold text-primary-600 bg-white px-2 py-1 rounded border">{newUserCredentials.password}</code>
+                                        <code className="text-lg font-mono font-bold text-primary-600 bg-white px-2 py-1 rounded border overflow-hidden text-ellipsis">{newUserCredentials.password}</code>
+                                        <button 
+                                            onClick={() => {
+                                                navigator.clipboard.writeText(newUserCredentials.password);
+                                                // Could add toast here
+                                            }}
+                                            className="ml-2 p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
+                                            title="Copy Password"
+                                        >
+                                            <Copy className="w-4 h-4" />
+                                        </button>
                                     </div>
                                 </div>
                                 <div>

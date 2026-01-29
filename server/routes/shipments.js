@@ -383,14 +383,12 @@ router.put('/:id/containers/:containerId', authenticateToken, async (req, res) =
 });
 
 // --- SUB-RESOURCES: BL/AWB ---
-// --- SUB-RESOURCES: BL/AWB ---
 router.post('/:id/bls', authenticateToken, async (req, res) => {
     try {
         const { id } = req.params;
         const { master_bl, house_bl, loading_port, vessel, etd, eta, delivery_agent, containers } = req.body;
 
-        // Ensure packages column exists in shipment_containers
-        await pool.query('ALTER TABLE shipment_containers ADD COLUMN IF NOT EXISTS packages JSONB DEFAULT \'[]\'');
+        // Schema update handled by migration 037_add_packages_to_shipment_containers.sql
 
         // Allow legacy packages input if containers is missing, but prefer containers
         // If containers provided, structure them into 'packages' col of BL for storage
@@ -438,8 +436,7 @@ router.put('/:id/bls/:blId', authenticateToken, async (req, res) => {
         const { id, blId } = req.params;
         const { master_bl, house_bl, loading_port, vessel, etd, eta, delivery_agent, containers } = req.body;
 
-        // Ensure packages column exists
-        await pool.query('ALTER TABLE shipment_containers ADD COLUMN IF NOT EXISTS packages JSONB DEFAULT \'[]\'');
+        // Schema update handled by migration 037_add_packages_to_shipment_containers.sql
 
         const blContent = (containers && containers.length > 0) ? JSON.stringify(containers) : (req.body.packages ? JSON.stringify(req.body.packages) : '[]');
 
