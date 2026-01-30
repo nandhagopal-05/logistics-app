@@ -116,6 +116,16 @@ const DeliveryNotes: React.FC = () => {
 
     const handleSaveDetails = async () => {
         if (!selectedNote) return;
+
+        // Validation: Document is mandatory if marking as delivered
+        if (detailsForm.mark_delivered) {
+            const hasExistingDocs = selectedNote.documents && selectedNote.documents.length > 0;
+            if (!fileToUpload && !hasExistingDocs) {
+                alert('Please upload a signed delivery note document to complete the delivery.');
+                return;
+            }
+        }
+
         try {
             setLoading(true);
             const formData = new FormData();
