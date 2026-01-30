@@ -35,9 +35,35 @@ const Dashboard: React.FC = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
+                // Fetch Analytics
                 const response = await analyticsAPI.getDashboard();
-                setData(response.data);
-                // setOriginalData(response.data);
+
+                // Fetch All Shipments for "Recent" list (Last 24h)
+                const shipmentsRes = await shipmentsAPI.getAll();
+                const allShipments = shipmentsRes.data || [];
+
+                // 24h Filter
+                const oneDayAgo = new Date();
+                oneDayAgo.setHours(oneDayAgo.getHours() - 24);
+
+                const recent24h = allShipments.filter((s: any) => {
+                    const sDate = s.created_at || s.date;
+                    return sDate && new Date(sDate) >= oneDayAgo;
+                });
+
+                // Normalize Fields
+                const normalized = recent24h.map((s: any) => ({
+                    id: s.id,
+                    customer: s.customer || s.receiver_name || s.sender_name,
+                    destination: s.destination || s.receiver_address || 'N/A',
+                    status: s.status || 'Processing',
+                    date: s.created_at || s.date
+                }));
+
+                // Sort by date desc
+                normalized.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+                setData({ ...response.data, recentShipments: normalized });
 
                 const notifResponse = await notificationsAPI.getAll();
                 setNotifications(notifResponse.data);
@@ -55,7 +81,6 @@ const Dashboard: React.FC = () => {
     const handleViewToggle = async () => {
         setLoading(true);
         try {
-            // Always fetch fresh data to ensure we have the latest
             const response = await shipmentsAPI.getAll();
             let allShipments = response.data || [];
 
@@ -65,18 +90,23 @@ const Dashboard: React.FC = () => {
                 customer: s.customer || s.receiver_name || s.sender_name,
                 destination: s.destination || s.receiver_address || 'N/A',
                 status: s.status || 'Processing',
-                date: s.created_at || s.date // Ensure we pick the right date field
+                date: s.created_at || s.date
             }));
 
             // Sort by date descending (newest first)
             normalized.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-            // If currently viewing all, switch to view less (10) using the FRESH data
             if (viewingAll) {
-                setData((prev: any) => ({ ...prev, recentShipments: normalized.slice(0, 10) }));
+                // View Less: Show only Last 24 Hours
+                const oneDayAgo = new Date();
+                oneDayAgo.setHours(oneDayAgo.getHours() - 24);
+
+                const filtered24h = normalized.filter((s: any) => new Date(s.date) >= oneDayAgo);
+
+                setData((prev: any) => ({ ...prev, recentShipments: filtered24h }));
                 setViewingAll(false);
             } else {
-                // Switch to view all
+                // View All: Show Everything
                 setData((prev: any) => ({ ...prev, recentShipments: normalized }));
                 setViewingAll(true);
             }
@@ -356,7 +386,7 @@ const Dashboard: React.FC = () => {
                             {viewingAll ? 'View Less' : 'View All'}
                         </button>
                     </div>
-                    <div className="overflow-x-auto">
+                    <div className="overflow-x-auto max-h-96 overflow-y-auto custom-scrollbar">
                         <table className="w-full">
                             <thead>
                                 <tr className="border-b border-gray-200">
