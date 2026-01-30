@@ -753,7 +753,7 @@ const ShipmentRegistry: React.FC = () => {
 
                 {/* Section: Manual Job Invoice */}
                 <div className="form-group mb-4">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Job Invoice No. <span className="text-gray-400 font-normal">(Optional)</span></label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Job Invoice No.</label>
                     <input
                         type="text"
                         name="manual_invoice_no"
