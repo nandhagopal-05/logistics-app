@@ -87,18 +87,11 @@ const Reports: React.FC = () => {
         rangeShipments.forEach(s => {
             created++;
             const status = s.status?.toLowerCase() || '';
-
+            const payment = s.payment_status?.toLowerCase() || 'pending';
 
             if (status !== 'cancelled' && status !== 'terminated') {
-                if (status === 'completed') {
+                if (status === 'completed' && payment === 'paid') {
                     completed++;
-
-
-
-
-
-
-
                 }
             }
         });
@@ -128,19 +121,14 @@ const Reports: React.FC = () => {
             if (dailyDataMap.has(dateStr)) {
                 const dayStats = dailyDataMap.get(dateStr);
                 const status = s.status?.toLowerCase() || '';
+                const payment = s.payment_status?.toLowerCase() || 'pending';
 
 
                 dayStats.Created += 1;
 
                 if (status !== 'cancelled' && status !== 'terminated') {
-                    if (status === 'completed') {
+                    if (status === 'completed' && payment === 'paid') {
                         dayStats.Completed += 1;
-
-
-
-
-
-
                     }
                 }
             }
