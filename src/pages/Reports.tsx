@@ -32,7 +32,7 @@ const Reports: React.FC = () => {
     const [stats, setStats] = useState({
         created: 0,
 
-        pendingPayment: 0,
+
         completed: 0
     });
 
@@ -80,28 +80,30 @@ const Reports: React.FC = () => {
         // Calculate Stats for the cards (Aggregated for the range)
         let created = 0;
 
-        let pendingPayment = 0;
+
         let completed = 0;
 
 
         rangeShipments.forEach(s => {
             created++;
             const status = s.status?.toLowerCase() || '';
-            const payment = s.payment_status?.toLowerCase() || 'pending';
+
 
             if (status !== 'cancelled' && status !== 'terminated') {
-                if (status === 'completed' && payment === 'paid') {
+                if (status === 'completed') {
                     completed++;
-                } else {
 
 
-                    // Pending Payment
-                    if (status === 'payment' && payment !== 'paid') pendingPayment++;
+
+
+
+
+
                 }
             }
         });
 
-        setStats({ created, pendingPayment, completed });
+        setStats({ created, completed });
 
         // Prepare Daily Data for Chart
         const dailyDataMap = new Map();
@@ -116,7 +118,7 @@ const Reports: React.FC = () => {
                 displayDate: `${d.getDate()}/${d.getMonth() + 1}`,
                 Created: 0,
 
-                Payment: 0,
+
                 Completed: 0
             });
         }
@@ -126,16 +128,19 @@ const Reports: React.FC = () => {
             if (dailyDataMap.has(dateStr)) {
                 const dayStats = dailyDataMap.get(dateStr);
                 const status = s.status?.toLowerCase() || '';
-                const payment = s.payment_status?.toLowerCase() || 'pending';
+
 
                 dayStats.Created += 1;
 
                 if (status !== 'cancelled' && status !== 'terminated') {
-                    if (status === 'completed' && payment === 'paid') {
+                    if (status === 'completed') {
                         dayStats.Completed += 1;
-                    } else {
 
-                        if (status === 'payment' && payment !== 'paid') dayStats.Payment += 1;
+
+
+
+
+
                     }
                 }
             }
@@ -198,7 +203,7 @@ const Reports: React.FC = () => {
                 ) : (
                     <div className="space-y-8">
                         {/* KPI Cards */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
                             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 border-l-4 border-l-blue-500">
                                 <p className="text-gray-500 text-sm font-medium">Jobs Created</p>
                                 <h3 className="text-3xl font-bold text-gray-900 mt-2">{stats.created}</h3>
@@ -207,16 +212,12 @@ const Reports: React.FC = () => {
 
 
 
-                            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 border-l-4 border-l-amber-500">
-                                <p className="text-gray-500 text-sm font-medium">Pending Payment</p>
-                                <h3 className="text-3xl font-bold text-gray-900 mt-2">{stats.pendingPayment}</h3>
-                                <p className="text-xs text-gray-400 mt-1">Unpaid Jobs</p>
-                            </div>
+
 
                             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 border-l-4 border-l-green-500">
                                 <p className="text-gray-500 text-sm font-medium">Completed</p>
                                 <h3 className="text-3xl font-bold text-gray-900 mt-2">{stats.completed}</h3>
-                                <p className="text-xs text-gray-400 mt-1">Delivered & Paid</p>
+                                <p className="text-xs text-gray-400 mt-1">Delivered</p>
                             </div>
 
 
@@ -261,15 +262,7 @@ const Reports: React.FC = () => {
                                             name="Jobs Created"
                                         />
 
-                                        <Line
-                                            type="monotone"
-                                            dataKey="Payment"
-                                            stroke="#F59E0B"
-                                            strokeWidth={3}
-                                            dot={{ r: 4, strokeWidth: 2 }}
-                                            activeDot={{ r: 6 }}
-                                            name="Pending Payment"
-                                        />
+
                                         <Line
                                             type="monotone"
                                             dataKey="Completed"
