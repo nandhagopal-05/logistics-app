@@ -369,6 +369,32 @@ router.put('/:id', authenticateToken, upload.array('files'), async (req, res) =>
 
         const result = await client.query(query, params);
 
+        // Logic: If Marking as Delivered, check if we should complete the Job(s)
+        if (mark_delivered === 'true' || mark_delivered === true) {
+            const jobsRes = await client.query('SELECT DISTINCT job_id FROM delivery_note_items WHERE delivery_note_id = $1', [id]);
+            const jobIds = jobsRes.rows.map(r => r.job_id);
+
+            for (const jobId of jobIds) {
+                // Check if there are any other Delivery Notes for this job that are NOT 'Delivered'
+                // (Since we just updated the current one to 'Delivered' in memory/transaction, the query helps verify the ecosystem)
+                // Note: The current DN is already updated in the transaction above, so 'dn.status' check might need care.
+                // We just ran the UPDATE, so reading it back should show 'Delivered'.
+
+                const pendingDnRes = await client.query(`
+                    SELECT count(*) FROM delivery_notes dn
+                    JOIN delivery_note_items dni ON dn.id = dni.delivery_note_id
+                    WHERE dni.job_id = $1 AND dn.status != 'Delivered'
+                 `, [jobId]);
+
+                if (parseInt(pendingDnRes.rows[0].count) === 0) {
+                    // All DNs for this job are delivered. Mark Job as Completed.
+                    await client.query("UPDATE shipments SET status = 'Completed', progress = 100 WHERE id = $1", [jobId]);
+
+                    await logActivity(req.user.id, 'JOB_COMPLETED', `Job marked as Completed (Delivery Confirmed)`, 'SHIPMENT', jobId);
+                }
+            }
+        }
+
         await client.query('COMMIT');
         res.json(result.rows[0]);
 
