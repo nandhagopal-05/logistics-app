@@ -38,11 +38,9 @@ const getStatusColor = (text: string) => {
 
 const ROLES = [
     'Administrator',
-    'Administrator Assistant',
     'Accountant',
-    'Accountant Assistant',
-    'Clearance Manager',
-    'Clearance Manager Assistant'
+    'Clearance',
+    'All'
 ];
 
 const Users: React.FC = () => {
@@ -278,7 +276,7 @@ const Users: React.FC = () => {
                                     <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Username</label>
                                     <div className="flex items-center justify-between mt-1">
                                         <code className="text-sm font-mono font-bold text-gray-900 bg-white px-2 py-1 rounded border overflow-hidden text-ellipsis">{newUserCredentials.username}</code>
-                                        <button 
+                                        <button
                                             onClick={() => {
                                                 navigator.clipboard.writeText(newUserCredentials.username);
                                                 // Could add toast here
@@ -294,7 +292,7 @@ const Users: React.FC = () => {
                                     <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Temporary Password</label>
                                     <div className="flex items-center justify-between mt-1">
                                         <code className="text-lg font-mono font-bold text-primary-600 bg-white px-2 py-1 rounded border overflow-hidden text-ellipsis">{newUserCredentials.password}</code>
-                                        <button 
+                                        <button
                                             onClick={() => {
                                                 navigator.clipboard.writeText(newUserCredentials.password);
                                                 // Could add toast here

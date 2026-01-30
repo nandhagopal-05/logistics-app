@@ -32,40 +32,54 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         navigate('/');
     };
     const userRole = user?.role || '';
-    const isAdministrator = userRole === 'Administrator';
-    const isClearance = ['Clearance Manager', 'Clearance Manager Assistant', 'Clearance Agent', 'Accountant', 'Accountant Assistant'].includes(userRole);
-    const isAccountant = ['Accountant', 'Accountant Assistant', 'Administrator'].includes(userRole);
+
+    // Role definitions matches the new simple roles: Admin, Accountant, Clearance, All
+    const hasFullAccess = ['Administrator', 'All'].includes(userRole);
+    const isClearanceMember = ['Clearance'].includes(userRole);
+    const isAccountantMember = ['Accountant'].includes(userRole);
+
+    // Computed Permissions
+    const showRegistry = hasFullAccess || isClearanceMember || isAccountantMember; // Everyone needs registry? Previously isClearance included Accountant. 
+    // Accountants need registry to click Payment icons usually.
+
+    const showClearanceSchedule = hasFullAccess || isClearanceMember; // NOT Accountant
+
+    const showDeliveryNotes = hasFullAccess || isClearanceMember || isAccountantMember; // Keeping previous behavior (Accountant had access via isClearance)
+
+    const showPayments = hasFullAccess || isAccountantMember;
+
+    // Admin Only
+    const showAdminToolsExpanded = hasFullAccess;
 
     const menuItems = [
         { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
     ];
 
-
-
-    // Registry Access
-    if (isClearance || isAdministrator) {
+    if (showRegistry) {
         menuItems.push(
             { icon: FileText, label: 'Shipment Registry', path: '/registry' }
         );
     }
 
-    // Clearance Tools
-    if (isClearance || isAdministrator) {
+    if (showClearanceSchedule) {
         menuItems.push(
-            { icon: Calendar, label: 'Clearance Schedule', path: '/schedule' },
+            { icon: Calendar, label: 'Clearance Schedule', path: '/schedule' }
+        );
+    }
+
+    if (showDeliveryNotes) {
+        menuItems.push(
             { icon: ClipboardList, label: 'Delivery Notes', path: '/delivery-notes' }
         );
     }
 
-    // Accountant Access
-    if (isAccountant) {
+    if (showPayments) {
         menuItems.push(
             { icon: CreditCard, label: 'Payments', path: '/payments' }
         );
     }
 
-    // Administrator Access
-    if (isAdministrator) {
+    if (showAdminToolsExpanded) {
         menuItems.push(
             { icon: Users, label: 'User Management', path: '/users' },
             { icon: FileText, label: 'Reports', path: '/reports' },
