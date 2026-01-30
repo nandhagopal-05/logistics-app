@@ -1352,16 +1352,18 @@ const ShipmentRegistry: React.FC = () => {
                                             <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">Registered Date</label>
                                             <p className="font-medium text-slate-200 py-2">{new Date(selectedJob.created_at || Date.now()).toLocaleString()}</p>
                                         </div>
-                                        <div>
-                                            <label className="text-xs font-bold text-indigo-400 uppercase tracking-wider mb-2 block">Job Invoice No.</label>
-                                            <input
-                                                type="text"
-                                                value={jobDetailsForm.job_invoice_no}
-                                                onChange={e => setJobDetailsForm({ ...jobDetailsForm, job_invoice_no: e.target.value })}
-                                                placeholder="Enter Invoice No"
-                                                className="w-full bg-slate-800 border border-indigo-500/50 rounded px-3 py-2 text-white focus:outline-none focus:border-indigo-500"
-                                            />
-                                        </div>
+                                        {['Administrator', 'Accountant'].includes(user?.role || '') && (
+                                            <div>
+                                                <label className="text-xs font-bold text-indigo-400 uppercase tracking-wider mb-2 block">Job Invoice No.</label>
+                                                <input
+                                                    type="text"
+                                                    value={jobDetailsForm.job_invoice_no}
+                                                    onChange={e => setJobDetailsForm({ ...jobDetailsForm, job_invoice_no: e.target.value })}
+                                                    placeholder="Enter Invoice No"
+                                                    className="w-full bg-slate-800 border border-indigo-500/50 rounded px-3 py-2 text-white focus:outline-none focus:border-indigo-500"
+                                                />
+                                            </div>
+                                        )}
                                     </div>
                                     <div className="flex justify-end gap-3 mt-6 pt-6 border-t border-slate-800">
                                         <button
@@ -1422,10 +1424,12 @@ const ShipmentRegistry: React.FC = () => {
                                             <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Registered Date</p>
                                             <p className="font-medium text-slate-200">{new Date(selectedJob.created_at || Date.now()).toLocaleString()}</p>
                                         </div>
-                                        <div>
-                                            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Job Invoice</p>
-                                            <p className="font-medium text-slate-200">{selectedJob.job_invoice_no || selectedJob.invoice_id || selectedJob.invoice?.invoice_no || <span className="opacity-50 italic">Not Generated</span>}</p>
-                                        </div>
+                                        {['Administrator', 'Accountant'].includes(user?.role || '') && (
+                                            <div>
+                                                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Job Invoice</p>
+                                                <p className="font-medium text-slate-200">{selectedJob.job_invoice_no || selectedJob.invoice_id || selectedJob.invoice?.invoice_no || <span className="opacity-50 italic">Not Generated</span>}</p>
+                                            </div>
+                                        )}
                                     </div>
                                 </>
                             )}
