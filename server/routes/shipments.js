@@ -540,8 +540,8 @@ router.post('/', authenticateToken, shipmentUpload, async (req, res) => {
                 sender_name, sender_address, receiver_name, receiver_address,
                 description, weight, dimensions, price,
                 date, expected_delivery_date, transport_mode,
-                driver, vehicle_id, service, billing_contact, shipment_type, packages, job_invoice_no
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)
+                driver, vehicle_id, service, billing_contact, shipment_type, packages
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
             RETURNING *
         `;
 
@@ -551,8 +551,7 @@ router.post('/', authenticateToken, shipmentUpload, async (req, res) => {
             description, safeWeight, dimensions, safePrice,
             date, expected_delivery_date, transport_mode,
             driver || null, vehicle_id || null, service, billing_contact, shipment_type,
-            packages ? JSON.stringify(packages) : '[]',
-            job_invoice_no || null
+            packages ? JSON.stringify(packages) : '[]'
         ];
 
         const shipmentResult = await pool.query(shipmentQuery, shipmentValues);
@@ -699,7 +698,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
                  billing_contact = COALESCE($37, billing_contact),
                  service = COALESCE($38, service),
                  packages = COALESCE($39, packages),
-                 job_invoice_no = COALESCE($40, job_invoice_no),
+                 
                  updated_at = CURRENT_TIMESTAMP
              WHERE id = $16
              RETURNING *`,
@@ -714,8 +713,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
                 house_bl ?? null, vessel ?? null, delivery_agent ?? null,
                 office ?? null, cargo_type ?? null, unloaded_date ?? null,
                 shipment_type ?? null, billing_contact ?? null, service ?? null,
-                packages ? JSON.stringify(packages) : null,
-                job_invoice_no ?? null
+                packages ? JSON.stringify(packages) : null
             ]
         );
 
