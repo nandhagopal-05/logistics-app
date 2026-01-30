@@ -17,15 +17,16 @@ import {
     Calendar,
     FileText
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 
 const Dashboard: React.FC = () => {
     const { user } = useAuth();
+    const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [data, setData] = useState<any>(null);
-    const [originalData, setOriginalData] = useState<any>(null);
+    // const [originalData, setOriginalData] = useState<any>(null);
     const [viewingAll, setViewingAll] = useState(false);
     const [notifications, setNotifications] = useState<any[]>([]);
     const [showNotifications, setShowNotifications] = useState(false);
@@ -36,7 +37,7 @@ const Dashboard: React.FC = () => {
             try {
                 const response = await analyticsAPI.getDashboard();
                 setData(response.data);
-                setOriginalData(response.data);
+                // setOriginalData(response.data);
 
                 const notifResponse = await notificationsAPI.getAll();
                 setNotifications(notifResponse.data);
@@ -52,43 +53,36 @@ const Dashboard: React.FC = () => {
     }, []);
 
     const handleViewToggle = async () => {
-        if (viewingAll) {
-            // View Less: Restore original data
-            setData(originalData);
-            setViewingAll(false);
-            return;
-        }
-
-        // View All logic
+        setLoading(true);
         try {
-            setLoading(true);
+            // Always fetch fresh data to ensure we have the latest
             const response = await shipmentsAPI.getAll();
-            const allShipments = response.data || [];
+            let allShipments = response.data || [];
 
-            const threeDaysAgo = new Date();
-            threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
-
-            const filtered = allShipments.filter((s: any) => {
-                const sDate = s.created_at || s.date; // handle various date fields
-                return sDate && new Date(sDate) >= threeDaysAgo;
-            });
-
-            // Normalize fields for dashboard display if needed (Dashboard expects: id, customer, destination, status, date)
-            const normalized = filtered.map((s: any) => ({
+            // Normalize fields
+            const normalized = allShipments.map((s: any) => ({
                 id: s.id,
-                customer: s.customer || s.receiver_name || s.sender_name, // fallback
-                destination: s.destination || s.receiver_address || 'N/A', // fallback
+                customer: s.customer || s.receiver_name || s.sender_name,
+                destination: s.destination || s.receiver_address || 'N/A',
                 status: s.status || 'Processing',
-                date: s.created_at || s.date
+                date: s.created_at || s.date // Ensure we pick the right date field
             }));
 
-            // Sort by date desc
+            // Sort by date descending (newest first)
             normalized.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-            setData((prev: any) => ({ ...prev, recentShipments: normalized }));
-            setViewingAll(true);
+            // If currently viewing all, switch to view less (10) using the FRESH data
+            if (viewingAll) {
+                setData((prev: any) => ({ ...prev, recentShipments: normalized.slice(0, 10) }));
+                setViewingAll(false);
+            } else {
+                // Switch to view all
+                setData((prev: any) => ({ ...prev, recentShipments: normalized }));
+                setViewingAll(true);
+            }
+
         } catch (error) {
-            console.error('Failed to load recent shipments', error);
+            console.error('Failed to update shipment view', error);
         } finally {
             setLoading(false);
         }
@@ -375,7 +369,11 @@ const Dashboard: React.FC = () => {
                             </thead>
                             <tbody>
                                 {data?.recentShipments?.map((shipment: any, index: number) => (
-                                    <tr key={index} className="border-b border-gray-100 hover:bg-primary-50/50 transition-colors">
+                                    <tr
+                                        key={index}
+                                        className="border-b border-gray-100 hover:bg-primary-50/50 transition-colors cursor-pointer"
+                                        onClick={() => navigate('/registry', { state: { selectedJobId: shipment.id } })}
+                                    >
                                         <td className="py-4 px-4">
                                             <span className="font-mono text-sm font-semibold text-primary-700">{shipment.id}</span>
                                         </td>

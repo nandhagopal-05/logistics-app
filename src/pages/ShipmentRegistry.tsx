@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Layout from '../components/Layout';
 import { shipmentsAPI, consigneesAPI, exportersAPI, clearanceAPI, deliveryAgentsAPI, vendorsAPI, paymentsAPI, paymentItemsAPI, logsAPI, customersAPI } from '../services/api';
@@ -49,6 +50,8 @@ interface JobFormData {
 const ShipmentRegistry: React.FC = () => {
     // State
     const { user } = useAuth();
+    const location = useLocation();
+    // const navigate = useNavigate(); // Unused for now
     const [jobs, setJobs] = useState<any[]>([]);
     const [selectedJob, setSelectedJob] = useState<any | null>(null);
     const [jobPayments, setJobPayments] = useState<any[]>([]);
@@ -63,6 +66,20 @@ const ShipmentRegistry: React.FC = () => {
     const [historyLogs, setHistoryLogs] = useState<any[]>([]);
     const [isEditingJobDetails, setIsEditingJobDetails] = useState(false);
     const [jobDetailsForm, setJobDetailsForm] = useState<any>({});
+
+    // Handle incoming navigation from Dashboard
+    useEffect(() => {
+        if (location.state?.selectedJobId && jobs.length > 0) {
+            const jobToSelect = jobs.find(j => j.id === location.state.selectedJobId);
+            if (jobToSelect) {
+                setSelectedJob(jobToSelect);
+                setViewMode('details');
+                // Optional: Clear state to prevent re-selection issues if needed, 
+                // but usually fine as long as we don't clear selection elsewhere unexpectedly.
+                // navigate(location.pathname, { replace: true, state: {} });
+            }
+        }
+    }, [jobs, location.state]);
 
     // Drawer State
     const [isBLDrawerOpen, setIsBLDrawerOpen] = useState(false);
