@@ -138,22 +138,12 @@ router.post('/', authenticateToken, async (req, res) => {
                 const pendingPayments = parseInt(payRes.rows[0].pending);
                 const totalPayments = parseInt(totalPayRes.rows[0].total);
 
-                // Only mark as Completed if there ARE payments and they are all paid.
                 if (totalPayments > 0 && pendingPayments === 0) {
-                    // Log Payment Completion Logic (Might be redundant if payments.js handles it, but good for completeness if DN triggers it)
                     await logActivity(req.user.id, 'ALL_PAYMENTS_COMPLETED', `All payments completed`, 'SHIPMENT', jobId);
-
-                    // Fully Cleared AND Fully Paid -> Completed
-                    await client.query('UPDATE shipments SET progress = 100, status = $1 WHERE id = $2', ['Completed', jobId]);
-                    try {
-                        await broadcastToAll('Job Completed', `Job ${jobId} is fully cleared and paid. Process Complete.`, 'success', `/registry?id=${jobId}`);
-                        await logActivity(req.user.id, 'JOB_COMPLETED', `Job marked as Completed`, 'SHIPMENT', jobId);
-                    } catch (ne) { console.error(ne); }
-                } else {
-                    // Just Cleared
-                    // Set status to 'Cleared' to indicate clearance is done but payments might be pending
-                    await client.query('UPDATE shipments SET progress = 100, status = $1 WHERE id = $2', ['Cleared', jobId]);
                 }
+
+                // Always set to 'Cleared' when delivery is done. 'Completed' is a manual step.
+                await client.query('UPDATE shipments SET progress = 100, status = $1 WHERE id = $2', ['Cleared', jobId]);
             } else {
                 // Optional: Set partial progress? e.g. (delivered / total) * 100
                 // preserving 'status' might be better if not complete, or set to 'In Clearance'

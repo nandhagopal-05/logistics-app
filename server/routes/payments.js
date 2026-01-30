@@ -354,11 +354,6 @@ router.post('/process-batch', authenticateToken, async (req, res) => {
             // Check if all payments are paid
             const checkRes = await client.query("SELECT count(*) FROM job_payments WHERE job_id = $1 AND status != 'Paid'", [jId]);
             if (parseInt(checkRes.rows[0].count) === 0) {
-                // Try to complete job if cleared
-                const updateRes = await client.query("UPDATE shipments SET status = 'Completed' WHERE id = $1 AND progress = 100 AND status != 'Completed' RETURNING id, customer", [jId]);
-                if (updateRes.rows.length > 0) {
-                    completedJobs.push(updateRes.rows[0]);
-                }
                 // Log Payment Completion separately
                 await pool.query(
                     'INSERT INTO audit_logs (user_id, action, details, entity_type, entity_id) VALUES ($1, $2, $3, $4, $5)',
