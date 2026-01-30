@@ -568,17 +568,6 @@ const DeliveryNotes: React.FC = () => {
         </div >
     );
 
-    const handleDeleteDocument = async (noteId: string, docUrl: string) => {
-        if (!confirm('Are you sure you want to delete this document?')) return;
-        try {
-            await deliveryNotesAPI.deleteDocument(noteId, docUrl);
-            // Refresh list
-            fetchNotes(); // Re-fetch to update the view
-        } catch (error) {
-            console.error('Failed to delete document', error);
-            alert('Failed to delete document');
-        }
-    };
 
     const renderDocumentView = () => {
         const docRows: {
@@ -730,16 +719,7 @@ const DeliveryNotes: React.FC = () => {
                                                                 >
                                                                     <Download className="w-4 h-4" />
                                                                 </a>
-                                                                <button
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        handleDeleteDocument(row.noteId, doc.url);
-                                                                    }}
-                                                                    className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                                                                    title="Delete"
-                                                                >
-                                                                    <Trash2 className="w-4 h-4" />
-                                                                </button>
+
                                                             </div>
                                                         );
                                                     })}
