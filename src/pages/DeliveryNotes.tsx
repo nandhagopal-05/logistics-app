@@ -778,7 +778,7 @@ const DeliveryNotes: React.FC = () => {
                                     className="flex items-center gap-2 px-6 py-3 bg-black text-white hover:bg-gray-800 rounded-lg shadow-sm transition-all"
                                 >
                                     <FileText className="w-4 h-4" />
-                                    <span className="text-sm font-bold uppercase tracking-wide">Documents</span>
+                                    <span className="text-sm font-bold uppercase tracking-wide">Completed Delivery Notes</span>
                                 </button>
                             </div>
                         </div>
