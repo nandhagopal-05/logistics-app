@@ -3,7 +3,7 @@ import Layout from '../components/Layout';
 import {
     Search, Printer, ChevronDown,
     X, Download, Upload,
-    Mail, Phone, Globe, MapPin, Trash2, FileText
+    Mail, Phone, Globe, MapPin, Trash2, FileText, Eye
 
 } from 'lucide-react';
 
@@ -702,7 +702,7 @@ const DeliveryNotes: React.FC = () => {
                                         </td>
                                         <td className="py-4 px-6 text-right">
                                             {row.documents.length > 0 ? (
-                                                <div className="flex flex-col items-end gap-1">
+                                                <div className="flex flex-col items-end gap-2">
                                                     {row.documents.map((doc, dIdx) => {
                                                         const token = localStorage.getItem('token') || sessionStorage.getItem('token');
                                                         const viewUrl = doc.fileId
@@ -710,20 +710,34 @@ const DeliveryNotes: React.FC = () => {
                                                             : `${API_BASE_URL}/delivery-notes/document/view?path=${encodeURIComponent(doc.url)}&token=${token}`;
 
                                                         return (
-                                                            <div key={dIdx} className="flex items-center gap-2">
+                                                            <div key={dIdx} className="flex items-center gap-3">
+                                                                <span className="text-xs text-gray-500 max-w-[150px] truncate" title={doc.name}>
+                                                                    {doc.name}
+                                                                </span>
                                                                 <a
                                                                     href={viewUrl}
                                                                     target="_blank"
                                                                     rel="noreferrer"
-                                                                    className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100 transition-colors text-xs font-medium border border-blue-100"
+                                                                    className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                                                                    title="View"
                                                                 >
-                                                                    <FileText className="w-3 h-3" />
-                                                                    View
+                                                                    <Eye className="w-4 h-4" />
+                                                                </a>
+                                                                <a
+                                                                    href={viewUrl}
+                                                                    download={doc.name}
+                                                                    className="p-1.5 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded transition-colors"
+                                                                    title="Download"
+                                                                >
+                                                                    <Download className="w-4 h-4" />
                                                                 </a>
                                                                 <button
-                                                                    onClick={() => handleDeleteDocument(row.noteId, doc.url)}
-                                                                    className="p-1.5 text-red-500 hover:bg-red-50 rounded-md transition-colors"
-                                                                    title="Delete Document"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        handleDeleteDocument(row.noteId, doc.url);
+                                                                    }}
+                                                                    className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                                                                    title="Delete"
                                                                 >
                                                                     <Trash2 className="w-4 h-4" />
                                                                 </button>
