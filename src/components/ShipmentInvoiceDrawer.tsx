@@ -12,7 +12,6 @@ const ShipmentInvoiceDrawer: React.FC<ShipmentInvoiceDrawerProps> = ({ isOpen, o
     const [formData, setFormData] = useState<any>({
         invoice_no: '',
         invoice_items: '',
-        no_of_pkgs: '',
         customs_r_form: '',
 
     });
@@ -22,7 +21,6 @@ const ShipmentInvoiceDrawer: React.FC<ShipmentInvoiceDrawerProps> = ({ isOpen, o
             setFormData({
                 invoice_no: initialData?.invoice_no || '',
                 invoice_items: initialData?.invoice_items || '',
-                no_of_pkgs: initialData?.no_of_pkgs || '',
                 customs_r_form: initialData?.customs_r_form || '',
 
             });
@@ -73,15 +71,14 @@ const ShipmentInvoiceDrawer: React.FC<ShipmentInvoiceDrawerProps> = ({ isOpen, o
                             <div>
                                 <label className="block text-xs font-bold text-gray-500 uppercase mb-1">No. of Items (Count)</label>
                                 <input
-                                    name="no_of_pkgs"
-                                    type="number"
-                                    value={formData.no_of_pkgs}
+                                    name="invoice_items"
+                                    value={formData.invoice_items}
                                     onChange={handleInputChange}
                                     className="input-field w-full py-2 px-3 border rounded text-sm"
-                                    placeholder="0"
+                                    placeholder="e.g. 50"
                                 />
                             </div>
-                            
+
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">

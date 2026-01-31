@@ -93,7 +93,7 @@ const ShipmentRegistry: React.FC = () => {
     const [editingContainerId, setEditingContainerId] = useState<string | null>(null);
     const [newContainer, setNewContainer] = useState<any>({ container_no: '', container_type: 'FCL 20', unloaded_date: '' });
 
-    const [newBL, setNewBL] = useState<any>({ master_bl: '', house_bl: '', loading_port: '', vessel: '', etd: '', eta: '', delivery_agent: '' });
+    const [newBL, setNewBL] = useState<any>({ master_bl: '', house_bl: '', delivery_agent: '' });
 
     // Invoice Drawer State
     const [isInvoiceDrawerOpen, setIsInvoiceDrawerOpen] = useState(false);
@@ -104,7 +104,8 @@ const ShipmentRegistry: React.FC = () => {
             // Sanitize payload
             const payload = {
                 ...data,
-                no_of_pkgs: data.no_of_pkgs ? parseInt(data.no_of_pkgs) : null,
+                // no_of_pkgs: data.no_of_pkgs ? data.no_of_pkgs.toString() : null, // Removed per request
+                invoice_items: data.invoice_items || null,
                 invoice_no: data.invoice_no || null,
                 customs_r_form: data.customs_r_form || null,
                 unloaded_date: data.unloaded_date || null
@@ -193,10 +194,6 @@ const ShipmentRegistry: React.FC = () => {
             const blPayload = {
                 master_bl: data.master_bl,
                 house_bl: data.house_bl,
-                loading_port: data.loading_port,
-                vessel: data.vessel,
-                etd: data.etd,
-                eta: data.eta,
                 delivery_agent: data.delivery_agent,
                 packages: data.packages || [],
                 containers: data.containers || []
@@ -247,7 +244,7 @@ const ShipmentRegistry: React.FC = () => {
             }
 
             setIsBLDrawerOpen(false);
-            setNewBL({ master_bl: '', house_bl: '', loading_port: '', vessel: '', etd: '', eta: '', delivery_agent: '' });
+            setNewBL({ master_bl: '', house_bl: '', delivery_agent: '' });
 
         } catch (e) {
             console.error(e);
@@ -1516,7 +1513,7 @@ const ShipmentRegistry: React.FC = () => {
 
                                 <div>
                                     <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">No. Items</p>
-                                    <p className="font-bold text-gray-900">{selectedJob.no_of_pkgs || '0'}</p>
+                                    <p className="font-bold text-gray-900">{selectedJob.invoice_items || '0'}</p>
                                 </div>
                                 <div>
                                     <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Customs Form No.</p>
@@ -1546,7 +1543,7 @@ const ShipmentRegistry: React.FC = () => {
                                                     if (selectedJob.bls && selectedJob.bls.length > 0) {
                                                         setNewBL(selectedJob.bls[0]);
                                                     } else {
-                                                        setNewBL({ master_bl: '', house_bl: '', loading_port: '', vessel: '', etd: '', eta: '', delivery_agent: '' });
+                                                        setNewBL({ master_bl: '', house_bl: '', delivery_agent: '' });
                                                     }
                                                     setIsBLDrawerOpen(true);
                                                     setOpenMenu(null);
@@ -1557,7 +1554,7 @@ const ShipmentRegistry: React.FC = () => {
                                             <button
                                                 className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-indigo-600 font-medium flex items-center gap-2"
                                                 onClick={() => {
-                                                    setNewBL({ master_bl: '', house_bl: '', loading_port: '', vessel: '', etd: '', eta: '', delivery_agent: '' });
+                                                    setNewBL({ master_bl: '', house_bl: '', delivery_agent: '' });
                                                     setIsBLDrawerOpen(true);
                                                     setOpenMenu(null);
                                                 }}
