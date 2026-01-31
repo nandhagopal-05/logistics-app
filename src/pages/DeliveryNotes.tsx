@@ -348,6 +348,43 @@ const DeliveryNotes: React.FC = () => {
                             </table>
                         </div>
 
+                        {/* Shortage & Damage Table (Conditional) */}
+                        {(() => {
+                            const shortageItems = selectedNote?.items?.filter(item => item.shortage !== 'No' || item.damaged !== 'No');
+                            if (shortageItems && shortageItems.length > 0) {
+                                return (
+                                    <div className="mb-6">
+                                        <div className="bg-gray-100 text-gray-700 font-bold px-2 py-1 text-[10px] mb-2 border-l-4 border-red-500">
+                                            Shortage / Damage Report
+                                        </div>
+                                        <table className="w-full border-collapse text-[10px]">
+                                            <thead className="bg-gray-200 font-bold border-y border-gray-400">
+                                                <tr>
+                                                    <th className="py-1 px-2 text-left w-1/3">BL/AWB #</th>
+                                                    <th className="py-1 px-2 text-left w-1/3">Shortage</th>
+                                                    <th className="py-1 px-2 text-left w-1/3">Damaged</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-gray-200">
+                                                {shortageItems.map((item, idx) => (
+                                                    <tr key={idx} className="border-b border-gray-200">
+                                                        <td className="py-1 px-2 align-top">{item.bl_awb_no || '-'}</td>
+                                                        <td className="py-1 px-2 align-top text-red-600 font-medium">
+                                                            {item.shortage !== 'No' ? item.shortage : '-'}
+                                                        </td>
+                                                        <td className="py-1 px-2 align-top text-red-600 font-medium">
+                                                            {item.damaged !== 'No' ? item.damaged : '-'}
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                );
+                            }
+                            return null;
+                        })()}
+
                         {/* Green Box 2: Signatures */}
                         <div className="border border-gray-800 flex mb-6 text-[10px] shrink-0">
                             {/* GOODS DELIVERED BY (66.66%) */}
@@ -462,7 +499,7 @@ const DeliveryNotes: React.FC = () => {
                     />
                 </div>
             </div>
-        </div>
+        </div >
     );
 
     // Render Manage View

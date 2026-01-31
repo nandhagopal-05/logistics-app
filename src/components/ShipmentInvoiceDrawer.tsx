@@ -77,7 +77,7 @@ const ShipmentInvoiceDrawer: React.FC<ShipmentInvoiceDrawerProps> = ({ isOpen, o
                                     value={formData.invoice_items}
                                     onChange={handleInputChange}
                                     className="input-field w-full py-2 px-3 border rounded text-sm"
-                                    placeholder="e.g. 50"
+                                    placeholder=""
                                 />
                             </div>
 
